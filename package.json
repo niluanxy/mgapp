@@ -1,0 +1,15 @@
+{
+  "name": "magic-app",
+  "version": "0.5.0",
+  "description": "magic app",
+  "repository": {
+    "type": "git",
+    "url": "https://git.coding.net/niluanxy/magic-app.git"
+  },
+  "author": "木风 <smufeng@126.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-sass": "^2.3.0"
+  }
+}
