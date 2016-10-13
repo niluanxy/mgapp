@@ -12,10 +12,8 @@
     min-height: rem($button-height);
     padding: 0 rem($button-padding);
 
-    color: $button-default-text;
-    border: $button-border-width solid $button-default-border;
+    border: $button-border-width solid $border-default-color;
     border-radius: rem($button-border-radius);
-    background-color: $button-default-bg;
 
     // 添加一个隐藏的区域，增大按钮的点击面积
     &:after {
@@ -29,27 +27,37 @@
     }
 }
 
-@mixin button-style($style, $prefix: $config-prefix) {
+@mixin button-style($style, $prefix: null) {
+    
+    $bg:                $button-#{$style}-bg;
+    $text:              $button-#{$style}-text;
+    $border:            $button-#{$style}-border;
+    $active-bg:         $button-#{$style}-active-bg;
+    $active-border:     $button-#{$style}-active-border;
+
     .#{$prefix}button-#{$style} {
         @extend %button;
 
+        color: $text;
+        background-color: $bg;
+        border-color: $border;
+
         &.active {
-            border-color: $active-border-color;
-            background-color: $active-bg-color;
+            border-color: $active-border;
+            background-color: $active-bg;
             box-shadow: inset 0 1px 4px rgba(0,0,0,0.1);
         }
 
         &.#{$prefix}button-clear {
-            color: $border-color !important;
+            color: $border !important;
         }
     }
 }
 
 @mixin button($prefix: $config-prefix) {
-    @include button-style($primary, $prefix);
-    @include button-style($second, $prefix);
-    @include button-style($danger, $prefix);
-    @include button-style($stable, $prefix);
+    @each $style in primary, second, danger, stable {
+        @include button-style($style, $prefix);
+    }
 
     @at-root { .#{$prefix}button {
         &-clear {
@@ -67,7 +75,7 @@
                 opacity: $button-clear-active;
             }
         }
-        
+
         &-block {
             display: block;
 
