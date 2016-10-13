@@ -1,0 +1,21 @@
+/*========================================================
+ * 全局默认文字值
+ *=======================================================*/
+
+
+$font-family-base:              "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+$font-family-money:             "verdana" !default;
+
+
+$font-color-base:               #353535 !default;
+$font-color-money:              #e85920 !default;
+
+
+// 首要文字大小，比如主标题
+$font-size-large:               20px !default;
+// 次要文字大小，比如副标题
+$font-size-medium:              16px !default;
+// 默认文字大小，比如正文
+$font-size-base:                14px !default;
+// 辅助文字大小，比如提示信息，辅助文字
+$font-size-small:               12px !default; 

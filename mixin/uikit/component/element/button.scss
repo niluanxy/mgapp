@@ -1,0 +1,112 @@
+// ========================================================
+// button 按钮UI生成器
+// ========================================================
+
+
+%button() {
+    @extend button-appearance;
+
+    font-size: rem($button-font-size);
+    line-height: rem($button-height - $button-border-width * 2);
+
+    min-height: rem($button-height);
+    padding: 0 rem($button-padding);
+
+    color: $button-default-text;
+    border: $button-border-width solid $button-default-border;
+    border-radius: rem($button-border-radius);
+    background-color: $button-default-bg;
+
+    // 添加一个隐藏的区域，增大按钮的点击面积
+    &:after {
+        position: absolute;
+        top: rem(-($button-padding / 2));
+        right: rem(-($button-padding / 2));
+        bottom: rem(-($button-padding / 2));
+        left: rem(-($button-padding / 2));
+
+        content: ' ';
+    }
+}
+
+@mixin button-style($style, $prefix: $config-prefix) {
+    .#{$prefix}button-#{$style} {
+        @extend %button;
+
+        &.active {
+            border-color: $active-border-color;
+            background-color: $active-bg-color;
+            box-shadow: inset 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        &.#{$prefix}button-clear {
+            color: $border-color !important;
+        }
+    }
+}
+
+@mixin button($prefix: $config-prefix) {
+    @include button-style($primary, $prefix);
+    @include button-style($second, $prefix);
+    @include button-style($danger, $prefix);
+    @include button-style($stable, $prefix);
+
+    @at-root { .#{$prefix}button {
+        &-clear {
+            padding: 0 rem($button-clear-padding);
+
+            color: $button-default-text;
+            border-width: 0;
+            background: none !important;
+            box-shadow: none !important;
+
+            transition: opacity .1s;
+
+            &.active,
+            &.activated {
+                opacity: $button-clear-active;
+            }
+        }
+        
+        &-block {
+            display: block;
+
+            width: 100%;
+            min-height: rem($button-block-height);
+            line-height: rem($button-block-height - $button-border-width * 2);
+            margin-bottom: rem($margin-base);
+        }
+
+        &-small {
+            font-size: rem($button-small-font-size);
+            line-height: rem($button-small-height - $button-border-width * 2);
+
+            min-width: rem($button-small-height);
+            min-height: rem($button-small-height);
+            padding: rem(2px) rem($button-small-padding);
+
+            &:before {
+                font-size: rem($button-small-font-size);
+                line-height: rem($button-small-height - $button-border-width * 2) !important;
+            }
+        }
+
+        &-large {
+            font-size: rem($button-large-font-size);
+            line-height: rem($button-large-height - $button-border-width * 2);
+
+            min-width: rem(($button-large-padding * 3) + $button-large-font-size);
+            padding: 0 rem($button-large-padding);
+
+            &.icon-right:before {
+                font-size: rem($button-large-font-size);
+                line-height: rem($button-large-height - $button-border-width * 2);
+            }
+        }
+
+        &.disabled,
+        &[disabled] {
+            @include disabled($button-disable-opacity);
+        }
+    }}       
+}

@@ -1,0 +1,19 @@
+/*========================================================
+ * 全局默认颜色值
+ *=======================================================*/
+
+// 忽略色，普通按钮颜色
+$color-stable:                          #f9fafc !default;
+// 主色调，默认按钮颜色
+$color-primary:                         #327eff !default;
+// 次色调，次按钮颜色
+$color-second:                          #32db64 !default;
+// 重要危险色调，重要按钮颜色
+$color-danger:                          #f53d3d !default;
+
+$color-dark:                            #222222 !default;
+$color-light:                           #f4f4f4 !default;
+
+$color-success:                         #13ce66 !default;
+$color-warning:                         #f7ba2a !default;
+$color-error:                           #ff4949 !default;

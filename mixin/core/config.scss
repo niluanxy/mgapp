@@ -1,0 +1,17 @@
+/*====================================================
+ * 全局属性配置
+ *====================================================*/
+
+// 表示编译为 REM 单位
+$config-build-rem:                  true !default;
+// 默认基本字体单位
+$config-build-rem-base:             20px !default;
+
+// 全局默认文字是否可选
+$config-user-select:                false !default;
+
+// 是否开启文字抗锯齿功能
+$config-font-antialiased:           true !default;
+
+// class 类前缀
+$config-prefix:                     "" !default;
