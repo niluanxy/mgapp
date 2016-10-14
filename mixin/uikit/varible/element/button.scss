@@ -2,7 +2,7 @@
 // 按钮默认样式变量
 // ========================================================
 
-$button-border-width:               1px !default;
+$button-border-width:               $border-default-width !default;
 $button-border-radius:              $border-radius-base !default;
 
 $button-font-size:                  16px !default;

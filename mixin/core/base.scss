@@ -4,17 +4,20 @@
 
 
 $padding-base:                      6px !default;
+$padding-small:                     5px !default;
 $padding-item-inset:                12px !default;
 $padding-large:                     10px !default;
 
 
 $margin-base:                       10px !default;
+$margin-small:                      8px !default;
 $margin-block:                      20px !default;
 $margin-large:                      20px !default;
 
 
 $border-default-color:              #b2b2b2 !default
-$border-default:                    1px solid $border-default-color !default;
+$border-default-width:              1px !default;
+$border-default:                    $border-default-width solid $border-default-color !default;
 
 
 $border-radius-base:                4px !default;
@@ -23,3 +26,9 @@ $border-radius-small:               3px !default;
 
 
 $active-opacity:                    .3 !default;
+
+
+$line-height-base:                  1.428571429 !default; // 20/14
+$line-height-computed:              floor($font-size-base * $line-height-base) !default; // ~20px
+$line-height-large:                 1.5 !default;
+$line-height-small:                 1.33 !default;

@@ -1,0 +1,47 @@
+// ========================================================
+// 表单元素 默认样式变量
+// ========================================================
+
+$input-inline-size:                 2em !default;
+$input-inline-fix:                0.2em !default;
+$input-inline-disabled:           #e4e4e4 !default;
+
+$input-check-width:               $input-inline-size * 0.3 !default;
+$input-check-height:              $input-inline-size * 0.6 !default;
+$input-check-radius:              $input-inline-size * 0.15 !default;
+$input-check-top:                 $input-inline-size * 0.1 !default;
+$input-check-top-circle:          $input-inline-size * 0.13 !default;
+$input-check-left:                $input-inline-size * 0.35 !default;
+$input-check-left-circle:         $input-inline-size * 0.33 !default;
+$input-check-border-base:         $input-inline-size * 0.075 !default;
+$input-check-border-check:        $input-inline-size * 0.1 !default;
+
+$input-switch-padding:            3px !default;
+$input-switch-width:              $input-inline-size * 1.65 !default;
+$input-switch-height:             $input-inline-size !default;
+$input-switch-border:             $input-inline-size * 0.13 !default;
+$input-switch-back:               $color-primary !default;
+$input-switch-uncheck:            #ddd !default;
+$input-switch-center:             #fff !default;
+$input-switch-move:               $input-switch-width - $input-switch-height;
+
+$input-radio-size:                $input-inline-size * 0.35 !default;
+
+$input-shadow-vpos:                1px !default;
+$input-shadow-blur:                1px !default;
+$input-shadow-base:                1px !default;
+$input-shadow-opacity:            0.35 !default;
+
+
+$input-height-base:               $line-height-computed + ($padding-base * 2) !default;
+$input-height-large:              (floor($font-size-large * $line-height-large) + ($padding-large * 2)) !default;
+$input-height-small:              (floor($font-size-small * $line-height-small) + ($padding-small * 2)) !default;
+
+$input-bg:                        $color-light !default;
+$input-bg-disabled:               $color-stable !default;
+
+$input-color:                     #111 !default;
+$input-border-color:              $border-default-color !default;
+$input-border-width:              $border-default-width !default;
+$input-label-color:               $color-dark !default;
+$input-color-placeholder:         lighten($color-dark, 40%) !default;

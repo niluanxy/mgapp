@@ -1,0 +1,207 @@
+// ========================================================
+// form 表单元素UI
+// ========================================================
+
+
+/**
+ * checkbox 代码借鉴: http://forsigner.com/magic-check/
+ * 实现核心: 采用 border 来做出来 对勾 效果，然后旋转
+ */
+
+%form-all {
+    display: inline-block;
+    cursor: pointer;
+    position: relative;
+    background-color: transparent;
+    text-align: center;
+    height: $input-inline-size;
+    width:  $input-inline-size;
+    -webkit-appearance: none;
+
+    &:disabled, &.disabled {
+        opacity: .35;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+}
+
+%form-radio {
+    margin: $input-inline-fix;
+
+    &:before, &:after {
+        transition: 0.3s cubic-bezier(0, 1.1, 1, 1.1);
+        transition-property: background-color, display;
+    }
+
+    &:before {
+        content: " ";
+        display: block;
+        border: $input-check-border-base solid $color-primary;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+    }
+
+    &:after {
+        content: " ";
+        display: none;
+        position: absolute;
+    }
+
+    &:checked:after,
+    &.checked:after {
+        display: block;
+    }
+}
+
+@mixin form($prefix: $config-prefix) {
+    @at-root {
+        input, button, select, textarea {
+            font-size: rem($font-size-base);
+            font-weight: normal;
+            font-family: $font-family-base;
+        }
+
+        input {
+            border: 0;
+            padding: 0;
+            vertical-align: middle;
+
+            &[type="text"],
+            &[type="password"] {
+                width: 100%;
+                height: rem($input-height-base);
+                line-height: rem($line-height-computed);
+            }
+
+            &[type="checkbox"], &[type="radio"] {
+                display: inline-block;
+            }
+        }
+
+        textarea {
+            border: $input-border-width solid $input-border-color;
+        }
+    }
+
+    .#{$prefix}checkbox {
+        @extend %form-all;
+        @extend %form-radio;
+
+        &.circle {
+            &:before {
+                border-radius: 50%;
+            }
+
+            &:after {
+                top: $input-check-top-circle;
+                left: $input-check-left-circle;
+            }
+        }
+
+        &:before {
+            border-radius: $input-check-radius;
+        }
+
+        &:after {
+            width: $input-check-width;
+            height: $input-check-height;
+            top: $input-check-top;
+            left: $input-check-left;
+            transform: rotate(45deg);
+            border: $input-check-border-check solid #fff;
+            border-top: 0;
+            border-left: 0;
+        }
+
+        &:checked,
+        &.checked {
+            &:before {
+                background-color: $color-primary;
+            }
+        }
+    }
+
+
+    .#{$prefix}radio {
+        @extend %form-all;
+        @extend %form-radio;
+
+        line-height: $input-inline-size;
+
+        &:before {
+            border-radius: 50%;
+        }
+
+        &:after {
+            width: $input-radio-size;
+            height: $input-radio-size;
+            margin: auto;
+
+            @include absolute-align-center;
+            border-radius: 50%;
+            background-color: $color-primary;
+        }
+    }
+
+    .#{$prefix}switch {
+        @extend %form-all;
+
+        width: $input-switch-width;
+        height: $input-switch-height;
+        border-radius: $input-switch-height;
+        overflow: hidden;
+
+        &:before, &:after {
+            content: " ";
+            display: block;
+            overflow: hidden;
+            position: absolute;
+        }
+
+        &:before {
+            z-index: 2;
+            left: $input-switch-border;
+            @include vertical-align-center;
+            border-radius: 50%;
+            width: $input-switch-height - $input-switch-border * 2;
+            height: $input-switch-height - $input-switch-border * 2;
+            background-color: $input-switch-center;
+            box-shadow: 0 $input-shadow-vpos
+                          $input-shadow-blur
+                          rgba(0, 0, 0, $input-shadow-opacity),
+
+                        0 $input-shadow-base
+                          $input-shadow-base
+                          rgba(0, 0, 0, $input-shadow-opacity/2);
+
+            transition: 0.3s cubic-bezier(0, 1.1, 1, 1.1);
+            transition-property: background-color, transform;
+        }
+
+        &:after {
+            z-index: 1;
+            left: rem($input-switch-padding);
+            right: rem($input-switch-padding);
+            top: rem($input-switch-padding);
+            bottom: rem($input-switch-padding);
+            border-radius: $input-switch-height;
+            background-color: $input-switch-uncheck;
+
+            transition: 0.3s cubic-bezier(0, 1.1, 1, 1.1);
+            transition-property: background-color, border;
+        }
+
+        &:checked,
+        &.checked {
+            &:before {
+                transform: translate3d($input-switch-move, -50%, 0);
+            }
+
+            &:after {
+                border-color: $input-switch-back;
+                background-color: $input-switch-back;
+            }
+        }
+    }
+}
