@@ -52,8 +52,8 @@ $button-styles: (
     }
 }
 
-@mixin button-style($name, $bg, $text, $border, $active-bg, $active-border, $prefix: null) {
-    .#{$prefix}button-#{$name} {
+@mixin button-style($name, $bg, $text, $border, $active-bg, $active-border, $class: button, $prefix: null) {
+    .#{$prefix+$class}-#{$name} {
         @extend %button;
 
         color: $text;
@@ -66,25 +66,27 @@ $button-styles: (
             box-shadow: inset 0 1px 4px rgba(0,0,0,0.1);
         }
 
-        &.#{$prefix}button-clear {
+        &.#{$prefix+$class}-clear {
             color: $border !important;
         }
     }
 }
 
-@mixin button($prefix: $config-prefix) {
+@mixin button($class: button, $prefix: $config-prefix) {
     @each $style in map-keys($button-styles) {
-        $bg: map-val($button-styles, $style, "bg");
-        $text: map-val($button-styles, $style, "text");
-        $border: map-val($button-styles, $style, "border");
-        $active-bg: map-val($button-styles, $style, "active-bg");
-        $active-border: map-val($button-styles, $style, "active-border");
+        $vals: map-values(map-get($button-styles, $style));
 
-        @include button-style($style, $bg, $text,
-            $border, $active-bg, $active-border, $prefix);
+        $bg:                nth($vals, 1);
+        $text:              nth($vals, 2);
+        $border:            nth($vals, 3);
+        $active-bg:         nth($vals, 4);
+        $active-border:     nth($vals, 5);
+
+        @include button-style($style, $bg, $text, $border,
+            $active-bg, $active-border, $class, $prefix);
     }
 
-    @at-root { .#{$prefix}button {
+    @at-root { .#{$prefix+$class} {
         &-clear {
             padding: rem($button-border-width) rem($button-clear-padding);
 

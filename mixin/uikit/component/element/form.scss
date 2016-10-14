@@ -54,7 +54,7 @@
     }
 }
 
-@mixin form($prefix: $config-prefix) {
+@mixin form-base() {
     @at-root {
         input, button, select, textarea {
             font-size: rem($font-size-base);
@@ -83,8 +83,10 @@
             border: $input-border-width solid $input-border-color;
         }
     }
+}
 
-    .#{$prefix}checkbox {
+@mixin form-checkbox($class: checkbox, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
         @extend %form-all;
         @extend %form-radio;
 
@@ -121,9 +123,10 @@
             }
         }
     }
+}
 
-
-    .#{$prefix}radio {
+@mixin form-radio($class: radio, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
         @extend %form-all;
         @extend %form-radio;
 
@@ -143,8 +146,10 @@
             background-color: $color-primary;
         }
     }
+}
 
-    .#{$prefix}switch {
+@mixin form-switch($class: switch, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
         @extend %form-all;
 
         width: $input-switch-width;

@@ -1,3 +1,7 @@
 @include reset();
 @include button();
-@include form();
+
+@include form-base();
+@include form-radio();
+@include form-switch();
+@include form-checkbox();
