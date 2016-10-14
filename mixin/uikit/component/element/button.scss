@@ -86,7 +86,7 @@ $button-styles: (
 
     @at-root { .#{$prefix}button {
         &-clear {
-            padding: 0 rem($button-clear-padding);
+            padding: rem($button-border-width) rem($button-clear-padding);
 
             border-width: 0;
             background: none !important;
