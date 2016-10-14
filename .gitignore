@@ -6,3 +6,6 @@
 
 # 过滤 sass 编译生成的临时文件
 /.sass-cache
+
+# 过滤 项目 编译生成的临时文件
+/mixin/dist
