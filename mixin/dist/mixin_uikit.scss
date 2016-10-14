@@ -1,0 +1,780 @@
+// ========================================================
+// 常用工具样式
+// ========================================================
+
+
+// 文字超过指定行。。。显示
+@mixin text-ellipsis($line: 1) {
+    // $line: number
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @if $line > 1 {
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: $line;
+        -webkit-box-orient: vertical;
+    }
+}
+
+// 文字两端对齐
+@mixin text-justify() {
+    text-align: justify;
+    text-align-last: justify;
+}
+
+@mixin disabled($opacity: 0.3) {
+    cursor: default !important;
+    pointer-events: none;
+    opacity: $opacity;
+}
+
+// 设置文本不可选中
+@mixin user-select($value) {
+    -ms-user-select: $value;
+    -moz-user-select: $value;
+    -webkit-user-select: $value;
+    user-select: $value;
+}
+
+/*====================================================
+ * retina-border 视网膜屏下 border 生成代码
+ *====================================================*/
+$retina-pixel-ratio: 2 !default; // 缩放系数
+
+// 设置 retain 屏幕下的 边框颜色
+@mixin retina-border-color($color, $type: all, $after: false) {
+    $inset: before; @if $after == true { $inset: after; }
+
+    @each $pos in $type {
+        @if $pos == all {
+            @if $build-rem == true {
+                border-color: $color;
+            } @else {
+                &:#{$inset} {
+                    border-color: $color;
+                }
+            }
+        }@else {
+            @if $build-rem == true {
+                border-#{$pos}-color: $color;
+            } @else {
+                &:#{$inset} {
+                    border-#{$pos}-color: $color;
+                }
+            }
+        }
+    }
+}
+
+// 设置 retina 屏幕下的 边框大小
+@mixin retina-border-width($type, $size: 1px, $after: false) {
+    $inset: before; @if $after == true { $inset: after; }
+
+    @each $pos in $type {
+        @if $pos == all {
+            @if $build-rem == true {
+                border-width: $size;
+            } @else {
+                &:#{$inset} {
+                    border-width: $size;
+                }
+            }
+        }@else {
+            @if $build-rem == true {
+                border-#{$pos}-width: $size;
+            } @else {
+                &:#{$inset} {
+                    border-#{$pos}-width: $size;
+                }
+            }
+        }
+    }
+}
+
+// 设置 retina 屏幕下 边框圆角
+@mixin retina-border-radius($size: 1px, $type: all, $after: false) {
+    $inset: before; @if $after == true { $inset: after; }
+
+    @each $pos in $type {
+        @if $pos == all {
+            border-radius: $size;
+
+            @if $build-rem != 1 {
+                &:#{$inset} {
+                    border-radius: $size;
+
+                    @media (-webkit-min-device-pixel-ratio: $retina-pixel-ratio),
+                    (min-device-pixel-ratio: $retina-pixel-ratio) {
+                        border-radius: $size*2;
+                    }
+                }
+            }
+        }@else {
+            border-radius: $size;
+
+            @if $build-rem != 1 {
+                &:#{$inset} {
+                    border-#{$pos}-radius: $size;
+
+                    @media (-webkit-min-device-pixel-ratio: $retina-pixel-ratio),
+                    (min-device-pixel-ratio: $retina-pixel-ratio) {
+                        border-#{$pos}-radius: $size*2;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// retina 屏幕下 视网膜屏幕边框 核心代码
+@mixin retina-border-content($color, $radio: $retina-pixel-ratio) {
+    @if $build-rem == true {
+        border-color: $color;
+        border-style: solid;
+    } @else {
+        z-index: 1;
+        content: " ";
+        position: absolute;
+        border-style: solid;
+        border-color: $color;
+        border-width: 0;
+        width: 100%;
+        height: 100%;
+        left: 0; top: 0;
+        pointer-events: none;
+
+        @media (-webkit-min-device-pixel-ratio: $radio),
+                (min-device-pixel-ratio: $radio) {
+
+            left: -50%; top: -50%;
+            width: 200%; height: 200%;
+            transform: scale(.5, .5);
+        }
+    }
+}
+
+// 修复 retina 屏幕下 border 变宽的问题
+@mixin retina-border($type: all, $color: $border-default-color, $after: false) {
+    // $type: top | bottom
+    // $color: color
+    // $after: true | false  插入元素的伪类名
+
+    $inset: before; @if $after == true { $inset: after; }//
+
+    @include retina-border-content($color, $retina-pixel-ratio);
+
+    @if $build-rem == true {
+        @each $pos in $type {
+            @if $pos == all {
+                border-width: 1px;
+            }@else {
+                border-#{$pos}-width: 1px;
+            }
+        }
+    } @else {
+        &:#{$inset} {
+            @each $pos in $type {
+                @if $pos == all {
+                    border-width: 1px;
+                }@else {
+                    border-#{$pos}-width: 1px;
+                }
+            }
+        }
+    }
+}
+
+/*====================================================
+ *  media 屏幕尺寸自适应
+ *====================================================*/
+@mixin media-width($min: null, $max: null) {
+    @if $min != null and $max != null {
+        @media screen and (-webkit-min-device-pixel-ratio: 1)
+            and (min-width: $min) and (max-width: $max),
+        screen and (min-device-pixel-ratio: 1) and (min-width: $min)
+            and (max-width: $max),
+
+        screen and (-webkit-min-device-pixel-ratio: 2)
+            and (min-width: $min * 2) and (max-width: $max * 2),
+        screen and (min-device-pixel-ratio: 2) and (min-width: $min * 2)
+            and (max-width: $max * 2) {
+            @content;
+        }
+    } @else if $min != null and $max == null {
+        @media screen and (-webkit-min-device-pixel-ratio: 1)
+            and (min-width: $min),
+        screen and (min-device-pixel-ratio: 1) and (min-width: $min),
+
+        screen and (-webkit-min-device-pixel-ratio: 2)
+            and (min-width: $min * 2),
+        screen and (min-device-pixel-ratio: 2) and (min-width: $min * 2) {
+            @content;
+        }
+    } @else if $max !=null and $min == null {
+        @media screen and (-webkit-min-device-pixel-ratio: 1)
+            and (max-width: $max),
+        screen and (min-device-pixel-ratio: 1) and (max-width: $max),
+
+        screen and (-webkit-min-device-pixel-ratio: 2)
+            and (max-width: $max * 2),
+        screen and (min-device-pixel-ratio: 2) and (max-width: $max * 2) {
+            @content;
+        }
+    }
+}
+
+// css3 居中
+@mixin vertical-align-center() {
+    top: 50%;
+    transform: translateY(-50%);
+    transform-style: preserve-3d;
+}
+
+// css3 上下左右绝对居中
+@mixin absolute-align-center() {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transform-style: preserve-3d;
+}
+
+
+// Flex布局相关属性设置
+@mixin flex-align-center() {
+    justify-content: space-around;
+    align-items: center;
+}
+
+// 修复 flex 子对象不是 100% 高度
+@mixin flex-full-height() {
+    display: flex;
+    flex-direction: column;
+}
+
+// 类 button 组件基本样式
+@mixin button-appearance() {
+    position: relative;
+    display: inline-block;
+    z-index: $zindex-element;
+    cursor: pointer;
+
+    white-space: nowrap;
+    text-decoration: none;
+
+    text-align: center;
+    vertical-align: bottom;
+    -webkit-user-drag: none;
+    @include user-select(none);
+
+    // 添加一个隐藏的区域，增大按钮的点击面积
+    &:after {
+        position: absolute;
+        top: rem(-($padding-base / 2));
+        right: rem(-($padding-base / 2));
+        bottom: rem(-($padding-base / 2));
+        left: rem(-($padding-base / 2));
+
+        content: ' ';
+    }
+}
+// ========================================================
+// button 按钮UI生成器
+// ========================================================
+
+$button-styles: (
+    stable: (bg:            $button-stable-bg,
+             text:          $button-stable-text,
+             border:        $button-stable-border,
+             active-bg:     $button-stable-active-bg,
+             active-border: $button-stable-active-border),
+
+    primary:(bg:            $button-primary-bg,
+             text:          $button-primary-text,
+             border:        $button-primary-border,
+             active-bg:     $button-primary-active-bg,
+             active-border: $button-primary-active-border),
+
+    second: (bg:            $button-second-bg,
+             text:          $button-second-text,
+             border:        $button-second-border,
+             active-bg:     $button-second-active-bg,
+             active-border: $button-second-active-border),
+
+    danger: (bg:            $button-danger-bg,
+             text:          $button-danger-text,
+             border:        $button-danger-border,
+             active-bg:     $button-danger-active-bg,
+             active-border: $button-danger-active-border),
+) !default;
+
+%button {
+    @include button-appearance;
+
+    font-size: rem($button-font-size);
+    line-height: rem($button-height - $button-border-width * 2);
+
+    min-height: rem($button-height);
+    padding: 0 rem($button-padding);
+
+    border: $button-border-width solid $border-default-color;
+    border-radius: rem($button-border-radius);
+
+    // 添加一个隐藏的区域，增大按钮的点击面积
+    &:after {
+        position: absolute;
+        top: rem(-($button-padding / 2));
+        right: rem(-($button-padding / 2));
+        bottom: rem(-($button-padding / 2));
+        left: rem(-($button-padding / 2));
+
+        content: ' ';
+    }
+}
+
+@mixin button-style($name, $bg, $text, $border, $active-bg, $active-border, $prefix: null) {
+    .#{$prefix}button-#{$name} {
+        @extend %button;
+
+        color: $text;
+        background-color: $bg;
+        border-color: $border;
+
+        &.active {
+            border-color: $active-border;
+            background-color: $active-bg;
+            box-shadow: inset 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        &.#{$prefix}button-clear {
+            color: $border !important;
+        }
+    }
+}
+
+@mixin button($prefix: $config-prefix) {
+    @each $style in map-keys($button-styles) {
+        $bg: map-val($button-styles, $style, "bg");
+        $text: map-val($button-styles, $style, "text");
+        $border: map-val($button-styles, $style, "border");
+        $active-bg: map-val($button-styles, $style, "active-bg");
+        $active-border: map-val($button-styles, $style, "active-border");
+
+        @include button-style($style, $bg, $text,
+            $border, $active-bg, $active-border, $prefix);
+    }
+
+    @at-root { .#{$prefix}button {
+        &-clear {
+            padding: 0 rem($button-clear-padding);
+
+            border-width: 0;
+            background: none !important;
+            box-shadow: none !important;
+
+            transition: opacity .1s;
+
+            &.active,
+            &.activated {
+                opacity: $button-clear-active;
+            }
+        }
+
+        &-block {
+            display: block;
+
+            width: 100%;
+            min-height: rem($button-block-height);
+            line-height: rem($button-block-height - $button-border-width * 2);
+            margin-bottom: rem($margin-base);
+        }
+
+        &-small {
+            font-size: rem($button-small-font-size);
+            line-height: rem($button-small-height - $button-border-width * 2);
+
+            min-width: rem($button-small-height);
+            min-height: rem($button-small-height);
+            padding: rem(2px) rem($button-small-padding);
+
+            &:before {
+                font-size: rem($button-small-font-size);
+                line-height: rem($button-small-height - $button-border-width * 2) !important;
+            }
+        }
+
+        &-large {
+            font-size: rem($button-large-font-size);
+            line-height: rem($button-large-height - $button-border-width * 2);
+
+            min-width: rem(($button-large-padding * 3) + $button-large-font-size);
+            padding: 0 rem($button-large-padding);
+
+            &.icon-right:before {
+                font-size: rem($button-large-font-size);
+                line-height: rem($button-large-height - $button-border-width * 2);
+            }
+        }
+
+        &.disabled,
+        &[disabled] {
+            @include disabled($button-disable-opacity);
+        }
+    }}       
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ========================================================
+// 样式重置
+// ========================================================
+
+
+@mixin reset() {
+    html, body, div, span, applet, object, iframe,
+    h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+    a, abbr, acronym, address, big, cite, code,
+    del, dfn, em, img, ins, kbd, q, s, samp,
+    small, strike, strong, sub, sup, tt, var,
+    b, i, u, center,
+    dl, dt, dd, ol, ul, li,
+    fieldset, form, label, legend,
+    table, caption, tbody, tfoot, thead, tr, th, td,
+    article, aside, canvas, details, embed, fieldset,
+    figure, figcaption, footer, header, hgroup,
+    menu, nav, output, ruby, section, summary,
+    time, mark, audio, video {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        vertical-align: baseline;
+        font: inherit;
+        font-size: 100%;
+    }
+
+    ol, ul {
+        list-style: none;
+    }
+    blockquote, q {
+        quotes: none;
+    }
+    blockquote:before, blockquote:after,
+    q:before, q:after {
+        content: '';
+        content: none;
+    }
+
+    /**
+     * Prevent modern browsers from displaying `audio` without controls.
+     * Remove excess height in iOS 5 devices.
+     */
+
+    audio:not([controls]) {
+        display: none;
+        height: 0;
+    }
+
+    /**
+     * Hide the `template` element in IE, Safari, and Firefox < 22.
+     */
+
+    [hidden],
+    template {
+        display: none;
+    }
+
+    script {
+        display: none !important;
+    }
+
+    /* ==========================================================================
+       Base
+       ========================================================================== */
+
+    /* 1. Set default font family to sans-serif. */
+
+    html {
+        font-family: $font-family-base;
+        text-size-adjust: none;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-size: $font-size-base;
+        line-height: 1;
+    }
+
+    *, *:before, *:after {
+        box-sizing: border-box;
+
+        @if $config-user-select == false {
+            @include user-select(none);
+        }
+
+        @if $config-font-antialiased == true {
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        -webkit-tap-highlight-color: rgba(255,255,255,0);
+    }
+
+    a,
+    button,
+    :focus,
+    a:focus,
+    button:focus,
+    a:active,
+    a:hover {
+        outline: 0;
+    }
+
+    a {
+        -webkit-user-drag: none;
+
+        color: inherit;
+        text-decoration: none;
+
+        &[href]:hover {
+            cursor: pointer;
+        }
+    }
+
+    b,
+    strong {
+        font-weight: bold;
+    }
+
+    dfn {
+        font-style: italic;
+    }
+
+    hr {
+        height: 0;
+
+        box-sizing: content-box;
+    }
+
+
+    /**
+     * Correct font family set oddly in Safari 5 and Chrome.
+     */
+
+    code,
+    kbd,
+    pre,
+    samp {
+        font-size: 1em;
+        font-family: monospace, serif;
+    }
+
+    /**
+     * Improve readability of pre-formatted text in all browsers.
+     */
+
+    pre {
+        white-space: pre-wrap;
+    }
+
+    /**
+     * Set consistent quote types.
+     */
+
+    q {
+        quotes: "\201C" "\201D" "\2018" "\2019";
+    }
+
+    /**
+     * Address inconsistent and variable font size in all browsers.
+     */
+
+    small {
+        font-size: 80%;
+    }
+
+    /**
+     * Prevent `sub` and `sup` affecting `line-height` in all browsers.
+     */
+
+    sub,
+    sup {
+        position: relative;
+        vertical-align: baseline;
+        font-size: 75%;
+        line-height: 0;
+    }
+
+    sup {
+        top: -0.5em;
+    }
+
+    sub {
+        bottom: -0.25em;
+    }
+
+    /**
+     * Define consistent border, margin, and padding.
+     */
+
+    fieldset {
+        margin: 0 2px;
+        padding: 0.35em 0.625em 0.75em;
+        border: 1px solid #c0c0c0;
+    }
+
+    /**
+     * 1. Correct `color` not being inherited in IE 8/9.
+     * 2. Remove padding so people aren't caught out if they zero out fieldsets.
+     */
+
+    legend {
+        padding: 0; /* 2 */
+        border: 0; /* 1 */
+    }
+
+    /**
+     * 1. Correct font family not being inherited in all browsers.
+     * 2. Correct font size not being inherited in all browsers.
+     * 3. Address margins set differently in Firefox 4+, Safari 5, and Chrome.
+     * 4. Remove any default :focus styles
+     * 5. Make sure webkit font smoothing is being inherited
+     * 6. Remove default gradient in Android Firefox / FirefoxOS
+     */
+
+    button,
+    input,
+    select,
+    textarea {
+        margin: 0; /* 3 */
+        font-size: 100%; /* 2 */
+        font-family: inherit; /* 1 */
+        outline-offset: 0; /* 4 */
+        outline-style: none; /* 4 */
+        outline-width: 0; /* 4 */
+        -webkit-font-smoothing: inherit; /* 5 */
+        background-image: none; /* 6 */
+    }
+
+    /**
+     * Address Firefox 4+ setting `line-height` on `input` using `importnt` in
+     * the UA stylesheet.
+     */
+
+    button,
+    input {
+        line-height: normal;
+    }
+
+    /**
+     * Address inconsistent `text-transform` inheritance for `button` and `select`.
+     * All other form control elements do not inherit `text-transform` values.
+     * Correct `button` style inheritance in Chrome, Safari 5+, and IE 8+.
+     * Correct `select` style inheritance in Firefox 4+ and Opera.
+     */
+
+    button,
+    select {
+        text-transform: none;
+    }
+
+    /**
+     * 1. Avoid the WebKit bug in Android 4.0.* where (2) destroys native `audio`
+     *  and `video` controls.
+     * 2. Correct inability to style clickable `input` types in iOS.
+     * 3. Improve usability and consistency of cursor style between image-type
+     *  `input` and others.
+     */
+
+    button,
+    html input[type="button"], /* 1 */
+    input[type="reset"],
+    input[type="submit"] {
+        cursor: pointer; /* 3 */
+        -webkit-appearance: button; /* 2 */
+    }
+
+    /**
+     * Re-set default cursor for disabled elements.
+     */
+
+    button[disabled],
+    html input[disabled] {
+        cursor: default;
+    }
+
+    /**
+     * 1. Address `appearance` set to `searchfield` in Safari 5 and Chrome.
+     * 2. Address `box-sizing` set to `border-box` in Safari 5 and Chrome
+     *  (include `-moz` to future-proof).
+     */
+
+    input[type="search"] {
+        -webkit-appearance: textfield; /* 1 */
+
+        box-sizing: content-box; /* 2 */
+    }
+
+    /**
+     * Remove inner padding and search cancel button in Safari 5 and Chrome
+     * on OS X.
+     */
+
+    input[type="search"]::-webkit-search-cancel-button,
+    input[type="search"]::-webkit-search-decoration {
+        -webkit-appearance: none;
+    }
+
+    /**
+     * Remove inner padding and border in Firefox 4+.
+     */
+
+    button::-moz-focus-inner,
+    input::-moz-focus-inner {
+        padding: 0;
+        border: 0;
+    }
+
+    /**
+     * 1. Remove default vertical scrollbar in IE 8/9.
+     * 2. Improve readability and alignment in all browsers.
+     */
+
+    textarea {
+        overflow: auto; /* 1 */
+        vertical-align: top; /* 2 */
+    }
+
+
+    img {
+        -webkit-user-drag: none;
+    }
+
+    /* ==========================================================================
+       Tables
+       ========================================================================== */
+
+    /**
+     * Remove most spacing between table cells.
+     */
+    table {
+        border-spacing: 0;
+        border-collapse: collapse;
+    }
+
+    *, *:before, *:after {
+        box-sizing: border-box;
+    }
+}
+
+
+

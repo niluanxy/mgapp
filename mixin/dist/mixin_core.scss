@@ -1,0 +1,165 @@
+/*====================================================
+ * 全局属性配置
+ *====================================================*/
+
+// 表示编译为 REM 单位
+$config-build-rem:                  true !default;
+// 默认基本字体单位
+$config-build-rem-base:             20px !default;
+
+// 全局默认文字是否可选
+$config-user-select:                false !default;
+
+// 是否开启文字抗锯齿功能
+$config-font-antialiased:           true !default;
+
+// class 类前缀
+$config-prefix:                     "" !default;
+/*====================================================
+ * 全局底层函数方法
+ *====================================================*/
+
+
+/*====================================================
+ * Px 转换 Rem 工具方法，$base 默认采取系统设置值
+ *====================================================*/
+@function rem($px, $base: $config-build-rem-base) {
+    @if $config-build-rem == true {
+        @return ($px / $base) * 1rem;
+    } @else {
+        @return $px;
+    }
+}
+
+/*====================================================
+ * 二维集合中获取指定维的指定值
+ *====================================================*/
+@function map-val($maps, $key, $val) {
+    $values: map-get($maps, $key);
+
+    @return map-get($values, $val);
+}
+
+/*====================================================
+ * 颜色处理报错函数
+ *====================================================*/
+@function color-error($color-value) {
+    @error "The value `#{$color-value}` must be a color";
+
+    @return false;
+}
+
+/*====================================================
+ * 颜色变淡函数
+ *====================================================*/
+@function color-brightness($color-value) {
+    @if (type-of($color-value) != color) {
+        @return color-error($color-value);
+    }
+
+    @return (red($color-value) * .299 + green($color-value) * .587 + blue($color-value) * .114) / 255 * 100%;
+}
+
+/*====================================================
+ * 颜色加深函数
+ *====================================================*/
+@function color-inverse($color-value, $dark: #000, $light: #fff) {
+    @if (type-of($color-value) != color) {
+        @return color-error($color-value);
+    }
+
+    $brightness: color-brightness($color-value);
+    $red: red($color-value);
+    $green: green($color-value);
+
+    @if ($brightness > 79) {
+        @return $dark;
+    }
+
+    @if ($green > 240) {
+        @return $dark;
+    }
+
+    @if ($red > 220 and $green > 180) {
+        @return $dark;
+    }
+
+    @return $light;
+}
+
+/*========================================================
+ * 全局默认层级值
+ *=======================================================*/
+
+
+$zindex-element:                1 !default;
+$zindex-module:                 3 !default;
+$zindex-module-item:            4 !default;
+$zindex-view:                   5 !default;
+$zindex-bar:                    6 !default;
+/*========================================================
+ * 全局默认颜色值
+ *=======================================================*/
+
+// 忽略色，普通按钮颜色
+$color-stable:                          #f9fafc !default;
+// 主色调，默认按钮颜色
+$color-primary:                         #327eff !default;
+// 次色调，次按钮颜色
+$color-second:                          #32db64 !default;
+// 重要危险色调，重要按钮颜色
+$color-danger:                          #f53d3d !default;
+
+$color-dark:                            #222222 !default;
+$color-light:                           #f4f4f4 !default;
+
+$color-success:                         #13ce66 !default;
+$color-warning:                         #f7ba2a !default;
+$color-error:                           #ff4949 !default;
+/*========================================================
+ * 全局默认文字值
+ *=======================================================*/
+
+
+$font-family-base:              "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+$font-family-money:             "verdana" !default;
+
+
+$font-color-base:               #353535 !default;
+$font-color-money:              #e85920 !default;
+
+
+// 首要文字大小，比如主标题
+$font-size-large:               20px !default;
+// 次要文字大小，比如副标题
+$font-size-medium:              16px !default;
+// 默认文字大小，比如正文
+$font-size-base:                14px !default;
+// 辅助文字大小，比如提示信息，辅助文字
+$font-size-small:               12px !default; 
+
+/*========================================================
+ * 全局共用变量
+ *=======================================================*/
+
+
+$padding-base:                      6px !default;
+$padding-item-inset:                12px !default;
+$padding-large:                     10px !default;
+
+
+$margin-base:                       10px !default;
+$margin-block:                      20px !default;
+$margin-large:                      20px !default;
+
+
+$border-default-color:              #b2b2b2 !default
+$border-default:                    1px solid $border-default-color !default;
+
+
+$border-radius-base:                4px !default;
+$border-radius-large:               6px !default;
+$border-radius-small:               3px !default;
+
+
+$active-opacity:                    .3 !default;

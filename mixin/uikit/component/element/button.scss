@@ -2,9 +2,34 @@
 // button 按钮UI生成器
 // ========================================================
 
+$button-styles: (
+    stable: (bg:            $button-stable-bg,
+             text:          $button-stable-text,
+             border:        $button-stable-border,
+             active-bg:     $button-stable-active-bg,
+             active-border: $button-stable-active-border),
 
-%button() {
-    @extend button-appearance;
+    primary:(bg:            $button-primary-bg,
+             text:          $button-primary-text,
+             border:        $button-primary-border,
+             active-bg:     $button-primary-active-bg,
+             active-border: $button-primary-active-border),
+
+    second: (bg:            $button-second-bg,
+             text:          $button-second-text,
+             border:        $button-second-border,
+             active-bg:     $button-second-active-bg,
+             active-border: $button-second-active-border),
+
+    danger: (bg:            $button-danger-bg,
+             text:          $button-danger-text,
+             border:        $button-danger-border,
+             active-bg:     $button-danger-active-bg,
+             active-border: $button-danger-active-border),
+) !default;
+
+%button {
+    @include button-appearance;
 
     font-size: rem($button-font-size);
     line-height: rem($button-height - $button-border-width * 2);
@@ -27,15 +52,8 @@
     }
 }
 
-@mixin button-style($style, $prefix: null) {
-    
-    $bg:                $button-#{$style}-bg;
-    $text:              $button-#{$style}-text;
-    $border:            $button-#{$style}-border;
-    $active-bg:         $button-#{$style}-active-bg;
-    $active-border:     $button-#{$style}-active-border;
-
-    .#{$prefix}button-#{$style} {
+@mixin button-style($name, $bg, $text, $border, $active-bg, $active-border, $prefix: null) {
+    .#{$prefix}button-#{$name} {
         @extend %button;
 
         color: $text;
@@ -55,15 +73,21 @@
 }
 
 @mixin button($prefix: $config-prefix) {
-    @each $style in primary, second, danger, stable {
-        @include button-style($style, $prefix);
+    @each $style in map-keys($button-styles) {
+        $bg: map-val($button-styles, $style, "bg");
+        $text: map-val($button-styles, $style, "text");
+        $border: map-val($button-styles, $style, "border");
+        $active-bg: map-val($button-styles, $style, "active-bg");
+        $active-border: map-val($button-styles, $style, "active-border");
+
+        @include button-style($style, $bg, $text,
+            $border, $active-bg, $active-border, $prefix);
     }
 
     @at-root { .#{$prefix}button {
         &-clear {
             padding: 0 rem($button-clear-padding);
 
-            color: $button-default-text;
             border-width: 0;
             background: none !important;
             box-shadow: none !important;

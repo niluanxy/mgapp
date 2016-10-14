@@ -9,6 +9,8 @@
   "author": "木风 <smufeng@126.com>",
   "license": "MIT",
   "devDependencies": {
+    "colors": "^1.1.2",
+    "del": "^2.2.2",
     "fs": "^0.0.1-security",
     "gulp": "^3.9.0",
     "gulp-concat": "^2.6.0",
@@ -16,6 +18,7 @@
     "gulp-rename": "^1.2.2",
     "gulp-sass": "^2.3.0",
     "gulp-shell": "^0.5.2",
+    "moment": "^2.15.1",
     "q": "^1.4.1"
   }
 }
