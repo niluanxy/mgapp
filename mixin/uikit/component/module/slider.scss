@@ -6,10 +6,10 @@
     .#{$prefix+$class} {
         width: 100%;
         overflow: hidden;
+        font-size: 0;
         position: relative;
 
         .wrapper {
-            font-size: 0;
             display: table;
             width: 100%;
             position: relative;
@@ -32,7 +32,7 @@
                 width: 100%;
             }
 
-            .desc {
+            .slider-desc {
                 font-size: rem($slider-font-size);
             }
         }
