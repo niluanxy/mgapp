@@ -1,0 +1,28 @@
+// ========================================================
+// content 内容UI生成器
+// ========================================================
+
+%scroll {
+    display: block;
+    width: 100%;
+    z-index: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+@mixin scroll($class: scroll, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        @extend %scroll;
+
+        overflow-y: scroll;
+    }
+
+    .#{$prefix+$class}-x {
+        @extend %scroll;
+
+        overflow-x: scroll;
+        height: auto;
+        display: table;
+        white-space: nowrap;
+    }
+}

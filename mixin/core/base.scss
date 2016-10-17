@@ -7,6 +7,7 @@ $padding-base:                      6px !default;
 $padding-small:                     5px !default;
 $padding-item-inset:                12px !default;
 $padding-large:                     10px !default;
+$padding-large-horizontal:          12px !default;
 
 
 $margin-base:                       10px !default;
@@ -32,3 +33,6 @@ $line-height-base:                  1.428571429 !default; // 20/14
 $line-height-computed:              floor($font-size-base * $line-height-base) !default; // ~20px
 $line-height-large:                 1.5 !default;
 $line-height-small:                 1.33 !default;
+
+$block-header-height:               44px !default;
+$block-footer-height:               49px !default;

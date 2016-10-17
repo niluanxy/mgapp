@@ -49,7 +49,7 @@ $retina-pixel-ratio: 2 !default; // 缩放系数
 
     @each $pos in $type {
         @if $pos == all {
-            @if $build-rem == true {
+            @if $config-build-rem == true {
                 border-color: $color;
             } @else {
                 &:#{$inset} {
@@ -57,7 +57,7 @@ $retina-pixel-ratio: 2 !default; // 缩放系数
                 }
             }
         }@else {
-            @if $build-rem == true {
+            @if $config-build-rem == true {
                 border-#{$pos}-color: $color;
             } @else {
                 &:#{$inset} {
@@ -74,7 +74,7 @@ $retina-pixel-ratio: 2 !default; // 缩放系数
 
     @each $pos in $type {
         @if $pos == all {
-            @if $build-rem == true {
+            @if $config-build-rem == true {
                 border-width: $size;
             } @else {
                 &:#{$inset} {
@@ -82,7 +82,7 @@ $retina-pixel-ratio: 2 !default; // 缩放系数
                 }
             }
         }@else {
-            @if $build-rem == true {
+            @if $config-build-rem == true {
                 border-#{$pos}-width: $size;
             } @else {
                 &:#{$inset} {
@@ -101,7 +101,7 @@ $retina-pixel-ratio: 2 !default; // 缩放系数
         @if $pos == all {
             border-radius: $size;
 
-            @if $build-rem != 1 {
+            @if $config-build-rem != 1 {
                 &:#{$inset} {
                     border-radius: $size;
 
@@ -114,7 +114,7 @@ $retina-pixel-ratio: 2 !default; // 缩放系数
         }@else {
             border-radius: $size;
 
-            @if $build-rem != 1 {
+            @if $config-build-rem != 1 {
                 &:#{$inset} {
                     border-#{$pos}-radius: $size;
 
@@ -130,7 +130,7 @@ $retina-pixel-ratio: 2 !default; // 缩放系数
 
 // retina 屏幕下 视网膜屏幕边框 核心代码
 @mixin retina-border-content($color, $radio: $retina-pixel-ratio) {
-    @if $build-rem == true {
+    @if $config-build-rem == true {
         border-color: $color;
         border-style: solid;
     } @else {
@@ -165,7 +165,7 @@ $retina-pixel-ratio: 2 !default; // 缩放系数
 
     @include retina-border-content($color, $retina-pixel-ratio);
 
-    @if $build-rem == true {
+    @if $config-build-rem == true {
         @each $pos in $type {
             @if $pos == all {
                 border-width: 1px;

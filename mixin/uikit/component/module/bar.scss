@@ -1,0 +1,182 @@
+// ========================================================
+// bar 工具栏UI生成器
+// ========================================================
+
+
+$bar-styles: (
+    stable: (bg:            $bar-stable-bg,
+             text:          $bar-stable-text,
+             border:        $bar-stable-border),
+
+    primary:(bg:            $bar-primary-bg,
+             text:          $bar-primary-text,
+             border:        $bar-primary-border),
+
+    second: (bg:            $bar-second-bg,
+             text:          $bar-second-text,
+             border:        $bar-second-border),
+
+    danger: (bg:            $bar-danger-bg,
+             text:          $bar-danger-text,
+             border:        $bar-danger-border),
+) !default;
+
+
+%bar {
+    position: relative;
+    z-index: $zindex-bar;
+
+    overflow: hidden;
+    color: $bar-primary-text;
+
+    padding: rem($bar-padding-portrait);
+    text-align: center;
+    height: rem($bar-height);
+    background-size: 0;
+    background-color: $bar-primary-bg;
+
+    display: flex;
+    width: 100%;
+    user-select: none;
+    border-width: 0;
+    @include retina-border(bottom, $bar-primary-border);
+
+    .title {
+        position: absolute;
+        padding: 0 rem($bar-button-padding);
+        max-width: 80%;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        margin: 0 auto;
+        line-height: rem($bar-height - $bar-padding-portrait * 2);
+        font-size: rem($bar-title-font-size);
+        z-index: $zindex-module-item;
+        
+        @include text-ellipsis;
+        
+        &.title-left {
+            margin-left: 0;
+        }
+    }
+
+    .button {
+        @extend %button;
+    
+        border-width: 0;
+        color: $bar-primary-text;
+        font-size: rem($bar-title-font-size);
+        line-height: rem($bar-button-height);
+        
+        z-index: $zindex-module-item;
+        @include vertical-align-center;
+
+        min-height: rem($bar-button-height);
+        padding: 0 rem($bar-button-padding);
+
+        &:first-child, &:last-child {
+            position: absolute;
+        }
+
+        &:first-child {
+            left: rem($bar-padding-portrait);
+        }
+
+        &:last-child {
+            right: rem($bar-padding-portrait);
+        }
+        
+        &:after {
+            height: rem($bar-height);
+            top: rem(-($button-padding / 2 + 1));
+        }
+    
+        &:before,
+        .icon:before {
+            font-size: rem($bar-button-icon-size);
+            line-height: rem($bar-button-height);
+        }
+        
+        &.button-clear:before {
+            padding: 0;
+            font-size: rem($bar-button-icon-clear-size);
+        }
+
+        &.#{$class-active} {
+            opacity: $active-opacity;
+        }
+    }
+}
+
+// 用于生成 工具栏 样式
+@mixin bar-style($style, $bg-color, $text-color, $border-color, $class: bar, $prefix: $config-prefix) {
+    // $style: 主题的名称
+    // $bg-color: 背景色
+    // $text-color: 内容的字体颜色
+    // $border-color: 边框色
+    
+    .#{$prefix+$class}-#{$style} {
+        @extend %bar;
+
+        color: $text-color;
+        background-color: $bg-color;
+        background-image: linear-gradient(0deg, $border-color, $border-color 50%, transparent 50%);
+
+        .title {
+            color: $text-color;
+        }
+
+        &.bar-footer {
+            background-image: linear-gradient(180deg, $border-color, $border-color 50%, transparent 50%);
+        }
+
+        @include retina-border-color($border-color);
+
+        .button {
+            color: $text-color;
+        }
+    }
+}
+
+@mixin bar($class: bar, $prefix: $config-prefix) {
+    @each $style in map-keys($bar-styles) {
+        $vals: map-values(map-get($bar-styles, $style));
+
+        $bg:                nth($vals, 1);
+        $text:              nth($vals, 2);
+        $border:            nth($vals, 3);
+
+        @include bar-style($style, $bg, $text, $border, $class, $prefix);
+    }
+
+    @at-root {
+        .#{$prefix+$class}-header {
+            top: 0;
+
+            & + .content {
+                top: rem($bar-height);
+            }
+        }
+
+        .#{$prefix+$class}-footer {
+            bottom: 0;
+            height: rem($bar-foot-height);
+            line-height: rem($bar-foot-height);
+            position: absolute;
+
+            background-position: top;
+
+            @include retina-border-width(top);
+            @include retina-border-width(bottom, 0);
+
+            .button {
+                line-height: rem($bar-button-foot-height);
+                min-height: rem($bar-button-foot-height);
+
+                &:after {
+                    height: rem($bar-foot-height);
+                }
+            }
+        }
+    }
+}

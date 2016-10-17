@@ -1,0 +1,44 @@
+// ========================================================
+// form 表单元素UI
+// ========================================================
+
+
+@mixin tip($class: tip, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        display: inline-block;
+        position: absolute;
+        color: $tip-text-color;
+        fill: #ffffff;
+        word-break: break-all;
+        @include absolute-align-center;
+        border-radius: $tip-border-radius;
+        padding: rem($tip-padding-vertical) rem($tip-padding-horizontal);
+        background-color: $tip-back-color;
+
+        .text {
+            font-size: 1.2em;
+            line-height: 1.5;
+        }
+
+        .icon {
+            width: rem($tip-icon-size);
+            height: rem($tip-icon-size);
+            margin: 0 auto;
+            display: block;
+            fill: #ffffff;
+            background-size: 100% 100%;
+
+            &.loading {
+                background-image: url($tip-svg-loading);
+            }
+
+            &.success {
+                background-image: url($tip-svg-success);
+            }
+
+            &.error {
+                background-image: url($tip-svg-error);
+            }
+        }
+    }
+}

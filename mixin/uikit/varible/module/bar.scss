@@ -1,0 +1,37 @@
+// ========================================================
+// bar 工具栏默认变量
+// ========================================================
+
+
+$bar-height:                      $block-header-height !default;
+$bar-foot-height:                 $block-footer-height !default;
+$bar-foot-plus:                   $bar-foot-height - $bar-height !default;
+
+$bar-title-font-size:             16px !default;
+$bar-padding-left:                35px !default;
+$bar-padding-portrait:            5px !default;
+$bar-padding-landscape:           5px !default;
+$bar-inline-height:               $bar-height - $bar-padding-portrait*2 !default;   
+$bar-transparency:                1 !default;
+
+$bar-button-height:               32px !default;
+$bar-button-foot-height:          $bar-button-height + $bar-foot-plus !default;
+$bar-button-padding:              8px !default;
+$bar-button-icon-size:            20px !default;
+$bar-button-icon-clear-size:      24px !default;
+
+$bar-stable-bg:                   rgba($color-stable, $bar-transparency) !default;
+$bar-stable-text:                 #444 !default;
+$bar-stable-border:               #b2b2b2 !default;
+
+$bar-primary-bg:                  $color-primary !default;
+$bar-primary-text:                #fff !default;
+$bar-primary-border:              darken($color-primary, 15%) !default;
+
+$bar-second-bg:                   $color-second !default;
+$bar-second-text:                 #fff !default;
+$bar-second-border:               darken($color-second, 5%) !default;
+
+$bar-danger-bg:                   $color-danger !default;
+$bar-danger-text:                 #fff !default;
+$bar-danger-border:               darken($color-danger, 10%) !default;

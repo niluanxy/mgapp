@@ -52,15 +52,15 @@ $button-styles: (
     }
 }
 
-@mixin button-style($name, $bg, $text, $border, $active-bg, $active-border, $class: button, $prefix: null) {
-    .#{$prefix+$class}-#{$name} {
+@mixin button-style($style, $bg, $text, $border, $active-bg, $active-border, $class: button, $prefix: $config-prefix) {
+    .#{$prefix+$class}-#{$style} {
         @extend %button;
 
         color: $text;
         background-color: $bg;
         border-color: $border;
 
-        &.active {
+        &.#{$class-active} {
             border-color: $active-border;
             background-color: $active-bg;
             box-shadow: inset 0 1px 4px rgba(0,0,0,0.1);
@@ -96,8 +96,7 @@ $button-styles: (
 
             transition: opacity .1s;
 
-            &.active,
-            &.activated {
+            &.#{$class-active} {
                 opacity: $button-clear-active;
             }
         }
@@ -138,8 +137,8 @@ $button-styles: (
             }
         }
 
-        &.disabled,
-        &[disabled] {
+        &.#{$class-disable},
+        &[#{$class-disable}] {
             @include disabled($button-disable-opacity);
         }
     }}       

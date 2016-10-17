@@ -1,0 +1,64 @@
+// ========================================================
+// slider 轮播组件
+// ========================================================
+
+@mixin slider($class: slider, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+
+        .wrapper {
+            font-size: 0;
+            display: table;
+            width: 100%;
+            position: relative;
+            white-space: nowrap;
+
+            &.init .slider-item {
+                display: inline-block;
+            }
+        }
+
+        .slider-item {
+            display: none;
+            width: 100%;
+
+            &:first-child {
+                display: inline-block;
+            }
+
+            img {
+                width: 100%;
+            }
+
+            .desc {
+                font-size: rem($slider-font-size);
+            }
+        }
+
+        .points {
+            z-index: 1;
+            text-align: center;
+            width: 100%;
+            bottom: 0;
+            display: table;
+            height: rem($slider-points-height);
+            padding: rem(($slider-points-height - $slider-points-size) / 2) 0;
+            position: absolute;
+
+            .point-item {
+                margin: 0 rem($slider-points-margin);
+                background-color: rgba(0, 0, 0, $slider-points-opacity);
+                display: inline-block;
+                width: rem($slider-points-size);
+                height: rem($slider-points-size);
+                border-radius: 50%;
+
+                &.#{$class-active} {
+                    background-color: $slider-points-active;
+                }
+            }
+        }
+    }
+}
