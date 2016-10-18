@@ -1,0 +1,192 @@
+// ========================================================
+// tab UI生成器
+// ========================================================
+
+
+$tabs-styles: (
+    stable: (bg:            $tabs-stable-bg,
+             text:          $tabs-stable-text,
+             border:        $tabs-stable-border,
+             active-text:   $tabs-stable-active-text,
+             striped-bg:    $tabs-stable-striped-bg),
+
+    primary:(bg:            $tabs-primary-bg,
+             text:          $tabs-primary-text,
+             border:        $tabs-primary-border,
+             active-text:   $tabs-primary-active-text,
+             striped-bg:    $tabs-primary-striped-bg),
+
+    second: (bg:            $tabs-second-bg,
+             text:          $tabs-second-text,
+             border:        $tabs-second-border,
+             active-text:   $tabs-second-active-text,
+             striped-bg:    $tabs-second-striped-bg),
+
+    danger: (bg:            $tabs-danger-bg,
+             text:          $tabs-danger-text,
+             border:        $tabs-danger-border,
+             active-text:   $tabs-danger-active-text,
+             striped-bg:    $tabs-danger-striped-bg),
+) !default;
+
+
+@mixin tabs-style($style, $bg-color, $text, $border-color,
+    $active-text, $striped-bg, $class: tabs, $prefix: $config-prefix) {
+
+    .#{$prefix+$class}-#{$style} {
+        @extend %tabs;
+
+        color: $text;
+        background-color: $bg-color;
+        background-image: linear-gradient(0deg, $border-color, $border-color 50%, transparent 50%);
+
+        // 设置视网膜屏幕下得上下border颜色
+        @include retina-border-color($border-color);
+
+        .#{$prefix+$class}-item {
+            @extend %tabs-item;
+
+            color: $text;
+            background-color: $bg-color;
+
+            &.#{$class-active} {
+                color: $active-text;
+
+                &:before {
+                    background-color: $striped-bg !important;
+                }
+            }
+        }
+
+        &.#{$prefix+$class}-striped, &.#{$prefix+$class}-striped-top {
+            .#{$prefix+$class}-item.#{$class-active} {
+                color: $text;
+
+                &:before {
+                    background-color: $striped-bg !important;
+                }
+            }
+        }
+    }
+}
+
+%tabs {
+    line-height: rem($tabs-height);
+
+    z-index: $zindex-module;
+
+    color: $tabs-primary-text;
+    display: flex;
+    flex-direction: row;
+    position: relative;
+
+    width: 100%;
+    height: rem($tabs-height);
+
+    text-align: center;
+    background-size: 0;
+    background-color: $tabs-primary-bg;
+
+    @include retina-border(bottom, $tabs-primary-border);
+
+    .icon {
+        display: block;
+        font-size: rem($tabs-icon-size);
+        height: rem($tabs-icon-size);
+    }
+}
+
+%tabs-item {
+    display: block;
+    flex: 1;
+    opacity: 1;
+    z-index: $zindex-module-item;
+    font-size: rem($tabs-text-font-size);
+    
+    @include button-like();
+
+    &.#{$class-disable},
+    &[#{$class-disable}] {
+        opacity: .4;
+        cursor: default;
+        @include pointer-events(none);
+    }
+}
+
+@mixin tabs($class: tabs, $prefix: $config-prefix) { 
+   @each $style in map-keys($tabs-styles) {
+        $vals: map-values(map-get($tabs-styles, $style));
+
+        $bg:                nth($vals, 1);
+        $text:              nth($vals, 2);
+        $border:            nth($vals, 3);
+        $active-text:       nth($vals, 4);
+        $striped-bg:        nth($vals, 5);
+
+        @include tabs-style($style, $bg, $text, $border,
+            $active-text, $striped-bg, $class, $prefix);
+    }
+
+    @at-root { .#{$prefix+$class} {
+        &-icon {
+            .tab-item {
+                padding-top: rem($tabs-padding);
+                font-size: rem($tabs-text-font-size-side-icon);
+                line-height: rem($tabs-text-font-size);
+            }
+        }
+
+        &-icon-only {
+            .icon {
+                height: 100%;
+                line-height: inherit;
+                font-size: rem($tabs-icon-size-only);
+            }
+        }
+
+        &-header,
+        &-footer {
+            position: absolute;
+            left: 0; right: 0;
+        }
+
+        &.border-bottom,
+        &-header {
+            @include retina-border-width(top, 0);
+            @include retina-border-width(bottom);
+        }
+
+        &-header {
+            top: 0;
+        }
+
+        &-footer {
+            bottom: 0;
+        }
+
+        &-striped, &-striped-top {
+            .#{$prefix+$class}-item.#{$class-active}:before {
+                position: absolute;
+                left: 50%;
+                bottom: 0;
+                transform: translate(-50%, 0);
+                content: ' ';
+                width: $tabs-striped-width;
+                height: rem($tabs-striped-height);
+                background-color: $tabs-primary-text;
+            }
+        }
+
+        &-striped {
+            .#{$prefix+$class}-item.#{$class-active}:before {
+                bottom: 0;
+            }
+        }
+
+        &-striped-top {
+            .#{$prefix+$class}-item.#{$class-active}:before {
+                top: 0;
+            }
+        }
+    }}
+}

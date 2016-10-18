@@ -149,8 +149,8 @@ $bar-styles: (
         @include bar-style($style, $bg, $text, $border, $class, $prefix);
     }
 
-    @at-root {
-        .#{$prefix+$class}-header {
+    @at-root { .#{$prefix+$class} {
+        &-header {
             top: 0;
 
             & + .content {
@@ -158,7 +158,7 @@ $bar-styles: (
             }
         }
 
-        .#{$prefix+$class}-footer {
+        &-footer {
             bottom: 0;
             height: rem($bar-foot-height);
             line-height: rem($bar-foot-height);
@@ -178,5 +178,5 @@ $bar-styles: (
                 }
             }
         }
-    }
+    }}
 }

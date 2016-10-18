@@ -38,6 +38,17 @@
     user-select: $value;
 }
 
+@mixin user-drag($value) {
+    -ms-user-drag: $value;
+    -moz-user-drag: $value;
+    -webkit-user-drag: $value;
+}
+
+@mixin pointer-events($value) {
+    -webkit-user-drag: $value;
+    pointer-events: $value;
+}
+
 /*====================================================
  * retina-border 视网膜屏下 border 生成代码
  *====================================================*/
@@ -254,19 +265,22 @@ $retina-pixel-ratio: 2 !default; // 缩放系数
 }
 
 // 类 button 组件基本样式
-@mixin button-appearance() {
-    position: relative;
-    display: inline-block;
-    z-index: $zindex-element;
+@mixin button-like() {
     cursor: pointer;
-
+    position: relative;
     white-space: nowrap;
     text-decoration: none;
-
     text-align: center;
     vertical-align: bottom;
-    -webkit-user-drag: none;
+    @include user-drag(none);
     @include user-select(none);
+}
+
+// button 组件基本样式
+@mixin button-appearance() {
+    @include button-like();
+    display: inline-block;
+    z-index: $zindex-element;    
 
     // 添加一个隐藏的区域，增大按钮的点击面积
     &:after {

@@ -1,0 +1,39 @@
+// ========================================================
+// tab UI默认变量
+// ========================================================
+
+
+$tabs-height:                     $block-footer-height !default;
+$tabs-padding:                     2px !default;
+$tabs-text-font-size:             14px !default;
+$tabs-text-font-size-side-icon:   12px !default;
+
+$tabs-icon-size:                  28px !default;
+$tabs-icon-size-only:             28px !default;
+
+$tabs-striped-height:              3px !default;
+$tabs-striped-width:               70% !default;
+
+$tabs-stable-bg:                  $color-stable !default;
+$tabs-stable-text:                #444 !default;
+$tabs-stable-border:              #b2b2b2 !default;
+$tabs-stable-active-text:         #e5e5e5 !default;
+$tabs-stable-striped-bg:          #a2a2a2 !default;
+
+$tabs-primary-bg:                 $color-primary !default;
+$tabs-primary-text:               #fff !default;
+$tabs-primary-border:             darken($color-primary, 15%) !default;
+$tabs-primary-active-text:        darken($color-primary, 15%) !default;
+$tabs-primary-striped-bg:         darken($color-primary, 15%) !default;
+
+$tabs-second-bg:                  $color-second !default;
+$tabs-second-text:                #fff !default;
+$tabs-second-border:              darken($color-second, 5%) !default;
+$tabs-second-active-text:         darken($color-second, 5%) !default;
+$tabs-second-striped-bg:          darken($color-second, 5%) !default;
+
+$tabs-danger-bg:                  $color-danger !default;
+$tabs-danger-text:                #fff !default;
+$tabs-danger-border:              darken($color-danger, 10%) !default;
+$tabs-danger-active-text:         darken($color-danger, 10%) !default;
+$tabs-danger-striped-bg:          darken($color-danger, 10%) !default;
