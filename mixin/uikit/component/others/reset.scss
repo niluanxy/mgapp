@@ -47,10 +47,6 @@
         height: 0;
     }
 
-    /**
-     * Hide the `template` element in IE, Safari, and Firefox < 22.
-     */
-
     [hidden],
     template {
         display: none;
@@ -60,13 +56,11 @@
         display: none !important;
     }
 
-    /* ==========================================================================
-       Base
-       ========================================================================== */
-
-    /* 1. Set default font family to sans-serif. */
-
     html {
+        @if ($config-build-rem == true) {
+            font-size: $config-build-rem-base;
+        }
+
         font-family: $font-family-base;
         text-size-adjust: none;
     }
