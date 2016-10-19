@@ -1,0 +1,69 @@
+// ========================================================
+// flex 布局功能
+// ========================================================
+
+%flex {
+    display: flex;
+    flex-direction: row;
+
+    /* 元素对其方式 */
+    &.align-start {
+        justify-content: flex-start;
+    }
+
+    &.align-center {
+        justify-content: center;
+    }
+
+    &.align-end {
+        justify-content: flex-end;
+    }
+
+    >*, .flex-item {
+        flex: 0 0 auto;
+
+        @for $space from 1 through 8 {
+            /* 默认的横向栅格布局 */
+            &.flex-#{$space} {
+                flex: $space 1 0;
+            }
+        }
+    }
+
+    .flex-main {
+        flex: 1;
+    }
+}
+
+@mixin flex($class: flex, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        &, &-col, &-row, &-split {
+            @extend %flex;
+        }
+
+        &-split {
+            >*, &.#{$prefix+$class}-item {
+                flex: 1;
+            }
+        }
+
+        &-wrap {
+            flex-wrap: wrap;
+        }
+
+        &-col {
+            flex-direction: column;
+        }
+
+        &-row {
+            flex-wrap: nowrap;
+            flex-direction: row;
+        }
+
+        &-inline {
+            display: inline-flex;
+        }
+
+        @content;   // 样式自定义扩展代码位置
+    }
+}

@@ -40,5 +40,7 @@
                 background-image: url($tip-svg-error);
             }
         }
+
+        @content;   // 样式自定义扩展代码位置
     }
 }

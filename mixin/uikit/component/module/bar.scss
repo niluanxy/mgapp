@@ -135,6 +135,8 @@ $bar-styles: (
         .button {
             color: $text-color;
         }
+
+        @content;   // 样式自定义扩展代码位置
     }
 }
 

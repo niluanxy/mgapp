@@ -122,6 +122,8 @@
                 background-color: $color-primary;
             }
         }
+
+        @content;   // 样式自定义扩展代码位置
     }
 }
 
@@ -145,6 +147,8 @@
             border-radius: 50%;
             background-color: $color-primary;
         }
+
+        @content;   // 样式自定义扩展代码位置
     }
 }
 
@@ -208,5 +212,7 @@
                 background-color: $input-switch-back;
             }
         }
+
+        @content;   // 样式自定义扩展代码位置
     }
 }
