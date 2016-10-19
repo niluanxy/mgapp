@@ -1,0 +1,330 @@
+// ========================================================
+// list 列表元素UI
+// ========================================================
+
+
+@mixin list-embed-all($class: list, $prefix: $config-prefix) {
+    @at-root {
+        .#{$prefix+$class}.embed .#{$prefix+$class}-item,
+        .#{$prefix+$class}.embed-left .#{$prefix+$class}-item,
+        .#{$prefix+$class}-item.embed {
+            @content;
+        }
+    } 
+}
+
+@mixin list-embed-item($class: list, $prefix: $config-prefix) {
+    @at-root {
+        .#{$prefix+$class}.embed .#{$prefix+$class}-item,
+        .#{$prefix+$class}-item.embed {
+            @content;
+        }
+    }
+}
+
+@mixin list($class: list, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        display: block;
+        overflow: hidden;
+        color: $list-item-default-text;
+        position: relative;
+        margin-bottom: rem($list-margin-bottom);
+        background-color: $list-item-default-bg;
+        @include retina-border(top bottom, $list-item-default-border);
+
+        &.list-inset {
+            @include retina-border-width(all);
+            @include retina-border-radius($list-border-radius);
+        }
+
+        &.embed {
+            padding: 0 rem($list-item-padding);
+
+            .#{$prefix+$class}-item {
+                padding: rem($list-item-padding) 0;
+
+                &.item-inline {
+                    padding: rem($list-item-padding/3) 0;
+                }
+            }
+        }
+
+        &.embed-left {
+            .#{$prefix+$class}-item {
+                padding-left: 0;
+                margin-left: rem($list-item-padding);
+            }
+        }
+
+        &-item {
+            display: block;
+            position: relative;
+            z-index: $zindex-module-item;
+
+            line-height: rem($list-item-line-height);
+            min-height: rem($list-item-height);
+
+            font-size: rem($list-item-font-size);
+            padding: rem($list-item-padding);
+            @include retina-border(bottom, $list-item-default-border);
+
+            &:last-child {
+                @include retina-border-width(bottom, 0);
+            }
+
+            &.inline {
+                padding: rem($list-item-padding/3) rem($list-item-padding);
+                min-height: rem($list-item-padding/3 + $list-item-line-height);
+                border-bottom-width: 0;
+            }
+
+            &.inline-first {
+                margin-top: rem($list-item-padding/3*1.5);
+            }
+
+            &.inline-last {
+                margin-bottom: rem($list-item-padding/3*1.5);
+            }
+
+            &.embed {
+                margin-left: rem($list-item-padding);
+                margin-right: rem($list-item-padding);
+
+                padding-left: 0;
+                padding-right: 0;
+            }
+
+            .icon, .icon-left,  {
+                color: $list-item-icon-color;
+
+                &:before {
+                    font-size: rem($list-item-icon-right-font-size);
+                    margin-top: rem($list-item-icon-fix);
+                }
+            }
+
+            /*====================================================
+             * item-input 相关代码
+             *====================================================*/
+            &.input {
+                padding: rem($list-item-inset-top-padding) rem($list-item-padding);
+
+                input {
+                    font-size: inherit;
+                }
+
+                &.embed {
+                    padding-right: 0;
+                }
+            }
+
+            /*====================================================
+             * item-avatar 相关代码
+             *====================================================*/
+            &.avatar,
+            &.avatar-large {
+                .avatar {
+                    border-radius: $list-border-radius;
+                    position: absolute;
+                    top: rem($list-item-padding);
+                    left: rem($list-item-padding);
+                    bottom: rem($list-item-padding);
+
+                    img {
+                        width: 100%;
+                        height: 100%;
+                    }
+                }
+
+                .line {
+                    @include text-ellipsis();
+                    position: relative;
+
+                    &:first-of-type {
+                        top: rem(-$list-item-avatar-fix);
+                    }
+
+                    &:last-of-type {
+                        bottom: rem(-$list-item-avatar-fix);
+                    }
+                }
+            }
+
+            &.avatar {
+                min-height: rem($list-item-padding*2 + $list-item-avatar);
+                padding-left: rem($list-item-padding*2 + $list-item-avatar);
+
+                .avatar {
+                    width: rem($list-item-avatar);
+                    height: rem($list-item-avatar);
+                }
+
+                .line {
+                    line-height: rem($list-item-avatar/2);
+                }
+            }
+
+            &.avatar-large {
+                min-height: rem($list-item-padding*2 + $list-item-avatar-large);
+                padding-left: rem($list-item-padding*2 + $list-item-avatar-large);
+
+                .avatar {
+                    width: rem($list-item-avatar-large);
+                    height: rem($list-item-avatar-large);
+                }
+
+                .line {
+                    line-height: rem($list-item-avatar-large/3);
+                }
+            }
+
+            @include list-embed-all() {
+                &.avatar,
+                &.avatar-large {
+                    .avatar {
+                        left: 0;
+                    }
+                }
+
+                &.avatar {
+                    padding-left: rem($list-item-padding + $list-item-avatar);
+                }
+
+                &.avatar-large {
+                    padding-left: rem($list-item-padding + $list-item-avatar-large);
+                }
+            }
+
+            /*====================================================
+             * label-left,icon-left 公用 相关代码
+             *====================================================*/
+            &.label-left .label-left,
+            &.icon-left .icon-left,
+            &.icon-left .icon-small {
+                position: absolute;
+                left: rem($list-item-padding);
+                top:50%;
+                transform: translate(0,-50%);
+            }
+
+            @include list-embed-all() {
+                &.label-left .label,
+                &.label-left .label-left,
+                &.icon-left .icon,
+                &.icon-left .icon-left,
+                &.icon-left .icon-small {
+                    left: 0;
+                }
+            }
+
+            /*====================================================
+             * label-left 相关代码
+             *====================================================*/
+            &.label-left {
+                padding-left: rem($list-item-inset-left-padding);
+
+                .label, .label-left {
+                    display: block;
+                    width: rem($list-item-inset-left-padding - $list-item-padding);
+                    min-height: rem($list-item-line-height);
+                    line-height: rem($list-item-line-height);
+                }
+            }
+
+            /*====================================================
+             * icon-left 相关代码
+             *====================================================*/
+            &.icon-left {
+                padding-left: rem($list-item-icon-padding);
+
+                &.label-left {
+                    padding-left: rem($list-item-icon-label-padding);
+
+                    .label, .label-left {
+                        left: rem($list-item-icon-label-left);
+                    }
+                }
+            }
+
+
+            /*====================================================
+             * icon-right,item-button-right 公用 相关代码
+             *====================================================*/
+            &.icon-right .icon,
+            &.icon-right .icon-right,
+            &.label-right .label,
+            &.label-right .label-right,
+            &.button-right .button,
+            &.button-right [class^="button-"],
+            &.button-right .button-right {
+                position: absolute;
+                right: rem($list-item-padding);
+                top:50%;
+                transform: translate(0,-50%);
+            }
+
+            @include list-embed-item() {
+                &.icon-right .icon,
+                &.icon-right .icon-right,
+                &.label-right .label,
+                &.label-right .label-right,
+                &.button-right .button,
+                &.button-right [class^="button-"],
+                &.button-right .button-right {
+                    right: 0;
+                }
+            }
+
+
+            /*====================================================
+             * icon-right 相关代码
+             *====================================================*/
+            &.icon-right {
+                padding-right: rem($list-item-icon-right-padding);
+                
+                .icon:before,
+                .icon-right:before {
+                    font-size: rem($list-item-icon-right-font-size);
+                }
+            }
+
+            /*====================================================
+             * label-right 相关代码
+             *====================================================*/
+            &.icon-right {
+                .label,
+                .label-right {
+                    right: rem($list-item-padding + $list-item-label-right-padding);
+                }
+
+                &.embed .label,
+                &.embed .label-right {
+                    right: rem($list-item-label-right-padding);
+                    line-height: rem($list-item-line-height);
+                }
+            }
+
+
+            /*====================================================
+             * item-button-right 相关代码
+             *====================================================*/
+            &.button-right {
+                padding-right: rem($list-item-inset-left-padding);
+
+                .button,
+                [class^="button-"],
+                .button-right {
+                    font-size: rem($list-item-button-font-size);
+                    padding: 0 rem($list-item-button-padding);
+                    line-height: rem($list-item-button-height);
+                    min-height: rem($list-item-button-height);
+
+                    &.button-clear {
+                        padding: 0;
+                        font-size: rem($list-item-font-size);
+                    }
+                }
+            }
+        }
+    }
+}

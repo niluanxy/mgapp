@@ -25,9 +25,8 @@ $border-radius-base:                4px !default;
 $border-radius-large:               6px !default;
 $border-radius-small:               3px !default;
 
-
 $active-opacity:                    .3 !default;
-
+$background-color:                  #fff !default;
 
 $line-height-base:                  1.428571429 !default; // 20/14
 $line-height-computed:              floor($font-size-base * $line-height-base) !default; // ~20px

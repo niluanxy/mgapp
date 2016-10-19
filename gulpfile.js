@@ -62,7 +62,8 @@ function task_concat_mixin() {
         .pipe(gulp.dest(DIST_MIXIN))
         .on("finish", function() { defer_uikit.resolve(); })
 
-        gulp.src(DIR_MIXIN+"uikit/varible/**/*.scss")
+        gulp.src([DIR_MIXIN+"uikit/varible/element/button.scss",
+            DIR_MIXIN+"uikit/varible/**/*.scss"])
         .pipe(concat("mixin_vars.scss"))
         .pipe(gulp.dest(DIST_MIXIN))
         .on("finish", function() { defer_vars.resolve(); })
