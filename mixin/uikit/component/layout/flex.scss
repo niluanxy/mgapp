@@ -2,6 +2,7 @@
 // flex 布局功能
 // ========================================================
 
+
 %flex {
     display: flex;
     flex-direction: row;
@@ -18,30 +19,20 @@
     &.align-end {
         justify-content: flex-end;
     }
-
-    >*, .flex-item {
-        flex: 0 0 auto;
-
-        @for $space from 1 through 8 {
-            /* 默认的横向栅格布局 */
-            &.flex-#{$space} {
-                flex: $space 1 0;
-            }
-        }
-    }
-
+    
     .flex-main {
         flex: 1;
     }
 }
 
+
 @mixin flex($class: flex, $prefix: $config-prefix) {
     .#{$prefix+$class} {
-        &, &-col, &-row, &-split {
-            @extend %flex;
-        }
+        @extend %flex;
 
         &-split {
+            @extend %flex;
+
             >*, &.#{$prefix+$class}-item {
                 flex: 1;
             }
@@ -52,10 +43,12 @@
         }
 
         &-col {
+            @extend %flex;
             flex-direction: column;
         }
 
         &-row {
+            @extend %flex;
             flex-wrap: nowrap;
             flex-direction: row;
         }
