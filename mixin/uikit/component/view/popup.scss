@@ -1,0 +1,42 @@
+// ========================================================
+// popup 弹框组件
+// ========================================================
+
+@mixin popup($class: pop, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        &-wraper {
+            display: none;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            pointer-events: none;
+            position: absolute;
+
+            .#{$prefix+$class}-item {
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                display: none;
+                // 让击事件传点到后面去
+                pointer-events: none;
+                position: absolute;
+
+                >* {
+                    // 恢复元素默认的点击效果
+                    pointer-events: auto;
+                }
+
+                .back {
+                    width: 100%;
+                    height: 100%;
+                    z-index: -1;
+                    top: 0; left: 0;
+                    position: absolute;
+                    background-color: $popup-back-color;
+                }
+            }
+        }
+
+        @content;   // 样式自定义扩展代码位置
+    }
+}

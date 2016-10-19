@@ -1,0 +1,29 @@
+// ========================================================
+// content 内容UI生成器
+// ========================================================
+
+@mixin content($class: content, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        position: absolute !important;
+        top: 0; right: 0;
+        bottom: 0; left: 0;
+        overflow: hidden;
+
+        margin-top: -1px;
+        padding-top:1px;
+        background-color: $content-back-color;
+
+        &.padding > *:first-child {
+            padding: rem($content-padding);
+        }
+
+        &.has-header {
+            top: rem($content-head-size);
+        }
+        &.has-footer {
+            bottom: rem($content-foot-size);
+        }
+
+        @content;   // 样式自定义扩展代码位置
+    }  
+}
