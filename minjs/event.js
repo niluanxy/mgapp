@@ -131,24 +131,38 @@
         }
     }
 
-    function emitEvent(space, args) {
-        var cointer, stopCall = false,
+    function eventArgs(arguments) {
+        var ret = {args: [], eve: ""};
+
+        ret.eve = arguments[0];
+        for(var i=1; i<arguments.length; i++) {
+            ret.args.push(arguments[i]);
+        }
+
+        return ret;
+    }
+
+    function eventEmit(space, before) {
+        var cointer, args, stopCall = false,
             _patch, _catch, _call, _copy;
 
-        if (space && args) {
-            cointer = {
-                propagation: true,
-                immediation: true,
+        bofore = before || {};
+        args = before.arguments || [];
+        cointer = {
+            propagation: !!before.propagation,
+            immediation: !!before.immediation,
 
-                stopPropagation: function() {
-                    this.propagation = false;
-                },
+            stopPropagation: function() {
+                this.propagation = false;
+            },
 
-                stopImmediation: function() {
-                    this.immediation = false;
-                }
+            stopImmediation: function() {
+                this.immediation = false;
+                this.stopPropagation();
             }
+        }
 
+        if (space && before.propagation && before.propagation) {
             // 先运行 path 方法，对运行参数进行操作
             _patch = space["patch"] || [];
             if (_patch && _patch.length > 0) {
@@ -178,13 +192,19 @@
                 }
             }
         }
+
+        /**
+         * 返回本次运行后的数据状态
+         */
+        return {
+            propagation: cointer.propagation,
+            immediation: cointer.immediation,
+            arguments  : args || [],
+        }
     }
 
     Event = function() {
         this.maps = {};
-
-        this.propagation = true;
-        this.immediation = true;
     };
 
     // 阻止本次的事件冒泡
@@ -286,22 +306,17 @@
 
     // 在元素上触发事件
     Event.prototype.emit = function(/* eve, args... */) {
-        var that = this, maps = this.maps, 
-            eve = arguments[0], args = [], stopCall,
-            space, _patch, _catch,_call, _copy = [];
+        var runs = eventArgs(arguments), space;
 
-        if (isString(eve)) {
-            for(var i=1; i<arguments.length; i++) {
-                args.push(arguments[i]);
-            }
-
-            space = pathFind(this.maps, eve);
-            
-            this.immediation = true;
-            this.propagation = true;
+        if (isString(runs.eve)) {
+            space = pathFind(this.maps, runs.eve);
 
             if (space && isObj(space)) {
-                
+                eventEmit(space, {
+                    arguments: runs.args,
+                    immediation: true,
+                    propagation: true,
+                });
             }
         }
 
@@ -309,19 +324,77 @@
     }
 
     // 向父元素冒泡这个事件
-    Event.prototype.dispatch = function() {
+    Event.prototype.dispatch = function(/* eve, args... */) {
+        var pathCall = [], runs = eventArgs(arguments),
+            eves, before, maps = this.maps;
 
+        if (isString(runs.eve)) {
+            eves = runs.eve.split(".");
+
+            for(var i=0; i<eves.length; i++) {
+                var key = keyfix(eves[i]);
+
+                if (isObj(maps[key])) {
+                    pathCall.push(maps[key]);
+                    maps = maps[key];
+                } else {
+                    return this;
+                }
+            }
+
+            // 小于说明不是完全匹配事件路劲
+            if (i < eves.length) return this;
+
+            before = {
+                arguments: runs.args,
+                immediation: true,
+                propagation: true,
+            };
+
+            for(var i=pathCall.length-1; i>=0; i--) {
+                before = eventEmit(pathCall[i], before);
+
+                if (!before.propagation) break;
+            }
+        }
+
+        return this;
     }
 
     // 向子元素传播这个事件
-    Event.prototype.broadcast = function() {
+    Event.prototype.broadcast = function(/* eve, args... */) {
+        var runs = eventArgs(arguments),
+            path, old, before, reg = new RegExp("^"+$KEY);
 
+        path = pathFind(this.maps, runs.eve);
+
+        if (path && isString(runs.eve)) {
+            before = {
+                arguments: runs.args,
+                immediation: true,
+                propagation: true,
+            };
+
+            do {
+                before = eventEmit(path, before);
+                if (!before.propagation) break;
+
+                old = path;
+                for(var key in path) {
+                    if (key.match(reg)) {
+                        path = path[key];
+                        break;
+                    }
+                }
+            } while (old != path);
+        }
+
+        return this;
     }
 
 
     if (!noGlobal) {
         window.mEvent = Event;
-        window.eve = new Event();
     }
     return Event;
 });
