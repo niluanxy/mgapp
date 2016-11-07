@@ -202,31 +202,29 @@
         };
 
         function callRuns(calls, eves, once) {
-            function stopPropa() {
-                propagation = false;
-            };
+            // 克隆数组，防止数组长度变化
+            var copy = arrayCopy(calls), immediation = true,
+                continer, stopPropa, stopImmed;
 
-            function stopImmed(propa) {
+            stopPropa = function() { propagation = false; };
+            stopImmed = function(propa) {
                 immediation = false;
                 // 默认也会终止事件冒泡
                 if (propa !== true) propagation = false;
             };
 
-            // 克隆数组，防止数组长度变化
-            var copy = arrayCopy(calls), immediation = true;
+            continer = function() {
+                this.stopPropagation = stopPropa;
+                this.stopImmediation = stopImmed;
+            };
 
             for(var i=0; i<copy.length; i++) {
                 var item = copy[i],
                     name = item.name, run = item.run;
 
                 if (name.match("^"+eves)) {
-                    run.stopPropagation = stopPropa;
-                    run.stopImmediation = stopImmed;
-
-                    run.apply(item.content || null, args);
-
-                    delete run.stopPropagation;
-                    delete run.stopImmediation;
+                    continer.prototype = item.content || null;
+                    run.apply(new continer, args);
 
                     if (once === true) break;
                 }
@@ -256,18 +254,6 @@
             propagation: propagation,
             arguments  : args || [],
         }
-    }
-
-    // 判断事件是否忽略自身执行
-    function selfIgnore(eve) {
-        if (isString(eve)) {
-            var pass = eve.split(" ");
-            if (isArray(pass) && pass[1] == "pass") {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     Emitter = function(maps, parent, prefix) {
@@ -372,14 +358,14 @@
 
     // 向父元素冒泡这个事件
     Prototype.dispatch = function(/* eve, args... */) {
-        var pathCall = [], runs = eventArgs(arguments),
+        var pathCall = [], run = eventArgs(arguments),
             eves, before, maps = this.maps, pass;
 
-        if (isString(runs.eve)) {
+        if (isString(run.eves)) {
             // 判断是否忽略自身
-            pass = selfIgnore(runs.eve);
+            pass = !!run.eves.match(/.+(\spass$)/);
 
-            eves = runs.eve.split(".");
+            eves = run.space.split("/");
 
             for(var i=0; i<eves.length; i++) {
                 var key = keyfix(eves[i]);
@@ -392,12 +378,8 @@
                 }
             }
 
-            // 小于说明不是完全匹配事件路劲
-            if (i < eves.length) return this;
-
             before = {
-                arguments: runs.args,
-                immediation: true,
+                arguments: run.args,
                 propagation: true,
             };
 
@@ -405,7 +387,8 @@
             if (pass == true) pathCall.shift();
 
             for(var i=pathCall.length-1; i>=0; i--) {
-                before = eventEmit(pathCall[i], before);
+                before = eventEmit(pathCall[i],
+                    run.eves, run.first, before);
 
                 if (!before.propagation) break;
             }
@@ -423,7 +406,7 @@
 
         if (path && isString(runs.eve)) {
             // 判断是否忽略自身
-            pass = selfIgnore(runs.eve);
+            pass = !!run.eves.match(/.+(\spass$)/);
 
             before = {
                 arguments: runs.args,
