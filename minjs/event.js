@@ -457,7 +457,7 @@
             };
 
             // 如果忽略自身，则移除自身执行数据
-            if (run.pass === true) pathCall.shift();
+            if (run.pass === true) pathCall.pop();
 
             for(var i=pathCall.length-1; i>=0; i--) {
                 before = eventEmit(pathCall[i],
