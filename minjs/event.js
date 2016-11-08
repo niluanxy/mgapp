@@ -15,9 +15,15 @@
     var Emitter, Prototype = {}, $KEY = "##_";
 
     // 获取到修饰后的 key 值
-    function keyfix(name) {
+    function keyFix(name) {
         name = name.replace(/^\./g, '');
         return $KEY + name;
+    }
+
+    function keyTest(name) {
+        var reg = new RegExp("^"+$KEY);
+
+        return name.match(reg);
     }
 
     function isFunction(call) {
@@ -43,7 +49,7 @@
 
         for(var i=0; i<arr.length; i++) {
             if (isString(arr[i])) {
-                var key = keyfix(arr[i]);
+                var key = keyFix(arr[i]);
 
                 if (!isObject(paths[key])) {
                     return null;
@@ -64,7 +70,7 @@
 
         for(var i=0; i<arr.length; i++) {
             if (isString(arr[i])) {
-                var key = keyfix(arr[i]);
+                var key = keyFix(arr[i]);
 
                 if (!isObject(paths[key])) {
                     paths[key] = {};
@@ -181,6 +187,63 @@
                 }
             }
         }
+    }
+
+    // 检测指定对象下，是否有可运行的事件对象
+    // 严格模式必须有匹配的事件
+    function eventTest(paths, eFirst, strict) {
+        var arrs = "call".split(" "), find = 0;
+
+        for(var i=0; i<arrs.length; i++) {
+            var key = arrs[i], runs;
+
+            runs = paths[key] || {};
+            runs = runs[eFirst] || [];
+        
+            if (!!strict === true) {
+                for(var j=0; j<runs.length; j++) {
+                    if (runs[i].name.match("^"+strict)) {
+                        find += 1;
+                    }
+                }
+            } else {
+                find += runs.length;
+            }
+        }
+
+        return find > 0;
+    }
+
+    /**
+     * 获取给定路劲下可以传播事件的对象
+     * 
+     * @param  {String} strict [严格匹配的事件名]
+     */
+    function eventChild(paths, eFirst, strict) {
+        var calls = [];
+
+        for(var key in paths) {
+            var item = paths[key], find;
+
+            if (keyTest(key) && eventTest(item, eFirst, strict)) {
+                if (!!strict) {
+                    // 严格模式下，至少要有一个完全匹配的事件
+                    find = item.call || {};
+                    find = find[eFirst] || [];
+
+                    for(var j=0; j<find.length; j++) {
+                        if (find[j].name.match("^"+strict)) {
+                            calls.push(item);
+                            break;
+                        }
+                    }
+                } else {
+                    calls.push(item);
+                }
+            }
+        }
+
+        return calls;
     }
 
     function eventEmit(paths, eName, eFirst, before) {
@@ -359,22 +422,26 @@
     // 向父元素冒泡这个事件
     Prototype.dispatch = function(/* eve, args... */) {
         var pathCall = [], run = eventArgs(arguments),
-            eves, before, maps = this.maps, pass;
+            space, before, maps = this.maps, pass;
 
         if (isString(run.eves)) {
             // 判断是否忽略自身
             pass = !!run.eves.match(/.+(\spass$)/);
 
-            eves = run.space.split("/");
+            if (run.space === "") {
+                pathCall.push(maps);
+            } else {
+                space = run.space.split("/");
 
-            for(var i=0; i<eves.length; i++) {
-                var key = keyfix(eves[i]);
+                for(var i=0; i<eves.length; i++) {
+                    var key = keyFix(eves[i]);
 
-                if (isObject(maps[key])) {
-                    pathCall.push(maps[key]);
-                    maps = maps[key];
-                } else {
-                    return this;
+                    if (isObject(maps[key])) {
+                        pathCall.push(maps[key]);
+                        maps = maps[key];
+                    } else {
+                        return this;
+                    }
                 }
             }
 
@@ -399,38 +466,46 @@
 
     // 向子元素传播这个事件
     Prototype.broadcast = function(/* eve, args... */) {
-        var runs = eventArgs(arguments),
-            path, old, before, reg = new RegExp("^"+$KEY);
+        var run = eventArgs(arguments),
+            calls, before, eFirst, eName;
 
-        path = pathFind(this.maps, runs.eve);
+        path = pathFind(this.maps, run.space);
+        eName = run.eves; eFirst = run.first;
 
-        if (path && isString(runs.eve)) {
+        if (path && isString(eName)) {
             // 判断是否忽略自身
-            pass = !!run.eves.match(/.+(\spass$)/);
+            pass  = !!run.eves.match(/.+(\spass$)/);
 
-            before = {
-                arguments: runs.args,
-                immediation: true,
-                propagation: true,
-            };
-
-            // 如果忽略自身，则移除自身执行数据
-            if (pass == true) {
-
+            // 忽略自身，则直接从子级开始执行
+            if (pass === true) {
+                calls = eventChild(path, eFirst, eName);
+            } else {
+                if (eventTest(path, eFirst, eName)) {
+                    calls = [path];
+                } else {
+                    return this;
+                }
             }
 
             do {
-                before = eventEmit(path, before);
-                if (!before.propagation) break;
+                var cache = [], child;
 
-                old = path;
-                for(var key in path) {
-                    if (key.match(reg)) {
-                        path = path[key];
-                        break;
+                for(var i=0; i<calls.length; i++) {
+                    var _args = arrayCopy(run.args);
+
+                    _args = eventEmit(calls[i], eName, eFirst, {
+                        arguments: _args,
+                        propagation: true,
+                    });
+
+                    if (_args.propagation === true) {
+                        child = eventChild(calls[i], eFirst, eName);
+                        cache = cache.concat(child);
                     }
                 }
-            } while (old != path);
+
+                calls = cache;
+            } while (calls.length);
         }
 
         return this;
