@@ -113,12 +113,21 @@
         return {space: space, eves: eves, first: first};
     }
 
+    // 分离出用户调用的事件名，事件参数
+    // 如果第一个参数为 true，表示执行会忽略根元素自身
     function eventArgs(arguments) {
         var ret = {}, split;
 
-        split = pathSplit(arguments[0]);
-
-        ret.args  = Array.prototype.splice(1);
+        if (arguments.length >= 2 && arguments[0] === true) {
+            ret.pass = true;
+            split = pathSplit(arguments[1]);
+            ret.args = Array.prototype.splice(2);
+        } else {
+            ret.pass = false;
+            split = pathSplit(arguments[0]);
+            ret.args  = Array.prototype.splice(1);
+        }
+        
         ret.eves  = split.eves;
         ret.first = split.first;
         ret.space = split.space;
@@ -422,19 +431,16 @@
     // 向父元素冒泡这个事件
     Prototype.dispatch = function(/* eve, args... */) {
         var pathCall = [], run = eventArgs(arguments),
-            space, before, maps = this.maps, pass;
+            space, before, maps = this.maps;
 
         if (isString(run.eves)) {
-            // 判断是否忽略自身
-            pass = !!run.eves.match(/.+(\spass$)/);
-
             if (run.space === "") {
                 pathCall.push(maps);
             } else {
-                space = run.space.split("/");
+                spaces = run.space.split("/");
 
-                for(var i=0; i<eves.length; i++) {
-                    var key = keyFix(eves[i]);
+                for(var i=0; i<spaces.length; i++) {
+                    var key = keyFix(spaces[i]);
 
                     if (isObject(maps[key])) {
                         pathCall.push(maps[key]);
@@ -451,7 +457,7 @@
             };
 
             // 如果忽略自身，则移除自身执行数据
-            if (pass == true) pathCall.shift();
+            if (run.pass === true) pathCall.shift();
 
             for(var i=pathCall.length-1; i>=0; i--) {
                 before = eventEmit(pathCall[i],
@@ -473,11 +479,8 @@
         eName = run.eves; eFirst = run.first;
 
         if (path && isString(eName)) {
-            // 判断是否忽略自身
-            pass  = !!run.eves.match(/.+(\spass$)/);
-
             // 忽略自身，则直接从子级开始执行
-            if (pass === true) {
+            if (run.pass === true) {
                 calls = eventChild(path, eFirst, eName);
             } else {
                 if (eventTest(path, eFirst, eName)) {
