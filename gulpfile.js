@@ -46,6 +46,7 @@ function task_concat_mixin() {
         defer_all = Q.defer();
 
     clear_mixin().then(function() {
+        // 核心文件合并
         gulp.src([DIR_MIXIN+"core/config.scss",
             DIR_MIXIN+"core/function.scss",
             DIR_MIXIN+"core/zindex.scss",
@@ -56,12 +57,14 @@ function task_concat_mixin() {
         .pipe(gulp.dest(DIST_MIXIN))
         .on("finish", function() { defer_core.resolve(); })
 
+        // UI文件合并
         gulp.src([DIR_MIXIN+"uikit/tools.scss",
             DIR_MIXIN+"uikit/component/**/*.scss"])
         .pipe(concat("mixin_uikit.scss"))
         .pipe(gulp.dest(DIST_MIXIN))
         .on("finish", function() { defer_uikit.resolve(); })
 
+        // 变量文件合并
         gulp.src([DIR_MIXIN+"uikit/varible/element/button.scss",
             DIR_MIXIN+"uikit/varible/**/*.scss"])
         .pipe(concat("mixin_vars.scss"))

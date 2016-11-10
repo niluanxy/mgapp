@@ -328,8 +328,8 @@
         }
     }
 
-    Emitter = function(maps, parent, prefix) {
-        this.maps = maps || {};
+    Emitter = function(tables, parent, prefix) {
+        this.tables = tables || {};
         this.parent = parent || null;
         this.prefix = prefix || null;
 
@@ -341,7 +341,7 @@
     // 添加一个事件对象
     Prototype.on = function(eve, call, content) {
         if (isString(eve) && isFunction(call)) {
-            pathObjectPush(this.maps, eve, "call", call, content);
+            pathObjectPush(this.tables, eve, "call", call, content);
         }
 
         return this;
@@ -366,7 +366,7 @@
     // 移除一个事件
     Prototype.off = function(eve, call) {
         if (isString(eve)) {
-            pathObjectDel(this.maps, eve, "call", call);
+            pathObjectDel(this.tables, eve, "call", call);
         }
 
         return this;
@@ -375,7 +375,7 @@
     // 在元素上添加捕获事件
     Prototype.catch = function(eve, call, content) {
         if (isString(eve) && isFunction(call)) {
-            pathObjectPush(this.maps, eve, "catch", call, content);
+            pathObjectPush(this.tables, eve, "catch", call, content);
         }
 
         return this;
@@ -384,7 +384,7 @@
     // 在元素上移除捕获事件
     Prototype.uncatch = function(eve, call) {
         if (isString(eve)) {
-            pathObjectDel(this.maps, eve, "catch", call);
+            pathObjectDel(this.tables, eve, "catch", call);
         }
 
         return this;
@@ -393,7 +393,7 @@
     // 在元素上添加一个修饰器
     Prototype.patch = function(eve, call) {
         if (isString(eve) && isFunction(call)) {
-            pathObjectPush(this.maps, eve, "patch", call, content);
+            pathObjectPush(this.tables, eve, "patch", call, content);
         }
 
         return this;
@@ -402,7 +402,7 @@
     // 在元素上移除一个修饰器
     Prototype.unpatch = function(eve, call) {
         if (isString(eve)) {
-            pathObjectDel(this.maps, eve, "patch", call);
+            pathObjectDel(this.tables, eve, "patch", call);
         }
 
         return this;
@@ -415,7 +415,7 @@
         if (isString(runs.eves)) {
             first = runs.first;
             eves  = runs.eves;
-            path  = pathFind(this.maps, runs.space);
+            path  = pathFind(this.tables, runs.space);
 
             if (isObject(path)) {
                 eventEmit(path, eves, first, {
@@ -431,7 +431,7 @@
     // 向父元素冒泡这个事件
     Prototype.dispatch = function(/* eve, args... */) {
         var pathCall = [], run = eventArgs(arguments),
-            space, before, maps = this.maps;
+            space, before, maps = this.tables;
 
         if (isString(run.eves)) {
             if (run.space === "") {
@@ -475,7 +475,7 @@
         var run = eventArgs(arguments),
             calls, before, eFirst, eName;
 
-        path = pathFind(this.maps, run.space);
+        path = pathFind(this.tables, run.space);
         eName = run.eves; eFirst = run.first;
 
         if (path && isString(eName)) {

@@ -4,6 +4,36 @@
 
 
 @mixin reset() {
+    *, *:before, *:after {
+        box-sizing: border-box;
+
+        @if $config-user-select == false {
+            @include user-select(none);
+        }
+
+        @if $config-font-antialiased == true {
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        -webkit-tap-highlight-color: rgba(255,255,255,0);
+    }
+    
+    html {
+        @if ($config-build-rem == true) {
+            font-size: $config-build-rem-base;
+        }
+
+        font-family: $font-family-base;
+        text-size-adjust: none;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-size: $font-size-base;
+        line-height: 1;
+    }
+
     html, body, div, span, applet, object, iframe,
     h1, h2, h3, h4, h5, h6, p, blockquote, pre,
     a, abbr, acronym, address, big, cite, code,
@@ -54,36 +84,6 @@
 
     script {
         display: none !important;
-    }
-
-    html {
-        @if ($config-build-rem == true) {
-            font-size: $config-build-rem-base;
-        }
-
-        font-family: $font-family-base;
-        text-size-adjust: none;
-    }
-
-    body {
-        margin: 0;
-        padding: 0;
-        font-size: $font-size-base;
-        line-height: 1;
-    }
-
-    *, *:before, *:after {
-        box-sizing: border-box;
-
-        @if $config-user-select == false {
-            @include user-select(none);
-        }
-
-        @if $config-font-antialiased == true {
-            -webkit-font-smoothing: antialiased;
-        }
-        
-        -webkit-tap-highlight-color: rgba(255,255,255,0);
     }
 
     a,
@@ -326,9 +326,5 @@
     table {
         border-spacing: 0;
         border-collapse: collapse;
-    }
-
-    *, *:before, *:after {
-        box-sizing: border-box;
     }
 }
