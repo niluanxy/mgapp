@@ -7,6 +7,9 @@ var gulp         = require('gulp-param')(require('gulp'), process.argv),
     concat       = require("gulp-concat"),
     rename       = require("gulp-rename"),
     shell        = require('gulp-shell'),
+    rollup       = require("rollup-stream"),
+    source       = require('vinyl-source-stream'),
+    webpack      = require("webpack-stream"),
     sass         = require("gulp-sass");
 
 colors.setTheme({  
@@ -23,8 +26,11 @@ colors.setTheme({
     time: 'gray'
 });
 
-var DIR_MIXIN = "mixin/",
-    DIST_MIXIN = DIR_MIXIN + "/dist";
+var DIR_MIXIN = __dirname + "/mixin/",
+    DIST_MIXIN = DIR_MIXIN + "/dist",
+
+    DIR_MAGIC = __dirname + "/magic/",
+    DIST_MAGIC = DIR_MAGIC + "/dist";
 
 function log(str, style) {
     style = style || "info";
@@ -86,7 +92,7 @@ function task_concat_mixin() {
         .pipe(sass())
         .pipe(gulp.dest(DIST_MIXIN))
         .on("finish", function() {
-            log("all has finish");
+            log("mixin concat finish");
             defer_all.resolve();
         })
     })
@@ -98,8 +104,48 @@ function clear_mixin() {
     return del(DIST_MIXIN);
 }
 
+/**===============================================
+ * magic 文件合并脚本函数
+ =================================================*/
+function task_build_magic() {
+    var defer_all = Q.defer(), defer_core = Q.defer(),
+        defer_mui = Q.defer(), defer_mixin = Q.defer(),
+
+    DIR_CORE = DIR_MAGIC+"core/",
+    DIR_MUI  = DIR_MAGIC+"MUI/";
+
+    clear_magic().then(function() {
+        rollup({
+            entry: DIR_CORE+"build.js",
+            format: 'umd',
+            moduleName: "Magic"
+        })
+        .pipe(source('core.js'))
+        .pipe(gulp.dest(DIST_MAGIC))
+        .on("finish", function() {
+            log("magic core build finish");
+            defer_core.resolve();
+        });
+
+        return Q.all([
+            defer_core.promise,
+        ])
+    }).then(function() {
+        log("magic task build finish");
+        defer_all.resolve();
+    });
+
+    return defer_core.promise;
+}
+
+function clear_magic() {
+    return del(DIST_MAGIC);
+}
+
 gulp.task("build", function() {
-    task_concat_mixin();
+    task_concat_mixin().then(function() {
+        return task_build_magic();
+    })
 })
 
 gulp.task("clean", function() {
