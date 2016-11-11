@@ -102,6 +102,7 @@ var isArray;
 var isObject;
 var isFunction;
 var isString;
+var isTrueString;
 
 isArray = Array.isArray;
 
@@ -128,13 +129,18 @@ isString = function(string) {
     return typeof string == "string";
 };
 
+isTrueString = function(string) {
+    return string && typeof string == "string";
+};
+
 
 
 var _CHECK = Object.freeze({
 	get isObject () { return isObject; },
 	get isFunction () { return isFunction; },
 	get isString () { return isString; },
-	get isArray () { return isArray; }
+	get isArray () { return isArray; },
+	get isTrueString () { return isTrueString; }
 });
 
 /*! 
@@ -362,6 +368,22 @@ function extend(/* deep, target, obj..., last */) {
     return target;     // 返回合并后的对象
 }
 
+function tryKey(key, val, empty) {
+    var object = this[0];
+
+    if (object && isTrueString(key)) {
+        if (val === undefined) {
+            return object[key];
+        } else if (empty && val !== undefined) {
+            object[key] = val;
+        } else if (val != undefined) {
+            object[key] = val;
+        }
+    }
+
+    return this;
+}
+
 var Magic;
 var Prototype;
 var Creater;
@@ -427,6 +449,18 @@ Prototype = {
 
         return this;
     },
+
+    extend: function() {
+        var args = [this];
+
+        for(var i=0; i<arguments.length; i++) {
+            args.push(arguments[i]);
+        }
+
+        extend.apply(null, args);
+
+        return this;
+    }
 };
 
 Creater = function(select, context) {
@@ -445,6 +479,31 @@ each([Creater, Magic], function(index, object) {
 Creater.fn = Creater.prototype = Magic.prototype = Prototype;
 
 var RootMagic$1 = Creater;
+
+function html(html) {
+    return tryKey.call(this, "innerHTML", html, true);
+}
+
+function outerHTML(html) {
+    return tryKey.call(this, "outerHTML", html, true);
+}
+
+function text(text) {
+    return tryKey.call(this, "innerText", html, true);
+}
+
+
+
+var attrbute = Object.freeze({
+	html: html,
+	outerHTML: outerHTML,
+	text: text
+});
+
+// import * as editer from "./editer/main.js";
+// import * as search from "./search/main.js";
+console.log("has run 1 attrs");
+RootMagic$1.fn.extend(attrbute);
 
 try {
     if (typeof window === "object") {

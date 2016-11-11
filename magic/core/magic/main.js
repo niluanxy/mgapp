@@ -1,7 +1,7 @@
 import * as _DOM  from "./dom.js";
-import * as _CHECK from "./check.js";
+import * as _CHECK from "../function/check.js";
 import _READY from "./ready.js";
-import { each as _EACH, extend as _EXTEND} from "./tools.js";
+import { each as _EACH, extend as _EXTEND} from "../function/tools.js";
 
 var Magic, Prototype, Creater;
 
@@ -66,6 +66,18 @@ Prototype = {
 
         return this;
     },
+
+    extend: function() {
+        var args = [this];
+
+        for(var i=0; i<arguments.length; i++) {
+            args.push(arguments[i]);
+        }
+
+        _EXTEND.apply(null, args);
+
+        return this;
+    }
 };
 
 Creater = function(select, context) {

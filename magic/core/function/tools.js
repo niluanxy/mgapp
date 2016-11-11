@@ -1,4 +1,4 @@
-import {isFunction, isArray, isObject} from "./check.js";
+import {isFunction, isArray, isObject, isTrueString} from "./check.js";
 
 /**
  * 对数组或者对象，执行指定的回调参数
@@ -85,4 +85,20 @@ function extend(/* deep, target, obj..., last */) {
     return target;     // 返回合并后的对象
 };
 
-export {each, extend};
+function tryKey(key, val, empty) {
+    var object = this[0];
+
+    if (object && isTrueString(key)) {
+        if (val === undefined) {
+            return object[key];
+        } else if (empty && val !== undefined) {
+            object[key] = val;
+        } else if (val != undefined) {
+            object[key] = val;
+        }
+    }
+
+    return this;
+}
+
+export {each, extend, tryKey};

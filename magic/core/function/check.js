@@ -1,4 +1,4 @@
-var isArray, isObject, isFunction, isString;
+var isArray, isObject, isFunction, isString, isTrueString;
 
 isArray = Array.isArray;
 
@@ -25,4 +25,8 @@ isString = function(string) {
     return typeof string == "string";
 };
 
-export {isObject, isFunction, isString, isArray};
+isTrueString = function(string) {
+    return string && typeof string == "string";
+};
+
+export {isObject, isFunction, isString, isArray, isTrueString};

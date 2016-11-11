@@ -1,59 +1,8 @@
-function index() {
+import RootMagic from "../../magic/main.js";
 
-}
+// import * as editer from "./editer/main.js";
+// import * as search from "./search/main.js";
+import * as attrbute from "./attrbute/main.js";
 
-function html() {
-
-}
-
-function wrap() {
-
-}
-
-function outerHTML() {
-
-}
-
-function text() {
-
-}
-
-function prepend() {
-
-}
-
-function append() {
-
-}
-
-function appendTo() {
-
-}
-
-function before() {
-
-}
-
-function remove() {
-
-}
-
-function after() {
-
-}
-
-function parent() {
-
-}
-
-function children() {
-
-}
-
-function below() {
-
-}
-
-function belowClass() {
-    
-}
+console.log("has run 1 attrs");
+RootMagic.fn.extend(attrbute); 
