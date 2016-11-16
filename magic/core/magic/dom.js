@@ -77,7 +77,6 @@ function query(select, el) {
             result = content.getElementById(select.slice(1));
         } else {
             result = content.querySelectorAll(select);
-            result = result.length==1?result[0]:result;
         }
     } else if (select instanceof Element) {
         result = select;    // dom元素直接返回
@@ -85,8 +84,16 @@ function query(select, el) {
         result = document;  // 如果是document直接返回
     }
 
-    if (!(result instanceof Array)) {
+    if (result.length === undefined) {
         result = [result];
+    } else {
+        var copy = [];
+
+        for(var i=0; i<result.length; i++) {
+            copy.push(result[i]);
+        }
+
+        result = copy;
     }
 
     return result;      // 返回最终的选择结果

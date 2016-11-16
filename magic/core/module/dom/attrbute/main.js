@@ -1,15 +1,13 @@
 import {tryKey} from "../../../function/tools.js";
 
-function html(html) {
+export function html(html) {
     return tryKey.call(this, "innerHTML", html, true);
 }
 
-function outerHTML(html) {
+export function outerHTML(html) {
     return tryKey.call(this, "outerHTML", html, true);
 }
 
-function text(text) {
-    return tryKey.call(this, "innerText", html, true);
+export function text(text) {
+    return tryKey.call(this, "innerText", text, true);
 }
-
-export {html, outerHTML, text};

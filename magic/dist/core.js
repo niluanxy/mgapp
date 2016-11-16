@@ -83,7 +83,6 @@ function query(select, el) {
             result = content.getElementById(select.slice(1));
         } else {
             result = content.querySelectorAll(select);
-            result = result.length==1?result[0]:result;
         }
     } else if (select instanceof Element) {
         result = select;    // dom元素直接返回
@@ -91,8 +90,16 @@ function query(select, el) {
         result = document;  // 如果是document直接返回
     }
 
-    if (!(result instanceof Array)) {
+    if (result.length === undefined) {
         result = [result];
+    } else {
+        var copy = [];
+
+        for(var i=0; i<result.length; i++) {
+            copy.push(result[i]);
+        }
+
+        result = copy;
     }
 
     return result;      // 返回最终的选择结果
@@ -299,6 +306,37 @@ function each(object, callback) {
 }
 
 /**
+ * 当前对象运行给定回调函数
+ * 
+ */
+function eachRun(/* call, args... */) {
+    var call = arguments[0], args;
+
+    if (isFunction(call)) {
+        args = slice(arguments, 1);
+
+        for(var i=0; i<this.length; i++) {
+            call.apply(this[i], args);
+        }
+    }
+
+    return this;
+}
+
+/**
+ * 类数组 slice 方法模拟
+ */
+function slice(array, start, end) {
+    var ret = [], aend = end || array.length;
+
+    for(var i=start||0; i<aend; i++) {
+        ret.push(array[i]);
+    }
+
+    return ret;
+}
+
+/**
  * 合并一个或多个对象到目标对象
  *
  * @param       {Object}    deep     - 是否深度复制
@@ -314,13 +352,13 @@ function extend(/* deep, target, obj..., last */) {
         pass = false, deep = false;
 
     // 如果最后一个变量是 true ，表示忽略无效字段
-    if (typeof argv[len-1] === "boolean") {
+    if (argv[len-1] === true) {
         pass = argv[len-1];
         len--;
     }
 
-    // 如果第一个变量是 布尔值，设置是否深度复制
-    if (typeof argv[0] === "boolean") {
+    // 如果第一个变量是 true，设置深度复制
+    if (argv[0] === true) {
         deep = argv[0];
         target = argv[1];
         i++;
@@ -368,6 +406,7 @@ function extend(/* deep, target, obj..., last */) {
     return target;     // 返回合并后的对象
 }
 
+// 尝试读取或者写入指定的对象
 function tryKey(key, val, empty) {
     var object = this[0];
 
@@ -423,6 +462,18 @@ Magic = function(select, context) {
         this.length = 1;
     } else if (select instanceof Magic) {
         return select;
+    } else if (select.length) {
+        var pos = 0, element;
+
+        for(var i=0; i<select.length; i++) {
+            element = select[i];
+
+            if (element instanceof Element || element === document) {
+                this[pos++] = element;
+            }
+        }
+
+        this.length = pos;
     }
 
     return this.length > 0 ? this : null;
@@ -451,12 +502,14 @@ Prototype = {
     },
 
     extend: function() {
-        var args = [this];
+        var args = slice(arguments);
 
-        for(var i=0; i<arguments.length; i++) {
-            args.push(arguments[i]);
+        if (args[0] === true) {
+            args.splice(1, 0, this);
+        } else {
+            args.unshift(this);
         }
-
+        
         extend.apply(null, args);
 
         return this;
@@ -480,7 +533,150 @@ Creater.fn = Creater.prototype = Magic.prototype = Prototype;
 
 var RootMagic$1 = Creater;
 
-function html(html) {
+function _edit(that, html, key) {
+    var el = that[0], dom;
+
+    if (html instanceof RootMagic$1) {
+        html = html[0];
+    }
+
+    if (el && el[key] && (dom = make(html)) ) {
+        el[key](dom);
+    }
+
+    return that;
+}
+
+function _insert(that, html, before) {
+    var el = that[0], parent, dom;
+
+    if (html instanceof RootMagic$1) {
+        html = html[0];
+    }
+
+    if ( el && (parent = el.parentNode) &&
+        (dom = make(html)) ) {
+        return parent.insertBefore(dom, before ? el : el.nextSibling);
+    }
+
+    return that;
+}
+
+function prepend(html) {
+    var first = this[0] && first.firstChild;
+
+    return _edit(this, "insertBefore", el);
+}
+
+function append(html) {
+    return _edit(this, "appendChild", html);
+}
+
+function appendTo(html) {
+    var that = RootMagic$1(html);
+
+    _edit(that, "appendChild", this);
+
+    return this;
+}
+
+function before(html) {
+    return _insert(that, html, true);
+}
+
+function after() {
+    return _insert(that, html);
+}
+
+function wrap(html) {
+    var el = this[0], wrap, parent;
+
+    if ( el && (parent = el.parentNode)
+         && (wrap = make(html)) ) {
+
+        wrap = wrap.firstChild;
+        wrap = parent.insertBefore(wrap, el);
+        append(wrap, el);
+    }
+
+    return this;
+}
+
+function wrapAll(html) {
+    var wrap = make(html), args;
+
+    if (wrap) {
+        args = slice(arguments, 1);
+        args.unshift(wrap);
+
+        eachRun.apply(this, args);
+    }
+
+    return this;
+}
+
+function remove() {
+    var el = this[0], parent;
+
+    if (el && (parent = el.parentNode) &&
+        parent != document) {
+        parent.removeChild(el);
+    }
+
+    return this;
+}
+
+var editer = Object.freeze({
+	prepend: prepend,
+	append: append,
+	appendTo: appendTo,
+	before: before,
+	after: after,
+	wrap: wrap,
+	wrapAll: wrapAll,
+	remove: remove
+});
+
+function index() {
+    var par = parent.call(this), items;
+
+    if (par && par.length) {
+        par = par[0];
+        items  = par.children;
+
+        for(var i=0; i<items.length; i++) {
+            if (items[i] == this[0]) {
+                return i;
+            }
+        }
+    }
+
+    return -1;  // 默认返回 -1
+}
+
+function parent() {
+    var el = this[0], parent;
+
+    return RootMagic$1(el && el.parentNode);
+}
+
+function children(search) {
+    var el = this[0];
+
+    if (search) {
+        return RootMagic$1(search, el);
+    } else {
+        return RootMagic$1(el && el.children);
+    }
+}
+
+var search = Object.freeze({
+	index: index,
+	parent: parent,
+	children: children
+});
+
+function html$1(html) {
     return tryKey.call(this, "innerHTML", html, true);
 }
 
@@ -489,21 +685,17 @@ function outerHTML(html) {
 }
 
 function text(text) {
-    return tryKey.call(this, "innerText", html, true);
+    return tryKey.call(this, "innerText", text, true);
 }
 
-
-
 var attrbute = Object.freeze({
-	html: html,
+	html: html$1,
 	outerHTML: outerHTML,
 	text: text
 });
 
-// import * as editer from "./editer/main.js";
-// import * as search from "./search/main.js";
 console.log("has run 1 attrs");
-RootMagic$1.fn.extend(attrbute);
+RootMagic$1.fn.extend(attrbute, editer, search);
 
 try {
     if (typeof window === "object") {

@@ -1,7 +1,7 @@
 import * as _DOM  from "./dom.js";
 import * as _CHECK from "../function/check.js";
 import _READY from "./ready.js";
-import { each as _EACH, extend as _EXTEND} from "../function/tools.js";
+import { each as _EACH, slice as _SLICE, extend as _EXTEND} from "../function/tools.js";
 
 var Magic, Prototype, Creater;
 
@@ -40,6 +40,18 @@ Magic = function(select, context) {
         this.length = 1;
     } else if (select instanceof Magic) {
         return select;
+    } else if (select.length) {
+        var pos = 0, element;
+
+        for(var i=0; i<select.length; i++) {
+            element = select[i];
+
+            if (element instanceof Element || element === document) {
+                this[pos++] = element;
+            }
+        }
+
+        this.length = pos;
     }
 
     return this.length > 0 ? this : null;
@@ -68,12 +80,14 @@ Prototype = {
     },
 
     extend: function() {
-        var args = [this];
+        var args = _SLICE(arguments);
 
-        for(var i=0; i<arguments.length; i++) {
-            args.push(arguments[i]);
+        if (args[0] === true) {
+            args.splice(1, 0, this);
+        } else {
+            args.unshift(this);
         }
-
+        
         _EXTEND.apply(null, args);
 
         return this;

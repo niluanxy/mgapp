@@ -16,6 +16,37 @@ function each(object, callback) {
 };
 
 /**
+ * 当前对象运行给定回调函数
+ * 
+ */
+function eachRun(/* call, args... */) {
+    var call = arguments[0], args;
+
+    if (isFunction(call)) {
+        args = slice(arguments, 1);
+
+        for(var i=0; i<this.length; i++) {
+            call.apply(this[i], args);
+        }
+    }
+
+    return this;
+}
+
+/**
+ * 类数组 slice 方法模拟
+ */
+function slice(array, start, end) {
+    var ret = [], aend = end || array.length;
+
+    for(var i=start||0; i<aend; i++) {
+        ret.push(array[i]);
+    }
+
+    return ret;
+}
+
+/**
  * 合并一个或多个对象到目标对象
  *
  * @param       {Object}    deep     - 是否深度复制
@@ -31,13 +62,13 @@ function extend(/* deep, target, obj..., last */) {
         pass = false, deep = false;
 
     // 如果最后一个变量是 true ，表示忽略无效字段
-    if (typeof argv[len-1] === "boolean") {
+    if (argv[len-1] === true) {
         pass = argv[len-1];
         len--;
     }
 
-    // 如果第一个变量是 布尔值，设置是否深度复制
-    if (typeof argv[0] === "boolean") {
+    // 如果第一个变量是 true，设置深度复制
+    if (argv[0] === true) {
         deep = argv[0];
         target = argv[1];
         i++;
@@ -85,6 +116,7 @@ function extend(/* deep, target, obj..., last */) {
     return target;     // 返回合并后的对象
 };
 
+// 尝试读取或者写入指定的对象
 function tryKey(key, val, empty) {
     var object = this[0];
 
@@ -101,4 +133,4 @@ function tryKey(key, val, empty) {
     return this;
 }
 
-export {each, extend, tryKey};
+export {each, eachRun, slice, extend, tryKey};
