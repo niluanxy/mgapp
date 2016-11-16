@@ -105,16 +105,10 @@ function query(select, el) {
     return result;      // 返回最终的选择结果
 }
 
-var isArray;
-var isObject;
-var isFunction;
-var isString;
-var isTrueString;
-
-isArray = Array.isArray;
+var isArray = Array.isArray;
 
 /* 判断是否为一个纯净的对象 */
-isObject = function(obj) {
+function isObject(obj) {
     if (typeof obj !== "object" ||
          obj.nodeType || obj === window) {
         return false;
@@ -126,28 +120,26 @@ isObject = function(obj) {
     }
 
     return true;
-};
+}
 
-isFunction = function(call) {
+function isFunction(call) {
     return typeof call == "function";
-};
+}
 
-isString = function(string) {
+function isString(string) {
     return typeof string == "string";
-};
+}
 
-isTrueString = function(string) {
+function isTrueString(string) {
     return string && typeof string == "string";
-};
-
-
+}
 
 var _CHECK = Object.freeze({
-	get isObject () { return isObject; },
-	get isFunction () { return isFunction; },
-	get isString () { return isString; },
-	get isArray () { return isArray; },
-	get isTrueString () { return isTrueString; }
+	isArray: isArray,
+	isObject: isObject,
+	isFunction: isFunction,
+	isString: isString,
+	isTrueString: isTrueString
 });
 
 /*! 
@@ -694,7 +686,6 @@ var attrbute = Object.freeze({
 	text: text
 });
 
-console.log("has run 1 attrs");
 RootMagic$1.fn.extend(attrbute, editer, search);
 
 try {

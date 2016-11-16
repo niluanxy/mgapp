@@ -1,7 +1,7 @@
 /**
  * 检测字符串是否可以创建为 dom 元素
  */
-function check(text) {
+export function check(text) {
     if (typeof text === "string") {
         // 去除字符串中的换行符等
         var txt = text.replace(/[\r\n]/g,"");
@@ -24,7 +24,7 @@ function check(text) {
  * @author      mufeng      <smufeng@gmail.com>
  * @version     0.1         <2015-05-30>
  */
-function make(text, context) {
+export function make(text, context) {
     var ret, i, div, tmp, cont, node = [], fragment; // 最终返回的 dom 对象
 
     if (check(text)) {
@@ -61,7 +61,7 @@ function make(text, context) {
  * @author      mufeng  <smufeng@gmail.com>
  * @version     0.3     <2015-06-05>
  */
-function query(select, el) {
+export function query(select, el) {
     var content, result;    // 定义执行环境及结果变量
 
     if (typeof select == "string") {
@@ -98,5 +98,3 @@ function query(select, el) {
 
     return result;      // 返回最终的选择结果
 };
-
-export {make, check, query};

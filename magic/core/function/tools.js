@@ -6,7 +6,7 @@ import {isFunction, isArray, isObject, isTrueString} from "./check.js";
  * @param  {Object}   object   [被操作的数组或者对象]
  * @param  {Function} callback [执行操作的函数]
  */
-function each(object, callback) {
+export function each(object, callback) {
     if (!object || !isFunction(callback)) return;
 
     for(var key in object) {
@@ -19,7 +19,7 @@ function each(object, callback) {
  * 当前对象运行给定回调函数
  * 
  */
-function eachRun(/* call, args... */) {
+export function eachRun(/* call, args... */) {
     var call = arguments[0], args;
 
     if (isFunction(call)) {
@@ -36,7 +36,7 @@ function eachRun(/* call, args... */) {
 /**
  * 类数组 slice 方法模拟
  */
-function slice(array, start, end) {
+export function slice(array, start, end) {
     var ret = [], aend = end || array.length;
 
     for(var i=start||0; i<aend; i++) {
@@ -56,7 +56,7 @@ function slice(array, start, end) {
  * @author      mufeng  <smufeng@gmail.com>
  * @version     0.1     <2015-04-10>
  */
-function extend(/* deep, target, obj..., last */) {
+export function extend(/* deep, target, obj..., last */) {
     var i = 1, argv = arguments, len = argv.length,
         target = argv[0], name, copy, clone,
         pass = false, deep = false;
@@ -117,7 +117,7 @@ function extend(/* deep, target, obj..., last */) {
 };
 
 // 尝试读取或者写入指定的对象
-function tryKey(key, val, empty) {
+export function tryKey(key, val, empty) {
     var object = this[0];
 
     if (object && isTrueString(key)) {
@@ -132,5 +132,3 @@ function tryKey(key, val, empty) {
 
     return this;
 }
-
-export {each, eachRun, slice, extend, tryKey};

@@ -1,9 +1,7 @@
-var isArray, isObject, isFunction, isString, isTrueString;
-
-isArray = Array.isArray;
+export var isArray = Array.isArray;
 
 /* 判断是否为一个纯净的对象 */
-isObject = function(obj) {
+export function isObject(obj) {
     if (typeof obj !== "object" ||
          obj.nodeType || obj === window) {
         return false;
@@ -17,16 +15,14 @@ isObject = function(obj) {
     return true;
 };
 
-isFunction = function(call) {
+export function isFunction(call) {
     return typeof call == "function";
 };
 
-isString = function(string) {
+export function isString(string) {
     return typeof string == "string";
 };
 
-isTrueString = function(string) {
+export function isTrueString(string) {
     return string && typeof string == "string";
 };
-
-export {isObject, isFunction, isString, isArray, isTrueString};
