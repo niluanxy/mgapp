@@ -15,6 +15,10 @@ export function isObject(obj) {
     return true;
 };
 
+export function isElement(object) {
+    return object instanceof Element || object === document;
+}
+
 export function isFunction(call) {
     return typeof call == "function";
 };

@@ -31,11 +31,8 @@ Magic = function(select, context) {
             _EXTEND(true, this, qur);
             this.length = qur.length;
         }
-    } else if (select instanceof Element) {
+    } else if (_CHECK.isElement(select) || select === window) {
         // 如果是DOM对象，返回包装的对象
-        this[0] = select;
-        this.length = 1;
-    } else if (select === document || select === window) {
         this[0] = select;
         this.length = 1;
     } else if (select instanceof Magic) {

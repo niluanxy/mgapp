@@ -1,5 +1,6 @@
 import {make as domMake} from "../../../magic/dom.js";
-import {slice, eachRun} from "../../../function/tools.js";
+import {eachProxy} from "../../../function/proxy.js";
+import {slice, element} from "../../../function/tools.js";
 import RootMagic from "../../../magic/main.js";
 
 function _edit(that, html, key) {
@@ -31,10 +32,15 @@ function _insert(that, html, before) {
     return that;
 }
 
-export function prepend(html) {
-    var first = this[0] && first.firstChild;
+export function prepend(html, setAll) {
+    var dom, el = element(this);
 
-    return _edit(this, "insertBefore", el);
+    if ( el && el.nodeType === 1 &&
+        (dom = _dom.make(html)) ) {
+        el.insertBefore(dom, el.firstChild);
+    }
+
+    return this;
 }
 
 export function append(html) {
@@ -78,7 +84,7 @@ export function wrapAll(html) {
         args = slice(arguments, 1);
         args.unshift(wrap);
 
-        eachRun.apply(this, args);
+        eachProxy.apply(this, args);
     }
 
     return this;

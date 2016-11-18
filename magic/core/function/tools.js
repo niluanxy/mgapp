@@ -1,4 +1,4 @@
-import {isFunction, isArray, isObject, isTrueString} from "./check.js";
+import {isFunction, isArray, isElement, isObject, isTrueString} from "./check.js";
 
 /**
  * 对数组或者对象，执行指定的回调参数
@@ -16,21 +16,18 @@ export function each(object, callback) {
 };
 
 /**
- * 当前对象运行给定回调函数
- * 
+ * 从给定字符串中，查找给定字符串或正则
  */
-export function eachRun(/* call, args... */) {
-    var call = arguments[0], args;
+export function strFind(strs, find) {
+    var arrs = strs.split(" ");
 
-    if (isFunction(call)) {
-        args = slice(arguments, 1);
-
-        for(var i=0; i<this.length; i++) {
-            call.apply(this[i], args);
+    for(var i=0; i<arrs.length; i++) {
+        if (arrs[i].match(find)) {
+            return i;
         }
     }
 
-    return this;
+    return -1;
 }
 
 /**
@@ -44,6 +41,21 @@ export function slice(array, start, end) {
     }
 
     return ret;
+}
+
+/**
+ * 尝试从 Magic 对象返回一个 element 对象
+ */
+export function element(object) {
+    if (object) {
+        if (isElement(object)) {
+            return object;
+        } else if (isElement(object[0])) {
+            return object[0];
+        }
+    }
+
+    return null;
 }
 
 /**
@@ -115,20 +127,3 @@ export function extend(/* deep, target, obj..., last */) {
 
     return target;     // 返回合并后的对象
 };
-
-// 尝试读取或者写入指定的对象
-export function tryKey(key, val, empty) {
-    var object = this[0];
-
-    if (object && isTrueString(key)) {
-        if (val === undefined) {
-            return object[key];
-        } else if (empty && val !== undefined) {
-            object[key] = val;
-        } else if (val != undefined) {
-            object[key] = val;
-        }
-    }
-
-    return this;
-}

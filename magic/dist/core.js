@@ -122,6 +122,10 @@ function isObject(obj) {
     return true;
 }
 
+function isElement(object) {
+    return object instanceof Element || object === document;
+}
+
 function isFunction(call) {
     return typeof call == "function";
 }
@@ -137,6 +141,7 @@ function isTrueString(string) {
 var _CHECK = Object.freeze({
 	isArray: isArray,
 	isObject: isObject,
+	isElement: isElement,
 	isFunction: isFunction,
 	isString: isString,
 	isTrueString: isTrueString
@@ -298,21 +303,18 @@ function each(object, callback) {
 }
 
 /**
- * 当前对象运行给定回调函数
- * 
+ * 从给定字符串中，查找给定字符串或正则
  */
-function eachRun(/* call, args... */) {
-    var call = arguments[0], args;
+function strFind(strs, find) {
+    var arrs = strs.split(" ");
 
-    if (isFunction(call)) {
-        args = slice(arguments, 1);
-
-        for(var i=0; i<this.length; i++) {
-            call.apply(this[i], args);
+    for(var i=0; i<arrs.length; i++) {
+        if (arrs[i].match(find)) {
+            return i;
         }
     }
 
-    return this;
+    return -1;
 }
 
 /**
@@ -326,6 +328,21 @@ function slice(array, start, end) {
     }
 
     return ret;
+}
+
+/**
+ * 尝试从 Magic 对象返回一个 element 对象
+ */
+function element(object) {
+    if (object) {
+        if (isElement(object)) {
+            return object;
+        } else if (isElement(object[0])) {
+            return object[0];
+        }
+    }
+
+    return null;
 }
 
 /**
@@ -398,23 +415,6 @@ function extend(/* deep, target, obj..., last */) {
     return target;     // 返回合并后的对象
 }
 
-// 尝试读取或者写入指定的对象
-function tryKey(key, val, empty) {
-    var object = this[0];
-
-    if (object && isTrueString(key)) {
-        if (val === undefined) {
-            return object[key];
-        } else if (empty && val !== undefined) {
-            object[key] = val;
-        } else if (val != undefined) {
-            object[key] = val;
-        }
-    }
-
-    return this;
-}
-
 var Magic;
 var Prototype;
 var Creater;
@@ -445,23 +445,20 @@ Magic = function(select, context) {
             extend(true, this, qur);
             this.length = qur.length;
         }
-    } else if (select instanceof Element) {
+    } else if (isElement(select) || select === window) {
         // 如果是DOM对象，返回包装的对象
-        this[0] = select;
-        this.length = 1;
-    } else if (select === document || select === window) {
         this[0] = select;
         this.length = 1;
     } else if (select instanceof Magic) {
         return select;
     } else if (select.length) {
-        var pos = 0, element;
+        var pos = 0, element$$1;
 
         for(var i=0; i<select.length; i++) {
-            element = select[i];
+            element$$1 = select[i];
 
-            if (element instanceof Element || element === document) {
-                this[pos++] = element;
+            if (element$$1 instanceof Element || element$$1 === document) {
+                this[pos++] = element$$1;
             }
         }
 
@@ -525,168 +522,147 @@ Creater.fn = Creater.prototype = Magic.prototype = Prototype;
 
 var RootMagic$1 = Creater;
 
-function _edit(that, html, key) {
-    var el = that[0], dom;
+function eachProxy(/* call, args... */) {
+    var call = arguments[0], args;
 
-    if (html instanceof RootMagic$1) {
-        html = html[0];
-    }
-
-    if (el && el[key] && (dom = make(html)) ) {
-        el[key](dom);
-    }
-
-    return that;
-}
-
-function _insert(that, html, before) {
-    var el = that[0], parent, dom;
-
-    if (html instanceof RootMagic$1) {
-        html = html[0];
-    }
-
-    if ( el && (parent = el.parentNode) &&
-        (dom = make(html)) ) {
-        return parent.insertBefore(dom, before ? el : el.nextSibling);
-    }
-
-    return that;
-}
-
-function prepend(html) {
-    var first = this[0] && first.firstChild;
-
-    return _edit(this, "insertBefore", el);
-}
-
-function append(html) {
-    return _edit(this, "appendChild", html);
-}
-
-function appendTo(html) {
-    var that = RootMagic$1(html);
-
-    _edit(that, "appendChild", this);
-
-    return this;
-}
-
-function before(html) {
-    return _insert(that, html, true);
-}
-
-function after() {
-    return _insert(that, html);
-}
-
-function wrap(html) {
-    var el = this[0], wrap, parent;
-
-    if ( el && (parent = el.parentNode)
-         && (wrap = make(html)) ) {
-
-        wrap = wrap.firstChild;
-        wrap = parent.insertBefore(wrap, el);
-        append(wrap, el);
-    }
-
-    return this;
-}
-
-function wrapAll(html) {
-    var wrap = make(html), args;
-
-    if (wrap) {
+    if (isFunction(call)) {
         args = slice(arguments, 1);
-        args.unshift(wrap);
 
-        eachRun.apply(this, args);
+        for(var i=0; i<this.length; i++) {
+            call.apply(this[i], args);
+        }
     }
 
     return this;
 }
 
-function remove() {
-    var el = this[0], parent;
+// 尝试读取或者写入指定的对象
+function keyProxy(aKey, aVal, empty) {
+    var el = element(this);
 
-    if (el && (parent = el.parentNode) &&
-        parent != document) {
-        parent.removeChild(el);
+    if (el && isTrueString(aKey)) {
+        if (aVal === undefined) {
+            return el[aKey];
+        } else if (empty && aVal !== undefined) {
+            el[aKey] = aVal;
+        } else if (aVal != undefined) {
+            el[aKey] = aVal;
+        }
     }
 
     return this;
 }
 
-var editer = Object.freeze({
-	prepend: prepend,
-	append: append,
-	appendTo: appendTo,
-	before: before,
-	after: after,
-	wrap: wrap,
-	wrapAll: wrapAll,
-	remove: remove
-});
+// 可全部执行代理方法，用于部分方法可以对所有对象执行
+function allProxy(/* call args... setAll */) {
+    var last, args, call,
+        len = arguments.length;
 
-function index() {
-    var par = parent.call(this), items;
+    call = arguments[0];
+    last = arguments[len-1];
+    
+    len = last === true ? len-1 : len;
+    args = slice(arguments, 1, len);
 
-    if (par && par.length) {
-        par = par[0];
-        items  = par.children;
+    if (last === true) {
+        args.unshift(call);
+        eachProxy.apply(this, args);
+        
+        return this;
+    } else {
+        return call.apply(this, args);
+    }
+}
 
-        for(var i=0; i<items.length; i++) {
-            if (items[i] == this[0]) {
-                return i;
+function html(html, setAll) {
+    return allProxy.call(this, keyProxy, "innerHTML", html, true, setAll);
+}
+
+function outerHtml(html, setAll) {
+    return allProxy.call(this, keyProxy, "outerHTML", html, true, setAll);
+}
+
+function text(text, setAll) {
+    return allProxy.call(this, keyProxy, "innerText", text, true, setAll);
+}
+
+/**
+ * 表单元素设置值或读取值
+ */
+function valProxy(aVal) {
+    var el = element(this), type, aValue;
+
+    if (el && el.tagName === "INPUT") {
+        type = _attr.call(el, "type") || "";
+        type = type.toUpperCase();
+
+        if (strFind("CHECKBOX RADIO", type) >= 0) {
+            if (aVal !== undefined) {
+                el.checked = !!aVal;
+            } else {
+                return el.checked ? "on" : "off";
+            }
+        } else {
+            if (aVal !== undefined) {
+                el.value = aVal;
+            } else {
+                return el.value;
             }
         }
     }
 
-    return -1;  // 默认返回 -1
+    return this;
 }
 
-function parent() {
-    var el = this[0], parent;
-
-    return RootMagic$1(el && el.parentNode);
+function val(aVal, setAll) {
+    return allProxy.call(this, valProxy, aVal, setAll);
 }
 
-function children(search) {
-    var el = this[0];
+function checked() {
+    return valProxy.call(this[0]) === "on";
+}
 
-    if (search) {
-        return RootMagic$1(search, el);
-    } else {
-        return RootMagic$1(el && el.children);
+/**
+ * 对象的 HTML 属性操作(读或者取)
+ */
+function attrProxy(aKey, aVal) {
+    var el = element(this), nType = el.nodeType ? el.nodeType : 2;
+
+    if (nType === 3 || nType === 8 || nType === 2) {
+        return; // 忽略掉 文本节点、注释和属性节点
     }
+
+    if (el && el.getAttribute && isTrueString(aKey)) {
+        aKey = aKey.toLowerCase(); // 转为小写
+
+        if (aVal === undefined) {
+            // val 不存在则为读取属性值
+            return el.getAttribute(aKey);
+        } else {
+            // 否则则为设置具体的属性值
+            el.setAttribute(aKey, aVal);
+        }
+    }
+
+    return this;
 }
 
-var search = Object.freeze({
-	index: index,
-	parent: parent,
-	children: children
-});
-
-function html$1(html) {
-    return tryKey.call(this, "innerHTML", html, true);
-}
-
-function outerHTML(html) {
-    return tryKey.call(this, "outerHTML", html, true);
-}
-
-function text(text) {
-    return tryKey.call(this, "innerText", text, true);
+function attr(aKey, aVal, setAll) {
+    return allProxy.call(this, attrProxy, aKey, aVal, setAll);
 }
 
 var attrbute = Object.freeze({
-	html: html$1,
-	outerHTML: outerHTML,
-	text: text
+	html: html,
+	outerHtml: outerHtml,
+	text: text,
+	val: val,
+	checked: checked,
+	attr: attr
 });
 
-RootMagic$1.fn.extend(attrbute, editer, search);
+// import * as editer from "./editer/main.js";
+// import * as search from "./search/main.js";
+RootMagic$1.fn.extend(attrbute);
 
 try {
     if (typeof window === "object") {
