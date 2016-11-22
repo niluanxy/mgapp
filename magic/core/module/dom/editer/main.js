@@ -1,102 +1,112 @@
 import {make as domMake} from "../../../magic/dom.js";
-import {eachProxy} from "../../../function/proxy.js";
+import {eachProxy, allProxy} from "../../../function/proxy.js";
 import {slice, element} from "../../../function/tools.js";
 import RootMagic from "../../../magic/main.js";
 
-function _edit(that, html, key) {
-    var el = that[0], dom;
+function domGet(html) {
+    var create = null;
 
     if (html instanceof RootMagic) {
-        html = html[0];
+        create = html[0];
+    } else {
+        create = domMake(html);
     }
 
-    if (el && el[key] && (dom = domMake(html)) ) {
-        el[key](dom);
-    }
-
-    return that;
+    return create;
 }
 
-function _insert(that, html, before) {
-    var el = that[0], parent, dom;
+function prependProxy(html) {
+    var el = element(this), dom;
 
-    if (html instanceof RootMagic) {
-        html = html[0];
-    }
-
-    if ( el && (parent = el.parentNode) &&
-        (dom = domMake(html)) ) {
-        return parent.insertBefore(dom, before ? el : el.nextSibling);
-    }
-
-    return that;
-}
-
-export function prepend(html, setAll) {
-    var dom, el = element(this);
-
-    if ( el && el.nodeType === 1 &&
-        (dom = _dom.make(html)) ) {
+    if (el && el.nodeType === 1 &&
+        (dom = domGet(html)) ) {
         el.insertBefore(dom, el.firstChild);
     }
 
     return this;
 }
 
-export function append(html) {
-    return _edit(this, "appendChild", html);
+export function prepend(html, setAll) {
+    return allProxy.call(this, prependProxy, html, setAll);
 }
 
-export function appendTo(html) {
-    var that = RootMagic(html);
+function appendProxy(html) {
+    var el = element(this), dom;
 
-    _edit(that, "appendChild", this);
+    if (el && el.nodeType === 1 &&
+        (dom = domGet(html)) ) {
+        el.appendChild(dom);
+    }
 
     return this;
 }
 
-export function before(html) {
-    return _insert(that, html, true);
+export function append(html, setAll) {
+    return allProxy.call(this, appendProxy, html, setAll);
 }
 
-export function after() {
-    return _insert(that, html);
+export function appendTo(html, setAll) {
+    var that = RootMagic(html);
+
+    if (setAll === true) {
+        for(var i=0; i<this.length; i++) {
+            appendProxy.call(that, this[i]);
+        }
+    } else {
+        appendProxy.call(that, this[0]);
+    }
+
+    return this;
 }
 
-export function wrap(html) {
-    var el = this[0], wrap, parent;
+function insertProxy(html, before) {
+    var el = element(this), dom, parent;
+
+    if (el && (parent = el.parentNode) &&
+        (dom = domGet(html)) ) {
+
+        parent.insertBefore(dom, before ? el : el.nextSibling);
+    }
+
+    return this;
+}
+
+export function before(html, setAll) {
+    return allProxy.call(this, insertProxy, html, true, setAll);
+}
+
+export function after(html, setAll) {
+    return allProxy.call(this, insertProxy, html, false, setAll);
+}
+
+function wrapProxy(html) {
+    var el = element(this), wrap, parent;
 
     if ( el && (parent = el.parentNode)
-         && (wrap = domMake(html)) ) {
+         && (wrap = domGet(html)) ) {
 
         wrap = wrap.firstChild;
         wrap = parent.insertBefore(wrap, el);
-        append(wrap, el);
+        appendProxy.call(wrap, el);
     }
 
     return this;
 }
 
-export function wrapAll(html) {
-    var wrap = domMake(html), args;
-
-    if (wrap) {
-        args = slice(arguments, 1);
-        args.unshift(wrap);
-
-        eachProxy.apply(this, args);
-    }
-
-    return this;
+export function wrap(html, setAll) {
+    return allProxy.call(this, wrapProxy, html, setAll);
 }
 
-export function remove() {
-    var el = this[0], parent;
+function removeProxy(html) {
+    var el = element(this), parent;
 
-    if (el && (parent = el.parentNode) &&
-        parent != document) {
+    if (el && (parent = el.parentNode)) {
         parent.removeChild(el);
     }
 
     return this;
+}
+
+export function remove(setAll) {
+    return allProxy.call(this, removeProxy, setAll);
 }
