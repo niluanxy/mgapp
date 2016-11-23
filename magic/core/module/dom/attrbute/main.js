@@ -78,3 +78,21 @@ function attrProxy(aKey, aVal) {
 export function attr(aKey, aVal, setAll) {
     return allProxy.call(this, attrProxy, aKey, aVal, setAll);
 }
+
+function removeAttrProxy(aKey) {
+    var el = element(this), dels;
+
+    if (isTrueString(aKey)) {
+        dels = aKey.split(" ");
+
+        for(var i=0; i<dels.length; i++) {
+            el.removeAttribute(dels[i].toLowerCase());
+        }
+    }
+
+    return this;
+}
+
+export function removeAttr(aKey, setAll) {
+    return allProxy.call(this, removeAttrProxy, aKey, setAll);
+}

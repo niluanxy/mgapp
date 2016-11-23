@@ -330,6 +330,10 @@ function slice(array, start, end) {
     return ret;
 }
 
+function trim(string) {
+    return string.replace(/^\s+/, '').replace(/\s+$/, '');
+}
+
 /**
  * 尝试从 Magic 对象返回一个 element 对象
  */
@@ -451,7 +455,7 @@ Magic = function(select, context) {
         this.length = 1;
     } else if (select instanceof Magic) {
         return select;
-    } else if (select.length) {
+    } else if (select && select.length) {
         var pos = 0, element$$1;
 
         for(var i=0; i<select.length; i++) {
@@ -668,7 +672,7 @@ function wrap(html, setAll) {
     return allProxy.call(this, wrapProxy, html, setAll);
 }
 
-function removeProxy(html) {
+function removeProxy() {
     var el = element(this), parent;
 
     if (el && (parent = el.parentNode)) {
@@ -684,12 +688,52 @@ function remove(setAll) {
 
 var editer = Object.freeze({
 	prepend: prepend,
+	appendProxy: appendProxy,
 	append: append,
 	appendTo: appendTo,
 	before: before,
 	after: after,
 	wrap: wrap,
 	remove: remove
+});
+
+function index() {
+    var par = parent.call(this), items;
+
+    if (par && par.length) {
+        par = par[0];
+        items  = par.children;
+
+        for(var i=0; i<items.length; i++) {
+            if (items[i] == this[0]) {
+                return i;
+            }
+        }
+    }
+
+    return -1;  // 默认返回 -1
+}
+
+function parent() {
+    var el = element(this);
+
+    return RootMagic$1(el && el.parentNode);
+}
+
+function children(search) {
+    var el = element(this);
+
+    if (search) {
+        return RootMagic$1(search, el);
+    } else {
+        return RootMagic$1(el && el.children);
+    }
+}
+
+var search = Object.freeze({
+	index: index,
+	parent: parent,
+	children: children
 });
 
 function html(html, setAll) {
@@ -769,17 +813,379 @@ function attr(aKey, aVal, setAll) {
     return allProxy.call(this, attrProxy, aKey, aVal, setAll);
 }
 
+function removeAttrProxy(aKey) {
+    var el = element(this), dels;
+
+    if (isTrueString(aKey)) {
+        dels = aKey.split(" ");
+
+        for(var i=0; i<dels.length; i++) {
+            el.removeAttribute(dels[i].toLowerCase());
+        }
+    }
+
+    return this;
+}
+
+function removeAttr(aKey, setAll) {
+    return allProxy.call(this, removeAttrProxy, aKey, setAll);
+}
+
 var attrbute = Object.freeze({
 	html: html,
 	outerHtml: outerHtml,
 	text: text,
 	val: val,
 	checked: checked,
-	attr: attr
+	attr: attr,
+	removeAttr: removeAttr
 });
 
-// import * as search from "./search/main.js";
-RootMagic$1.fn.extend(attrbute, editer);
+RootMagic$1.fn.extend(attrbute, editer, search);
+
+function hasClass(cls) {
+    var el = element(this), result, arrays, test, clsName;
+
+    if (isTrueString(cls) && el && (clsName = el.className)) {
+        test = cls.replace(/\s+/, ' ').split(" ");
+        result = true;
+
+        for(var i=0; i<test.length; i++) {
+            var reg = new RegExp("(^|\\s)" + test[i] + "(\\s|$)");
+
+            if (!reg.test(clsName)) {
+                result = false;
+                break;
+            }
+        }
+
+        return result;
+    } else {
+        return false;
+    }
+}
+
+function addProxy(cls) {
+    var el = element(this), adds, clsName;
+
+    if (isTrueString(cls) && el && el.className !== undefined) {
+        adds = cls.replace(/\s+/, ' ').split(" ");
+        clsName = el.className || "";
+        clsName = clsName.replace(/\s+/, ' ');
+        clsName = clsName ? clsName.split(" ") : [];
+
+        for(var i=0; i<adds.length; i++) {
+            if (!hasClass.call(el, adds[i])) {
+                clsName.push(adds[i]);
+            }
+        }
+
+        el.className = clsName.join(" ");
+    }
+
+    return this;
+}
+
+function addClass(cls, setAll) {
+    return allProxy.call(this, addProxy, cls, setAll);
+}
+
+function removeProxy$1(cls) {
+    var el = element(this), dels, clsName;
+
+    if (isTrueString(cls) && el && el.className !== undefined) {
+        dels = cls.replace(/\s+/, ' ').split(" ");
+        clsName = el.className || "";
+        clsName = clsName.replace(/\s+/, ' ');
+
+        for(var i=0; i<dels.length; i++) {
+            var reg = new RegExp("(^|\\s)" + dels[i] + "(\\s|$)", 'g');
+
+            clsName = trim(clsName.replace(reg, ' '));
+        }
+
+        el.className = clsName;
+    }
+
+    return this;
+}
+
+function removeClass(cls, setAll) {
+    return allProxy.call(this, removeProxy$1, cls, setAll);
+}
+
+/**
+ * 切换对象的某个类，已包含时移除，未包含时添加
+ *
+ * @param       {String}    cls - 要切换的类名
+ * @param       {Boolean}   set - 是否强制设置
+ *
+ * @author      mufeng  <smufeng@gmail.com>
+ * @version     0.2     <2016-11-22>
+ */
+function toggleProxy(cls, set) {
+    var el = element(this);
+
+    if (set != undefined) {
+        // 有 SET 时，为真添加，否则删除
+        if (set == true) {
+            addProxy.call(el, cls);
+        } else {
+            removeProxy$1.call(el, cls);
+        }
+    } else if (hasClass.call(el, cls)) {
+        removeProxy$1.call(el, cls);
+    } else {
+        addProxy.call(el, cls);
+    }
+
+    return this;
+}
+
+function toggleClass(cls, set, setAll) {
+    return allProxy.call(this, toggleProxy, cls, set, setAll);
+}
+
+var clase = Object.freeze({
+	hasClass: hasClass,
+	addClass: addClass,
+	removeClass: removeClass,
+	toggleClass: toggleClass
+});
+
+var NAME_STYLE = "_MG_STYLE_";
+var NAME_EVENT = "_MG_EVENT_";
+var NAME_CORE  = "_MG_CORE_";
+
+
+function tryVal(el, space, aKey, aVal) {
+    var data = el[space];
+    if (!data) data = el[space] = {};
+
+    if (aKey && aVal !== undefined) {
+        data[aKey] = aVal;
+        return true;
+    } else if (aKey) {
+        return data[aKey];
+    }
+
+    return null;
+}
+
+function dataStyle(el, aKey, aVal) {
+    return tryVal(el, NAME_STYLE, aKey, aVal);
+}
+
+/**
+ * TODO: 添加CSS采用拼接字符串的方式，这样删除可以从
+ * 尾部删除CSS，可以不干扰样式代码别人自定义的样式
+ */
+function cssProxy(aKey, aVal) {
+    var el = element(this);
+
+    if (el && isTrueString(aKey)) {
+        if (aVal === undefined) {
+            return getComputedStyle(el)[aKey];
+        } else {
+            el.style[aKey] = aVal;
+        }
+    }
+
+    return this;
+}
+
+function css(aKey, aVal, setAll) {
+    if (aVal !== undefined) {
+        return allProxy.call(this, cssProxy, aKey, aVal, setAll);
+    } else {
+        return cssProxy.call(this, aKey);
+    }
+}
+
+function removeCssProxy(aKey) {
+    var el = element(this), style, dels;
+
+    if (el && el.attributes && isTrueString(aKey)) {
+        style = el.attributes.style;
+
+        if (style = style.value) {
+            dels = aKey.split(" ");
+
+            for(var i=0; i<dels.length; i++) {
+                var reg = new RegExp(dels[i]+':[^;]*;');
+                style = style.replace(reg, '');
+
+                if (style === "") break;
+            }
+        }
+
+        if (style === "") {
+            el.removeAttribute('style');
+        } else {
+            el.attributes.style.value = trim(style);
+        }
+    }
+
+    return this;
+}
+
+function removeCss(aKey, setAll) {
+    return allProxy.call(this, removeCssProxy, aKey, setAll);
+}
+
+/**
+ * 获取元素的 尺寸信息
+ * @param  {Element} relative [相对定位的对象]
+ * @return {Object}           [返回的尺寸信息对象]
+ *
+ * 如果 el 为字符串，会自动生成一个临时的对象到容器中来
+ * 获取对象的尺寸信息，此时必须指定 relative 参数
+ *
+ * relative 为要插入的容器，因为有时候插入的元素会收到
+ * 容器CSS的影响，导致尺寸有变化，为空默认为body元素
+ */
+function offset(relative) {
+    var el = element(this), relative, body = document.body,
+        rect, copy = {}, clone, fix = [], docElem, win = window,
+        render = '<div style="height: 0px; visibility: hidden"></div>';
+
+    relative = RootMagic$1(relative);
+    relative = element(relative) || body;
+
+    if (el == document) {
+        var width = body.clientWidth,
+            height = body.clientHeight;
+
+        rect = {
+            top: 0, left: 0, right: width,
+
+            bottom: height, width: width, height: height
+        };
+    } else {
+        if (typeof el == "string") {
+            rect  = {top: 0, left: 0, right: 0, bottom: 0};
+            clone = el;
+        } else if (el.getBoundingClientRect) {
+            clone = el.cloneNode(true);
+            rect  = el.getBoundingClientRect();
+            docElem = el.ownerDocument.documentElement;
+        }
+
+        if (!rect.width && !rect.height && relative) {
+            css.call(clone, "height", "0px");
+
+            render = element(RootMagic$1(render));
+            append.call(relative, render);
+            append.call(render, clone);
+
+            // 先设置对象高度为0，无干扰获取宽度等信息
+            fix.push(clone.getBoundingClientRect());
+
+            // 再设置父容器定位，无干扰获取高度等信息
+            css.call(render, "position", "absolute");
+            removeCss.call(clone, "height");
+            removeCss.call(render, "height");
+            fix.push(clone.getBoundingClientRect());
+
+            docElem = clone.ownerDocument.documentElement;
+            remove.call(render); // 删除创建的临时节点
+        }
+    }
+
+    extend(copy, rect);
+    if (fix && fix.length) {
+        // 设置第一次获取尺寸绝对正确地值
+        copy.width = fix[0].width;
+        copy.top = fix[0].top;
+        copy.left = fix[0].left;
+        copy.right = fix[0].right;
+
+        // 设置第二次获取尺寸绝对正确地值
+        copy.height = fix[1].height;
+        copy.bottom = fix[1].bottom;
+    }
+
+    copy.top  = copy.top + win.pageYOffset - docElem.clientTop;
+    copy.left = copy.left + win.pageXOffset - docElem.clientLeft;
+
+    return copy;
+}
+
+function width(relative) {
+    var size = offset.call(this, relative);
+
+    return parseFloat(size.width) || 0;
+}
+
+function height(relative) {
+    var size = offset.call(this, relative);
+
+    return parseFloat(size.height) || 0;
+}
+
+function showProxy(display) {
+    var el = element(this), show, cache;
+
+    if (cssProxy.call(el, "display") == "none") {
+        cache = dataStyle(el, "display");
+        show = display || cache || "block";
+        cssProxy.call(el, "display", show);
+    }
+
+    return this;
+}
+
+function show(display, setAll) {
+    return allProxy.call(this, showProxy, display, setAll);
+}
+
+function hideProxy() {
+    var el = element(this), display;
+
+    display = cssProxy.call(el, "display");
+    dataStyle(el, "display", display);
+    cssProxy.call(el, "display", "none");
+
+    return this;
+}
+
+function hide(setAll) {
+    return allProxy.call(this, hideProxy, setAll);
+}
+
+/** 
+ * 返回元素是否处于显示状态
+ *
+ * http://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
+ */
+function visible() {
+
+}
+
+/**
+ * 返回元素是否在窗口可见视图中
+ * 
+ * https://remysharp.com/2009/01/26/element-in-view-event-plugin
+ * https://github.com/mmmeff/jquery.inview2/blob/master/jquery.inview2.js
+ * http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
+ */
+function inview() {
+
+}
+
+var other = Object.freeze({
+	css: css,
+	removeCss: removeCss,
+	offset: offset,
+	width: width,
+	height: height,
+	show: show,
+	hide: hide,
+	visible: visible,
+	inview: inview
+});
+
+RootMagic$1.fn.extend(clase, other);
 
 try {
     if (typeof window === "object") {

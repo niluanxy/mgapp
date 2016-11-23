@@ -1,4 +1,5 @@
 import RootMagic from "../../../magic/main.js";
+import {element} from "../../../function/tools.js";
 
 export function index() {
     var par = parent.call(this), items;
@@ -18,13 +19,13 @@ export function index() {
 }
 
 export function parent() {
-    var el = this[0], parent;
+    var el = element(this);
 
     return RootMagic(el && el.parentNode);
 }
 
 export function children(search) {
-    var el = this[0];
+    var el = element(this);
 
     if (search) {
         return RootMagic(search, el);

@@ -37,7 +37,7 @@ Magic = function(select, context) {
         this.length = 1;
     } else if (select instanceof Magic) {
         return select;
-    } else if (select.length) {
+    } else if (select && select.length) {
         var pos = 0, element;
 
         for(var i=0; i<select.length; i++) {

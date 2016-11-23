@@ -43,6 +43,10 @@ export function slice(array, start, end) {
     return ret;
 }
 
+export function trim(string) {
+    return string.replace(/^\s+/, '').replace(/\s+$/, '');
+}
+
 /**
  * 尝试从 Magic 对象返回一个 element 对象
  */

@@ -1,6 +1,7 @@
 import RootMagic from "./magic/main.js";
 
 import "./module/dom/main.js";
+import "./module/style/main.js";
 
 try {
     if (typeof window === "object") {

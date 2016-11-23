@@ -30,7 +30,7 @@ export function prepend(html, setAll) {
     return allProxy.call(this, prependProxy, html, setAll);
 }
 
-function appendProxy(html) {
+export function appendProxy(html) {
     var el = element(this), dom;
 
     if (el && el.nodeType === 1 &&
@@ -97,7 +97,7 @@ export function wrap(html, setAll) {
     return allProxy.call(this, wrapProxy, html, setAll);
 }
 
-function removeProxy(html) {
+function removeProxy() {
     var el = element(this), parent;
 
     if (el && (parent = el.parentNode)) {
