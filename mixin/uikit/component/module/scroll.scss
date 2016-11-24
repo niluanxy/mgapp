@@ -8,6 +8,20 @@
     z-index: 1;
     overflow: hidden;
     position: relative;
+
+    &::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: darkgrey;
+        outline: 1px solid slategrey;
+    }
 }
 
 @mixin scroll($class: scroll, $prefix: $config-prefix) {
@@ -19,10 +33,19 @@
         &-x {
             @extend %scroll;
 
+            width: 100%;
             overflow-x: scroll;
-            height: auto;
-            display: table;
-            white-space: nowrap;
+
+            .wrapper {
+                height: 100%;
+                width: auto;
+                float: left;
+                white-space: nowrap;
+            }
+        }
+
+        .wrapper {
+            width: 100%;
         }
 
         @content;   // 样式自定义扩展代码位置
