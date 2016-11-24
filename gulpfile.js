@@ -6,7 +6,9 @@ var gulp         = require('gulp-param')(require('gulp'), process.argv),
     colors       = require('colors'),
     concat       = require("gulp-concat"),
     rename       = require("gulp-rename"),
+    autoprefixer = require("gulp-autoprefixer"),
     shell        = require('gulp-shell'),
+    px2rem       = require("gulp-px2rem"),
     rollup       = require("rollup-stream"),
     source       = require('vinyl-source-stream'),
     webpack      = require("webpack-stream"),
@@ -25,6 +27,16 @@ colors.setTheme({
     error: 'red',
     time: 'gray'
 });
+
+var px2remConfig = {
+    rootValue: 20,
+    unitPrecision: 5,
+    propertyBlackList: [],
+    propertyWhiteList: [],
+    replace: true,
+    mediaQuery: false,
+    minPx: 3
+};
 
 var DIR_MIXIN = __dirname + "/mixin/",
     DIST_MIXIN = DIR_MIXIN + "/dist",
@@ -88,8 +100,10 @@ function task_concat_mixin() {
             DIST_MIXIN+"mixin_uikit.scss",
             DIR_MIXIN+"build.scss"])
         .pipe(concat("mixin.scss"))
-        .pipe(gulp.dest(DIST_MIXIN))
         .pipe(sass())
+        .pipe(autoprefixer())
+        .pipe(px2rem(px2remConfig))
+        .pipe(gulp.dest(DIST_MIXIN))
         .pipe(gulp.dest(DIST_MIXIN))
         .on("finish", function() {
             log("mixin concat finish");
