@@ -1041,7 +1041,7 @@ function removeCss(aKey, setAll) {
  * 如果 el 为字符串，会自动生成一个临时的对象到容器中来
  * 获取对象的尺寸信息，此时必须指定 relative 参数
  *
- * relative 为要插入的容器，因为有时候插入的元素会收到
+ * relative 为要插入的容器，因为有时候插入的元素会受到
  * 容器CSS的影响，导致尺寸有变化，为空默认为body元素
  */
 function offset(relative) {
@@ -1155,22 +1155,56 @@ function hide(setAll) {
 
 /** 
  * 返回元素是否处于显示状态
- *
- * http://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
  */
 function visible() {
+    var el = element(this),
+        rect = offset.call(el),
+        opacity = parseFloat(css.call(el, "opacity")),
+        display = css.call(el, "display"),
+        avisible= css.call(el, "visibility");
 
+    if (rect.width <=0 || rect.height <= 0 ||
+        opacity <= 0 || display === "none" ||
+        avisible === "hidden") {
+
+        return false;
+    }
+
+    return true;
 }
 
 /**
  * 返回元素是否在窗口可见视图中
- * 
- * https://remysharp.com/2009/01/26/element-in-view-event-plugin
- * https://github.com/mmmeff/jquery.inview2/blob/master/jquery.inview2.js
- * http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
  */
-function inview() {
+function inview(offsetTop, offsetLeft) {
+    var el = element(this),
+        show = visible.call(el),
+        rect = offset.call(el),
+        doce = document.documentElement,
+        body = document.body,
+        vw, vh, stop, sleft, ft, fl, bt, bl;
 
+    if (!show) return fasle;
+    vw = doce.clientWidth;
+    vh = doce.clientHeight;
+
+    stop = doce.scrollTop ? doce.scrollTop : body.scrollTop;
+    sleft = doce.scrollLeft ? doce.scrollLeft : body.scrollLeft;
+
+    offsetTop = offsetTop || 0;
+    offsetLeft = offsetLeft || 0;
+
+    ft = rect.top - stop;
+    bt = rect.top - stop + rect.height;
+    fl = rect.left - sleft;
+    bl = rect.left - sleft + rect.width;
+
+    if ( (ft-offsetTop <= vh && bt >= 0) &&
+         (fl-offsetLeft <= vw && bl >= 0) ) {
+        return true;
+    }
+
+    return false;
 }
 
 var other = Object.freeze({
