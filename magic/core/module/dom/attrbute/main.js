@@ -56,10 +56,6 @@ export function checked() {
 function attrProxy(aKey, aVal) {
     var el = element(this), nType = el.nodeType ? el.nodeType : 2;
 
-    if (nType === 3 || nType === 8 || nType === 2) {
-        return; // 忽略掉 文本节点、注释和属性节点
-    }
-
     if (el && el.getAttribute && isTrueString(aKey)) {
         aKey = aKey.toLowerCase(); // 转为小写
 
@@ -82,7 +78,7 @@ export function attr(aKey, aVal, setAll) {
 function removeAttrProxy(aKey) {
     var el = element(this), dels;
 
-    if (isTrueString(aKey)) {
+    if (el && isTrueString(aKey)) {
         dels = aKey.split(" ");
 
         for(var i=0; i<dels.length; i++) {

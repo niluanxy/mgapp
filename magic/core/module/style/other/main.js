@@ -1,6 +1,6 @@
 import {allProxy} from "../../../function/proxy.js";
 import {element, extend, trim} from "../../../function/tools.js";
-import {isTrueString, isObject} from "../../../function/check.js";
+import {isTrueString} from "../../../function/check.js";
 import {dataStyle} from "../../../magic/tools.js";
 import {append, remove} from "../../dom/editer/main.js";
 import RootMagic from "../../../magic/main.js";
@@ -80,6 +80,9 @@ export function offset(relative) {
 
     relative = RootMagic(relative);
     relative = element(relative) || body;
+
+    if (!el) return {top: 0, left: 0, right: 0,
+                     bottom: 0, width: 0, height: 0};
 
     if (el == document) {
         var width = body.clientWidth,
@@ -192,7 +195,7 @@ export function visible() {
         display = css.call(el, "display"),
         avisible= css.call(el, "visibility");
 
-    if (rect.width <=0 || rect.height <= 0 ||
+    if (!el || rect.width <=0 || rect.height <= 0 ||
         opacity <= 0 || display === "none" ||
         avisible === "hidden") {
 

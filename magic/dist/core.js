@@ -134,6 +134,10 @@ function isString(string) {
     return typeof string == "string";
 }
 
+function isNumber(number) {
+    return typeof number == "number" && !isNaN(number);
+}
+
 function isTrueString(string) {
     return string && typeof string == "string";
 }
@@ -144,6 +148,7 @@ var _CHECK = Object.freeze({
 	isElement: isElement,
 	isFunction: isFunction,
 	isString: isString,
+	isNumber: isNumber,
 	isTrueString: isTrueString
 });
 
@@ -730,10 +735,45 @@ function children(search) {
     }
 }
 
+function eq(el, checkAll) {
+    if (isNumber(el)) {
+        return RootMagic$1(this[el]);
+    } else if (isElement(el)) {
+        return this[0] === el;
+    } else if (el instanceof RootMagic$1) {
+        if (checkAll === true) {
+            for(var i=0; i<this.length; i++) {
+                if (this[i] !== el[i]) return false;
+            }
+
+            return true;
+        } else {
+            return this[0] === el[0];
+        }
+    }
+}
+
+function below(parent) {
+    var par = RootMagic$1(parent),
+        check = this.parent();
+
+    do {
+        if (check.eq(par)) {
+            return true;
+        }
+
+        check = check.parent();
+    } while(check.length > 0);
+
+    return false;
+}
+
 var search = Object.freeze({
 	index: index,
 	parent: parent,
-	children: children
+	children: children,
+	eq: eq,
+	below: below
 });
 
 function html(html, setAll) {
@@ -790,10 +830,6 @@ function checked() {
 function attrProxy(aKey, aVal) {
     var el = element(this), nType = el.nodeType ? el.nodeType : 2;
 
-    if (nType === 3 || nType === 8 || nType === 2) {
-        return; // 忽略掉 文本节点、注释和属性节点
-    }
-
     if (el && el.getAttribute && isTrueString(aKey)) {
         aKey = aKey.toLowerCase(); // 转为小写
 
@@ -816,7 +852,7 @@ function attr(aKey, aVal, setAll) {
 function removeAttrProxy(aKey) {
     var el = element(this), dels;
 
-    if (isTrueString(aKey)) {
+    if (el && isTrueString(aKey)) {
         dels = aKey.split(" ");
 
         for(var i=0; i<dels.length; i++) {
@@ -1052,6 +1088,9 @@ function offset(relative) {
     relative = RootMagic$1(relative);
     relative = element(relative) || body;
 
+    if (!el) return {top: 0, left: 0, right: 0,
+                     bottom: 0, width: 0, height: 0};
+
     if (el == document) {
         var width = body.clientWidth,
             height = body.clientHeight;
@@ -1163,7 +1202,7 @@ function visible() {
         display = css.call(el, "display"),
         avisible= css.call(el, "visibility");
 
-    if (rect.width <=0 || rect.height <= 0 ||
+    if (!el || rect.width <=0 || rect.height <= 0 ||
         opacity <= 0 || display === "none" ||
         avisible === "hidden") {
 

@@ -27,6 +27,10 @@ export function isString(string) {
     return typeof string == "string";
 };
 
+export function isNumber(number) {
+    return typeof number == "number" && !isNaN(number);
+};
+
 export function isTrueString(string) {
     return string && typeof string == "string";
 };

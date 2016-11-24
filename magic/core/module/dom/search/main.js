@@ -1,5 +1,6 @@
-import RootMagic from "../../../magic/main.js";
 import {element} from "../../../function/tools.js";
+import {isNumber, isElement} from "../../../function/check.js";
+import RootMagic from "../../../magic/main.js";
 
 export function index() {
     var par = parent.call(this), items;
@@ -32,4 +33,37 @@ export function children(search) {
     } else {
         return RootMagic(el && el.children);
     }
+}
+
+export function eq(el, checkAll) {
+    if (isNumber(el)) {
+        return RootMagic(this[el]);
+    } else if (isElement(el)) {
+        return this[0] === el;
+    } else if (el instanceof RootMagic) {
+        if (checkAll === true) {
+            for(var i=0; i<this.length; i++) {
+                if (this[i] !== el[i]) return false;
+            }
+
+            return true;
+        } else {
+            return this[0] === el[0];
+        }
+    }
+}
+
+export function below(parent) {
+    var par = RootMagic(parent),
+        check = this.parent();
+
+    do {
+        if (check.eq(par)) {
+            return true;
+        }
+
+        check = check.parent();
+    } while(check.length > 0);
+
+    return false;
 }
