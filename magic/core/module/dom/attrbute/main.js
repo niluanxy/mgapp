@@ -1,6 +1,6 @@
-import {strFind, element} from "../../../function/tools.js";
-import {allProxy, keyProxy} from "../../../function/proxy.js";
-import {isTrueString, isString} from "../../../function/check.js";
+import {strFind, element} from "CORE_FUNCTION/tools.js";
+import {allProxy, keyProxy} from "CORE_FUNCTION/proxy.js";
+import {isTrueString, isString} from "CORE_FUNCTION/check.js";
 
 export function html(html, setAll) {
     return allProxy.call(this, keyProxy, "innerHTML", html, true, setAll);

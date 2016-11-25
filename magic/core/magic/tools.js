@@ -2,7 +2,6 @@ var NAME_STYLE = "_MG_STYLE_",
     NAME_EVENT = "_MG_EVENT_",
     NAME_CORE  = "_MG_CORE_";
 
-
 function tryVal(el, space, aKey, aVal) {
     var data = el[space];
     if (!data) data = el[space] = {};
@@ -17,12 +16,24 @@ function tryVal(el, space, aKey, aVal) {
     return null;
 }
 
+function delKey(el, space, aKey) {
+    var data = el[space];
+
+    if (data) delete data[aKey];
+
+    return true;
+}
+
 export function dataStyle(el, aKey, aVal) {
     return tryVal(el, NAME_STYLE, aKey, aVal);
 }
 
 export function dataCore(el, aKey, aVal) {
     return tryVal(el, NAME_CORE, aKey, aVal);
+}
+
+export function removeDataCore(el, aKey) {
+    return delKey(el, NAME_CORE, aKey);
 }
 
 export function dataEvent(el, aKey, aVal) {

@@ -1,7 +1,7 @@
 import * as _DOM  from "./dom.js";
-import * as _CHECK from "../function/check.js";
+import * as _CHECK from "CORE_FUNCTION/check.js";
 import _READY from "./ready.js";
-import { each as _EACH, slice as _SLICE, extend as _EXTEND} from "../function/tools.js";
+import { each as _EACH, slice as _SLICE, extend as _EXTEND} from "CORE_FUNCTION/tools.js";
 
 var Magic, Prototype, Creater;
 
@@ -60,14 +60,14 @@ Prototype = {
     // 原型有splice属性,对象会变为类数组对象
     splice: [].splice,
 
-    /* 简单的查询方法，返回标准的dom对象 */
-    query: function(select) {
-        return _DOM.query(select, this[0]);
-    },
-
     /* 在子类中查找对象 */
     find: function(select) {
         return new Magic(select, this[0]);
+    },
+
+    /* 简单的查询方法，返回标准的dom对象 */
+    query: function(select) {
+        return _DOM.query(select, this[0]);
     },
 
     each: function(callback) {

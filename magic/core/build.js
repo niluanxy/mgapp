@@ -1,7 +1,9 @@
-import RootMagic from "./magic/main.js";
+import RootMagic from "CORE_MAGIC/main.js";
 
-import "./module/dom/main.js";
-import "./module/style/main.js";
+import "CORE_MODULE/dom/main.js";
+import "CORE_MODULE/style/main.js";
+import "CORE_MODULE/event/main.js";
+import "CORE_MODULE/util/main.js";
 
 try {
     if (typeof window === "object") {

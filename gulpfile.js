@@ -1,18 +1,21 @@
-var gulp         = require('gulp-param')(require('gulp'), process.argv),
-    shell        = require('gulp-shell'),
-    Q            = require("q"),
-    del          = require("del"),
-    moment       = require("moment"),
-    colors       = require('colors'),
-    concat       = require("gulp-concat"),
-    rename       = require("gulp-rename"),
-    autoprefixer = require("gulp-autoprefixer"),
-    shell        = require('gulp-shell'),
-    px2rem       = require("gulp-px2rem"),
-    rollup       = require("rollup-stream"),
-    source       = require('vinyl-source-stream'),
-    webpack      = require("webpack-stream"),
-    sass         = require("gulp-sass");
+var gulp                = require('gulp-param')(require('gulp'), process.argv),
+    shell               = require('gulp-shell'),
+    Q                   = require("q"),
+    del                 = require("del"),
+    moment              = require("moment"),
+    colors              = require('colors'),
+    concat              = require("gulp-concat"),
+    rename              = require("gulp-rename"),
+    autoprefixer        = require("gulp-autoprefixer"),
+    shell               = require('gulp-shell'),
+    px2rem              = require("gulp-px2rem"),
+    rollup              = require("rollup-stream"),
+    rollupReplace       = require('rollup-plugin-replace'),
+    rollupUglify        = require('rollup-plugin-uglify'),
+    rollupAlias         = require("rollup-plugin-alias"),
+    source              = require('vinyl-source-stream'),
+    webpack             = require("webpack-stream"),
+    sass                = require("gulp-sass");
 
 colors.setTheme({  
     silly: 'rainbow',  
@@ -39,10 +42,25 @@ var px2remConfig = {
 };
 
 var DIR_MIXIN = __dirname + "/mixin/",
-    DIST_MIXIN = DIR_MIXIN + "/dist",
+    DIST_MIXIN = DIR_MIXIN + "dist",
+
+    DIR_MINJS =  __dirname + "/minjs/",
 
     DIR_MAGIC = __dirname + "/magic/",
-    DIST_MAGIC = DIR_MAGIC + "/dist";
+    DIST_MAGIC = DIR_MAGIC + "dist";
+
+var DIR_MAGIC_ALIAS = {
+    resolve: ['.jsx', '.js'],
+
+    LIB_MINJS: DIR_MINJS,
+
+    MUI: DIR_MAGIC+"mui",
+
+    CORE_FUNCTION: DIR_MAGIC+"core/function",
+    CORE_MAGIC : DIR_MAGIC+"core/magic",
+    CORE_MODULE: DIR_MAGIC+"core/module",
+    CORE_STATIC: DIR_MAGIC+"core/static",
+};
 
 function log(str, style) {
     style = style || "info";
@@ -93,7 +111,9 @@ function task_concat_mixin() {
             defer_core.promise,
             defer_uikit.promise,
             defer_vars.promise
-        ])
+        ]).then(function() {
+            log("--- mixin concat finish");
+        });
     }).then(function() {
         gulp.src([DIST_MIXIN+"mixin_core.scss",
             DIST_MIXIN+"mixin_vars.scss",
@@ -106,7 +126,7 @@ function task_concat_mixin() {
         .pipe(gulp.dest(DIST_MIXIN))
         .pipe(gulp.dest(DIST_MIXIN))
         .on("finish", function() {
-            log("mixin concat finish");
+            log("mixin build to css finish");
             defer_all.resolve();
         })
     })
@@ -132,12 +152,21 @@ function task_build_magic() {
         rollup({
             entry: DIR_CORE+"build.js",
             format: 'umd',
-            moduleName: "Magic"
+            moduleName: "Magic",
+
+            plugins: [
+                rollupAlias(DIR_MAGIC_ALIAS),
+                rollupReplace({
+                    exclude: 'node_modules/**',
+                    ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
+                }),
+                (process.env.NODE_ENV === 'production' && rollupUglify()),
+            ],
         })
         .pipe(source('core.js'))
         .pipe(gulp.dest(DIST_MAGIC))
         .on("finish", function() {
-            log("magic core build finish");
+            log("--- magic core build finish");
             defer_core.resolve();
         });
 
@@ -145,7 +174,7 @@ function task_build_magic() {
             defer_core.promise,
         ])
     }).then(function() {
-        log("magic task build finish");
+        log("magic task all finish");
         defer_all.resolve();
     });
 

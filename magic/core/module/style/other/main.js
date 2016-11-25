@@ -1,9 +1,9 @@
-import {allProxy} from "../../../function/proxy.js";
-import {element, extend, trim} from "../../../function/tools.js";
-import {isTrueString} from "../../../function/check.js";
-import {dataStyle} from "../../../magic/tools.js";
-import {append, remove} from "../../dom/editer/main.js";
-import RootMagic from "../../../magic/main.js";
+import {allProxy} from "CORE_FUNCTION/proxy.js";
+import {element, extend, trim} from "CORE_FUNCTION/tools.js";
+import {isTrueString} from "CORE_FUNCTION/check.js";
+import {dataStyle} from "CORE_MAGIC/tools.js";
+import {append, remove} from "CORE_MODULE/dom/editer/main.js";
+import RootMagic from "CORE_MAGIC/main.js";
 
 /**
  * TODO: 添加CSS采用拼接字符串的方式，这样删除可以从

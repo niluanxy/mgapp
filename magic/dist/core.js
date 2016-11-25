@@ -483,14 +483,14 @@ Prototype = {
     // 原型有splice属性,对象会变为类数组对象
     splice: [].splice,
 
-    /* 简单的查询方法，返回标准的dom对象 */
-    query: function(select) {
-        return query(select, this[0]);
-    },
-
     /* 在子类中查找对象 */
     find: function(select) {
         return new Magic(select, this[0]);
+    },
+
+    /* 简单的查询方法，返回标准的dom对象 */
+    query: function(select) {
+        return query(select, this[0]);
     },
 
     each: function(callback) {
@@ -993,7 +993,6 @@ var NAME_STYLE = "_MG_STYLE_";
 var NAME_EVENT = "_MG_EVENT_";
 var NAME_CORE  = "_MG_CORE_";
 
-
 function tryVal(el, space, aKey, aVal) {
     var data = el[space];
     if (!data) data = el[space] = {};
@@ -1008,8 +1007,28 @@ function tryVal(el, space, aKey, aVal) {
     return null;
 }
 
+function delKey(el, space, aKey) {
+    var data = el[space];
+
+    if (data) delete data[aKey];
+
+    return true;
+}
+
 function dataStyle(el, aKey, aVal) {
     return tryVal(el, NAME_STYLE, aKey, aVal);
+}
+
+function dataCore(el, aKey, aVal) {
+    return tryVal(el, NAME_CORE, aKey, aVal);
+}
+
+function removeDataCore(el, aKey) {
+    return delKey(el, NAME_CORE, aKey);
+}
+
+function dataEvent(el, aKey, aVal) {
+    return tryVal(el, NAME_EVENT, aKey, aVal);
 }
 
 /**
@@ -1259,6 +1278,759 @@ var other = Object.freeze({
 });
 
 RootMagic$1.fn.extend(clase, other);
+
+var Emitter;
+var Prototype$1 = {};
+var $KEY = "##_";
+
+// 获取到修饰后的 key 值
+function keyFix(name) {
+    name = name.replace(/^\./g, '');
+    return $KEY + name;
+}
+
+function keyTest(name) {
+    var reg = new RegExp("^"+$KEY);
+
+    return name.match(reg);
+}
+
+function isFunction$1(call) {
+    return typeof call == "function";
+}
+
+function isObject$1(object) {
+    return object && typeof object == "object";
+}
+
+function isArray$1(array) {
+    return array && array instanceof Array;
+}
+
+function isString$1(str) {
+    return str && typeof str == "string";
+}
+
+// 在 列表树 中根据路径查询对象
+// 如果没有值会返回 null
+function pathFind(paths, str, parent) {
+    var arr = str.split("/"), par = null;
+
+    for(var i=0; i<arr.length; i++) {
+        if (isString$1(arr[i])) {
+            var key = keyFix(arr[i]);
+
+            if (!isObject$1(paths[key])) {
+                return null;
+            } else {
+                par = paths;
+                paths = paths[key];
+            }
+        }
+    }
+
+    return parent ? par : paths;
+}
+
+// 在 列表树 中根据路径查询对象
+// 如果没有值则会每一级的创建空对象
+function pathAdd(paths, str) {
+    var arr = str.split("/");
+
+    for(var i=0; i<arr.length; i++) {
+        if (isString$1(arr[i])) {
+            var key = keyFix(arr[i]);
+
+            if (!isObject$1(paths[key])) {
+                paths[key] = {};
+            }
+
+            paths = paths[key];
+        }
+    }
+
+    return paths;
+}
+
+function arrayCopy(array) {
+    var copy = [];
+
+    if (isArray$1(array)) {
+        for(var i=0; i<array.length; i++) {
+            copy.push(array[i]);
+        }
+    }
+
+    return copy;
+}
+
+function pathSplit(str) {
+    var space, eves, first, split;
+
+    if (str.match(/^.+\s.+$/)) {
+        split = str.split(" ");
+        space = split[0];
+        eves  = split[1];
+    } else {
+        space = "";
+        eves  = str || "";
+    }
+
+    first = eves.match(/(^[^\.]*)\./);
+    first = first ? first[1] : eves;
+
+    return {space: space, eves: eves, first: first};
+}
+
+// 分离出用户调用的事件名，事件参数
+// 如果第一个参数为 true，表示执行会忽略根元素自身
+function eventArgs(/* args... */) {
+    var ret = {}, split, splice = Array.prototype.splice;
+
+    if (arguments.length >= 2 && arguments[0] === true) {
+        ret.pass = true;
+        split = pathSplit(arguments[1]);
+        ret.args = splice.call(arguments, 2);
+    } else {
+        ret.pass = false;
+        split = pathSplit(arguments[0]);
+        ret.args = splice.call(arguments, 1);
+    }
+    
+    ret.eves  = split.eves;
+    ret.first = split.first;
+    ret.space = split.space;
+
+    return ret;
+}
+
+// 查找给定路劲下的给定对象
+// 没有会创建空对象
+function pathObjectAdd(paths, str, key) {
+    if (!paths || !key) return null;
+
+    var path = pathAdd(paths, str);
+
+    if ( !(isObject$1(path[key])) ) {
+        path[key] = {};
+    }
+
+    return path[key];
+}
+
+function pathObjectPush(paths, str, key, call, content) {
+    var split = pathSplit(str), path,
+        space = split.space,
+        eves  = split.eves,
+        first = split.first;
+
+    path = pathObjectAdd(paths, space, key);
+
+    if (!isArray$1(path[first])) {
+        path[first] = [];
+    }
+
+    path[first].push({
+        name: eves, run: call,
+        content: content || window || null
+    });
+}
+
+// 删除给定路劲下的回调对象
+// 未给定回调则删除所有
+function pathObjectDel(paths, str, key, call) {
+    var split = pathSplit(str),
+        space = split.space,
+        eves  = split.eves,
+        first = split.first, path, arrs;
+
+    path = pathFind(paths, space);
+    arrs = path[key];
+
+    if (isObject$1(arrs)) {
+        if (eves === first && call === undefined) {
+            delete arrs[eves];
+        } else {
+            arrs = arrs[first] || [];
+
+            for(var i=0; i<arrs.length; i++) {
+                var item = arrs[i],
+                    name = item.name, run = item.run;
+
+                if (call && name.match("^"+eves) && call === run) {
+                    arrs.splice(i--, 1);
+                } else if (!call && name.match("^"+eves)) {
+                    arrs.splice(i--, 1);
+                }
+            }
+        }
+    }
+}
+
+// 检测指定对象下，是否有可运行的事件对象
+// 严格模式必须有匹配的事件
+function eventTest(paths, eFirst, strict) {
+    var arrs = "call".split(" "), find = 0;
+
+    for(var i=0; i<arrs.length; i++) {
+        var key = arrs[i], runs;
+
+        runs = paths[key] || {};
+        runs = runs[eFirst] || [];
+    
+        if (!!strict === true) {
+            for(var j=0; j<runs.length; j++) {
+                if (runs[i].name.match("^"+strict)) {
+                    find += 1;
+                }
+            }
+        } else {
+            find += runs.length;
+        }
+    }
+
+    return find > 0;
+}
+
+/**
+ * 获取给定路劲下可以传播事件的对象
+ * 
+ * @param  {String} strict [严格匹配的事件名]
+ */
+function eventChild(paths, eFirst, strict) {
+    var calls = [];
+
+    for(var key in paths) {
+        var item = paths[key], find;
+
+        if (keyTest(key) && eventTest(item, eFirst, strict)) {
+            if (!!strict) {
+                // 严格模式下，至少要有一个完全匹配的事件
+                find = item.call || {};
+                find = find[eFirst] || [];
+
+                for(var j=0; j<find.length; j++) {
+                    if (find[j].name.match("^"+strict)) {
+                        calls.push(item);
+                        break;
+                    }
+                }
+            } else {
+                calls.push(item);
+            }
+        }
+    }
+
+    return calls;
+}
+
+function eventEmit(paths, eName, eFirst, before) {
+    var args, propagation;
+
+    before = before || {};
+    args = before.arguments || [];
+    propagation = !!before.propagation;
+
+    function getCalls(paths, type, eves) {
+        var arrs = [];
+
+        if (isObject$1(paths[type])) {
+            paths = paths[type];
+            arrs  = paths[eves] || [];
+        }
+
+        return arrs;
+    }
+
+    function callRuns(calls, eves, once) {
+        // 克隆数组，防止数组长度变化
+        var copy = arrayCopy(calls), immediation = true,
+            continer, stopPropa, stopImmed;
+
+        stopPropa = function() { propagation = false; };
+        stopImmed = function(propa) {
+            immediation = false;
+            // 默认也会终止事件冒泡
+            if (propa !== true) propagation = false;
+        };
+
+        continer = function() {
+            this.stopPropagation = stopPropa;
+            this.stopImmediation = stopImmed;
+        };
+
+        for(var i=0; i<copy.length; i++) {
+            var item = copy[i],
+                name = item.name, run = item.run;
+
+            if (name.match("^"+eves)) {
+                continer.prototype = item.content || null;
+                run.apply(new continer, args);
+
+                if (once === true) break;
+            }
+
+            if (!immediation) break;
+        }
+    }
+
+    if (isObject$1(paths)) {
+        var actions = ["patch", "catch", "call"];
+
+        for(var i=0; i<actions.length; i++) {
+            var action = actions[i], eves;
+            eves = getCalls(paths, action, eFirst);
+
+            if (propagation && eves.length > 0) {
+                callRuns(eves, eName, action == "catch");
+                if(action === "catch") break;
+            }
+        }
+    }
+
+    /**
+     * 返回本次运行后的数据状态
+     */
+    return {
+        propagation: propagation,
+        arguments  : args || [],
+    }
+}
+
+Emitter = function(tables, parent, prefix) {
+    this.tables = tables || {};
+    this.parent = parent || null;
+    this.prefix = prefix || null;
+
+    return this;
+};
+
+Emitter.prototype = Prototype$1;
+
+// 添加一个事件对象
+Prototype$1.on = function(eve, call, content) {
+    if (isString$1(eve) && isFunction$1(call)) {
+        pathObjectPush(this.tables, eve, "call", call, content);
+    }
+
+    return this;
+};
+
+// 添加一个一次性的事件对象
+Prototype$1.once = function(eve, call, content) {
+    if (isString$1(eve) && isFunction$1(call)) {
+        var that = this, once;
+
+        once = function() {
+            call.apply(this, arguments);
+            that.off(eve, once);
+        };
+
+        that.on(eve, once, content);
+    }
+
+    return this;
+};
+
+// 移除一个事件
+Prototype$1.off = function(eve, call) {
+    if (isString$1(eve)) {
+        pathObjectDel(this.tables, eve, "call", call);
+    }
+
+    return this;
+};
+
+// 在元素上添加捕获事件
+Prototype$1.catch = function(eve, call, content) {
+    if (isString$1(eve) && isFunction$1(call)) {
+        pathObjectPush(this.tables, eve, "catch", call, content);
+    }
+
+    return this;
+};
+
+// 在元素上移除捕获事件
+Prototype$1.uncatch = function(eve, call) {
+    if (isString$1(eve)) {
+        pathObjectDel(this.tables, eve, "catch", call);
+    }
+
+    return this;
+};
+
+// 在元素上添加一个修饰器
+Prototype$1.patch = function(eve, call) {
+    if (isString$1(eve) && isFunction$1(call)) {
+        pathObjectPush(this.tables, eve, "patch", call, content);
+    }
+
+    return this;
+};
+
+// 在元素上移除一个修饰器
+Prototype$1.unpatch = function(eve, call) {
+    if (isString$1(eve)) {
+        pathObjectDel(this.tables, eve, "patch", call);
+    }
+
+    return this;
+};
+
+// 在元素上触发事件
+Prototype$1.emit = function(/* eve, args... */) {
+    var runs = eventArgs.apply(null, arguments),
+        path, eves, first;
+
+    if (isString$1(runs.eves)) {
+        first = runs.first;
+        eves  = runs.eves;
+        path  = pathFind(this.tables, runs.space);
+
+        if (isObject$1(path)) {
+            eventEmit(path, eves, first, {
+                arguments: runs.args,
+                propagation: true,
+            });
+        }
+    }
+
+    return this;
+};
+
+// 向父元素冒泡这个事件
+Prototype$1.dispatch = function(/* eve, args... */) {
+    var pathCall = [], run = eventArgs(arguments),
+        space, before, maps = this.tables;
+
+    if (isString$1(run.eves)) {
+        if (run.space === "") {
+            pathCall.push(maps);
+        } else {
+            spaces = run.space.split("/");
+
+            for(var i=0; i<spaces.length; i++) {
+                var key = keyFix(spaces[i]);
+
+                if (isObject$1(maps[key])) {
+                    pathCall.push(maps[key]);
+                    maps = maps[key];
+                } else {
+                    return this;
+                }
+            }
+        }
+
+        before = {
+            arguments: run.args,
+            propagation: true,
+        };
+
+        // 如果忽略自身，则移除自身执行数据
+        if (run.pass === true) pathCall.pop();
+
+        for(var i=pathCall.length-1; i>=0; i--) {
+            before = eventEmit(pathCall[i],
+                run.eves, run.first, before);
+
+            if (!before.propagation) break;
+        }
+    }
+
+    return this;
+};
+
+// 向子元素传播这个事件
+Prototype$1.broadcast = function(/* eve, args... */) {
+    var run = eventArgs(arguments),
+        calls, before, eFirst, eName;
+
+    path = pathFind(this.tables, run.space);
+    eName = run.eves; eFirst = run.first;
+
+    if (path && isString$1(eName)) {
+        // 忽略自身，则直接从子级开始执行
+        if (run.pass === true) {
+            calls = eventChild(path, eFirst, eName);
+        } else {
+            if (eventTest(path, eFirst, eName)) {
+                calls = [path];
+            } else {
+                return this;
+            }
+        }
+
+        do {
+            var cache = [], child;
+
+            for(var i=0; i<calls.length; i++) {
+                var _args = arrayCopy(run.args);
+
+                _args = eventEmit(calls[i], eName, eFirst, {
+                    arguments: _args,
+                    propagation: true,
+                });
+
+                if (_args.propagation === true) {
+                    child = eventChild(calls[i], eFirst, eName);
+                    cache = cache.concat(child);
+                }
+            }
+
+            calls = cache;
+        } while (calls.length);
+    }
+
+    return this;
+};
+
+// 构造函数，兼容 new 方式创建对象
+var Creater$1 = function() {
+    return new Emitter();
+}; Creater$1.prototype = Prototype$1;
+
+try {
+    if (typeof window === "object") {
+        window.Emitter = Creater$1;
+    }
+} catch(e) {}
+
+function getPrefix(eve) {
+    var find = eve.match(/[^\.]*\./);
+
+    if (find) {
+        return find[0].replace(".", '');
+    } else {
+        return eve;
+    }
+}
+
+function checkIn(event, select) {
+    if (isObject(event)) {
+        if (isTrueString(select)) {
+            var target = event.target,
+                $finds = parent.call(target);
+
+            $finds.find(select).each(function(key, ele) {
+                if (ele === target) return true;
+            });
+
+            return false;
+        } else {
+            return true;
+        }
+    } else {
+        return false;
+    }
+}
+
+function fixEvent(event, scope) {
+    var fix = extend({}, event);
+
+    fix.immediation = true;
+    fix.propagation = true;
+
+    fix.stopImmediatePropagation = function() {
+        scope.stopImmediation();
+        event.stopImmediatePropagation();
+        fix.immediation = false;
+        fix.propagation = false;
+    };
+
+    fix.stopImmediation = function() {
+        scope.stopImmediation(true);
+        fix.immediation = false;
+    };
+
+    fix.stopPropagation = function() {
+        scope.stopPropagation();
+        event.stopPropagation();
+        fix.propagation = false;
+    };
+
+    return fix;
+}
+
+function addProxy$1(bind, eve, select, callback) {
+    var el = element(this), adds, scope, handle;
+
+    if (el && isTrueString(eve) && isFunction(callback)) {
+        adds = eve.split(" ");
+        scope = RootMagic$1(el);
+
+        for(var i=0; i<adds.length; i++) {
+            var eveName = getPrefix(adds[i]),
+                eveCtrl = dataEvent(el, eveName);
+
+            if (!eveCtrl || !eveCtrl.on) {
+                eveCtrl = Creater$1();
+                dataEvent(el, eveName, eveCtrl);
+            }
+
+            eveCtrl[bind](adds[i], function(event) {
+                if (checkIn(event, select)) {
+                    var args = extend([], arguments);
+
+                    args[0] = fixEvent(event, this);
+                    callback.apply(scope, args);
+                }
+            });
+        }
+    }
+
+    return this;
+}
+
+function addFixArgs(proxy, bind, args) {
+    var copy = extend([], args);
+
+    if (isFunction(copy[1])) {
+        copy.splice(1, 0, null);
+    }
+
+    copy.unshift(bind);
+    copy.unshift(proxy);
+
+    return copy;
+}
+
+function on(eve, select, callback, setAll) {
+    return allProxy.apply(this, addFixArgs(addProxy$1, "on", arguments));
+}
+
+function once() {
+    return allProxy.apply(this, addFixArgs(addProxy$1, "once", arguments));
+}
+
+function emitProxy(/* eve, args... */) {
+    var el = element(this), runs, scope,
+        args = extend([], arguments);
+
+    if (el && isTrueString(args[0])) {
+        runs = args[0].split(" ");
+        scope = RootMagic$1(el);
+
+        for(var i=0; i<runs.length; i++) {
+            var eveName = getPrefix(args[0]),
+                eveCtrl = dataEvent(el, eveName), runArgs, creEvent;
+
+            if (eveCtrl && eveCtrl.emit) {
+                creEvent = document.createEvent('Event');
+                creEvent.initEvent(eveName, true, true);
+                creEvent = extend({}, creEvent, {target: el});
+
+                runArgs = args.slice(1);
+                runArgs.unshift(creEvent);
+                runArgs.unshift(args[0]);
+
+                eveCtrl.emit.apply(eveCtrl, runArgs);
+            }
+        }
+    }
+
+    return this;
+}
+
+function emit(/* eve, args... */) {
+    var args = extend([], arguments);
+    args.unshift(emitProxy);
+    return allProxy.apply(this, args);
+}
+
+var core = Object.freeze({
+	on: on,
+	once: once,
+	emit: emit
+});
+
+RootMagic$1.fn.extend(core);
+
+function dataProxy(aKey, aVal) {
+    var el = element(this);
+
+    if (aKey && aVal === undefined) {
+        return dataCore(el, aKey);
+    } else {
+        dataCore(el, aKey, aVal);
+    }
+
+    return this;
+}
+
+function data(aKey, aVal, setAll) {
+    return allProxy.call(this, dataProxy, aKey, aVal, setAll);
+}
+
+function removeDataProxy(aKey) {
+    var el = element(this);
+
+    removeDataCore(el, aKey);
+
+    return this;
+}
+
+function removeData(aKey, setAll) {
+    return allProxy.call(this, removeDataProxy, aKey, setAll);
+}
+
+var data$1 = Object.freeze({
+	data: data,
+	removeData: removeData
+});
+
+/**
+ * templayed.js 0.2.1 (Uncompressed)
+ * http://archan937.github.io/templayed.js/
+ */
+function templayed(template, vars) {
+    var get = function(path, i) {
+        i = 1; path = path.replace(/\.\.\//g, function() { i++; return ''; });
+        var js = ['vars[vars.length - ', i, ']'], keys = (path == "." ? [] : path.split(".")), j = 0;
+        for (j; j < keys.length; j++) { js.push('.' + keys[j]); }
+        return js.join('');
+    }, tag = function(template) {
+        return template.replace(/\{\{(!|&|\{)?\s*(.*?)\s*}}+/g, function(match, operator, context) {
+            if (operator == "!") return '';
+            var i = inc++;
+            return ['"; var o', i, ' = ', get(context), ', s', i, ' = (((typeof(o', i, ') == "function" ? o', i, '.call(vars[vars.length - 1]) : o', i, ') || "") + ""); s += ',
+                (operator ? ('s' + i) : '(/[&"><]/.test(s' + i + ') ? s' + i + '.replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/>/g,"&gt;").replace(/</g,"&lt;") : s' + i + ')'), ' + "'
+            ].join('');
+        });
+    }, block = function(template) {
+        return tag(template.replace(/\{\{(\^|#)(.*?)}}(.*?)\{\{\/\2}}/g, function(match, operator, key, context) {
+            var i = inc++;
+            return ['"; var o', i, ' = ', get(key), '; ',
+                (operator == "^" ?
+                        ['if ((o', i, ' instanceof Array) ? !o', i, '.length : !o', i, ') { s += "', block(context), '"; } '] :
+                        ['if (typeof(o', i, ') == "boolean" && o', i, ') { s += "', block(context), '"; } else if (o', i, ') { for (var i', i, ' = 0; i', i, ' < o',
+                            i, '.length; i', i, '++) { vars.push(o', i, '[i', i, ']); s += "', block(context), '"; vars.pop(); }}']
+                ).join(''), '; s += "'].join('');
+        }));
+    }, inc = 0;
+
+    return new Function("vars", 'vars = [vars], s = "' + block(template.replace(/"/g, '\\"').replace(/\n/g, '\\n')) + '"; return s;');
+}
+
+function tplProxy(template, data) {
+    var el = element(this), tpls;
+
+    if (el && isTrueString(template) && isObject(data)) {
+        tpls = templayed(template)(data);
+        append.call(el, tpls);
+    }
+
+    return this;
+}
+
+function tpl(template, data, setAll) {
+    return allProxy.call(this, tplProxy, template, data, setAll);
+}
+
+var other$1 = Object.freeze({
+	tpl: tpl
+});
+
+RootMagic$1.fn.extend(data$1, other$1);
 
 try {
     if (typeof window === "object") {

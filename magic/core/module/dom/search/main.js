@@ -1,6 +1,6 @@
-import {element} from "../../../function/tools.js";
-import {isNumber, isElement} from "../../../function/check.js";
-import RootMagic from "../../../magic/main.js";
+import {element} from "CORE_FUNCTION/tools.js";
+import {isNumber, isElement} from "CORE_FUNCTION/check.js";
+import RootMagic from "CORE_MAGIC/main.js";
 
 export function index() {
     var par = parent.call(this), items;

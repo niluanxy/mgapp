@@ -1,6 +1,6 @@
-import {isTrueString} from "../../../function/check.js";
-import {allProxy} from "../../../function/proxy.js";
-import {element, trim} from "../../../function/tools.js";
+import {isTrueString} from "CORE_FUNCTION/check.js";
+import {allProxy} from "CORE_FUNCTION/proxy.js";
+import {element, trim} from "CORE_FUNCTION/tools.js";
 
 export function hasClass(cls) {
     var el = element(this), result, arrays, test, clsName;

@@ -1,7 +1,7 @@
-import {make as domMake} from "../../../magic/dom.js";
-import {eachProxy, allProxy} from "../../../function/proxy.js";
-import {slice, element} from "../../../function/tools.js";
-import RootMagic from "../../../magic/main.js";
+import {make as domMake} from "CORE_MAGIC/dom.js";
+import {eachProxy, allProxy} from "CORE_FUNCTION/proxy.js";
+import {slice, element} from "CORE_FUNCTION/tools.js";
+import RootMagic from "CORE_MAGIC/main.js";
 
 function domGet(html) {
     var create = null;
