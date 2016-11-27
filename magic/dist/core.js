@@ -2096,7 +2096,9 @@ function fixEvent(event, scope) {
 
     fix.stopImmediatePropagation = function() {
         scope.stopImmediation();
-        event.stopPropagation();
+        if (event.bubbles) {
+            event.stopPropagation();
+        }
         event.magicImmediation = false;
         event.magicPropagation = false;
     };
@@ -2108,12 +2110,16 @@ function fixEvent(event, scope) {
 
     fix.stopPropagation = function() {
         scope.stopPropagation();
-        event.stopPropagation();
+        if (event.bubbles) {
+            event.stopPropagation();
+        }
         event.magicPropagation = false;
     };
 
     fix.preventDefault = function() {
-        event.preventDefault();
+        if (event.bubbles && event.cancelable) {
+            event.preventDefault();
+        }
     };
 
     fix.originalEvent = event;
@@ -2138,7 +2144,10 @@ function addProxy$1(bind, eve, select, callback, extScope) {
 
                 // 添加原生事件监听支持
                 el.addEventListener(evePre, function(event) {
-                    eveCtrl.emit(evePre, event);
+                    // 防止重复触发绑定的事件
+                    if (event.magicCalled !== true) {
+                        eveCtrl.emit(evePre, event);
+                    }
                 });
             }
 
@@ -2192,10 +2201,9 @@ function propaEmit(/* el, eveName, args... */) {
     evePre = getPrefix(eveName);
 
     do {
-        var creEvent = document.createEvent('Event'),
+        var creEvent = new Event(evePre,{bubbles:false, cancelable:true}),
             eveCtrl = dataEvent(el, evePre), runArgs, runEvent;
 
-        creEvent.initEvent(evePre, false, true);
         runEvent = extend({}, creEvent, {target: el});
         
         if (eveCtrl && eveCtrl.emit) {
@@ -2208,6 +2216,7 @@ function propaEmit(/* el, eveName, args... */) {
 
         // 触发原生DOM同名事件，为 false 不触发
         if (runEvent.magicImmediation !== false) {
+            creEvent.magicCalled = true;
             el.dispatchEvent(creEvent);
         }
 
