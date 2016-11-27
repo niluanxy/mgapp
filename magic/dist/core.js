@@ -2073,7 +2073,7 @@ function getPrefix(eve) {
 }
 
 function checkIn(event, select) {
-    if (isObject(event)) {
+    if (event) {
         if (isTrueString(select)) {
             var target = event.target,
                 $finds = parent$1.call(target);
@@ -2096,6 +2096,7 @@ function fixEvent(event, scope) {
 
     fix.stopImmediatePropagation = function() {
         scope.stopImmediation();
+        event.stopPropagation();
         event.magicImmediation = false;
         event.magicPropagation = false;
     };
@@ -2107,7 +2108,12 @@ function fixEvent(event, scope) {
 
     fix.stopPropagation = function() {
         scope.stopPropagation();
+        event.stopPropagation();
         event.magicPropagation = false;
+    };
+
+    fix.preventDefault = function() {
+        event.preventDefault();
     };
 
     fix.originalEvent = event;
@@ -2122,16 +2128,21 @@ function addProxy$1(bind, eve, select, callback, extScope) {
         adds = eve.split(" ");
         scope = extScope || RootMagic$1(el);
 
-        for(var i=0; i<adds.length; i++) {
-            var eveName = getPrefix(adds[i]),
-                eveCtrl = dataEvent(el, eveName);
+        each(adds, function(index$$1, eveName) {
+            var evePre  = getPrefix(eveName),
+                eveCtrl = dataEvent(el, evePre);
 
             if (!eveCtrl || !eveCtrl.on) {
                 eveCtrl = Creater$1();
-                dataEvent(el, eveName, eveCtrl);
+                dataEvent(el, evePre, eveCtrl);
+
+                // 添加原生事件监听支持
+                el.addEventListener(evePre, function(event) {
+                    eveCtrl.emit(evePre, event);
+                });
             }
 
-            eveCtrl[bind](adds[i], function(event) {
+            eveCtrl[bind](eveName, function(event) {
                 if (checkIn(event, select)) {
                     var args = extend([], arguments);
 
@@ -2139,7 +2150,7 @@ function addProxy$1(bind, eve, select, callback, extScope) {
                     callback.apply(scope, args);
                 }
             });
-        }
+        });
     }
 
     return this;
