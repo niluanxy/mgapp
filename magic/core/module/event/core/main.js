@@ -1,7 +1,7 @@
 import Emitter from "LIB_MINJS/emitter.js";
 import {isFunction, isTrueString, isObject} from "CORE_FUNCTION/check.js";
 import {allProxy} from "CORE_FUNCTION/proxy.js";
-import {element, extend} from "CORE_FUNCTION/tools.js";
+import {element, extend, slice, each} from "CORE_FUNCTION/tools.js";
 import {parent} from "CORE_MODULE/dom/search/main.js";
 import {dataEvent} from "CORE_MAGIC/tools.js";
 import RootMagic from "CORE_MAGIC/main.js";
@@ -38,26 +38,23 @@ function checkIn(event, select) {
 function fixEvent(event, scope) {
     var fix = extend({}, event);
 
-    fix.immediation = true;
-    fix.propagation = true;
-
     fix.stopImmediatePropagation = function() {
         scope.stopImmediation();
-        event.stopImmediatePropagation();
-        fix.immediation = false;
-        fix.propagation = false;
+        event.magicImmediation = false;
+        event.magicPropagation = false;
     }
 
     fix.stopImmediation = function() {
-        scope.stopImmediation(true);
-        fix.immediation = false;
+        scope.stopImmediation();
+        event.magicImmediation = false;
     }
 
     fix.stopPropagation = function() {
         scope.stopPropagation();
-        event.stopPropagation();
-        fix.propagation = false;
+        event.magicPropagation = false;
     }
+
+    fix.originalEvent = event;
 
     return fix;
 }
@@ -113,6 +110,42 @@ export function once() {
     return allProxy.apply(this, addFixArgs(addProxy, "once", arguments));
 }
 
+function propaEmit(/* el, eveName, args... */) {
+    var args = $.extend([], arguments),
+        el = element(args[0]), eveName = args[1], evePre;
+
+    args = slice(args, 2);
+    evePre = getPrefix(eveName);
+
+    do {
+        var creEvent = document.createEvent('Event'),
+            eveCtrl = dataEvent(el, evePre), runArgs, runEvent;
+
+        creEvent.initEvent(evePre, false, true);
+        runEvent = extend({}, creEvent, {target: el});
+        
+        if (eveCtrl && eveCtrl.emit) {
+            runArgs = extend([], args);
+            runArgs.unshift(runEvent);
+            runArgs.unshift(eveName);
+
+            eveCtrl.emit.apply(eveCtrl, runArgs);
+        }
+
+        // 触发原生DOM同名事件，为 false 不触发
+        if (runEvent.magicImmediation !== false) {
+            el.dispatchEvent(creEvent);
+        }
+
+        // 尝试手动进行事件冒泡，为 false 不冒泡
+        if (runEvent.magicPropagation !== false) {
+            el = el.parentNode;
+        } else {
+            return;
+        }
+    } while(el.parentNode);
+}
+
 function emitProxy(/* eve, args... */) {
     var el = element(this), runs, scope,
         args = extend([], arguments);
@@ -121,22 +154,14 @@ function emitProxy(/* eve, args... */) {
         runs = args[0].split(" ");
         scope = RootMagic(el);
 
-        for(var i=0; i<runs.length; i++) {
-            var eveName = getPrefix(args[0]),
-                eveCtrl = dataEvent(el, eveName), runArgs, creEvent;
+        each(runs, function(index, eveName) {
+            var runArgs = args.slice(1);
 
-            if (eveCtrl && eveCtrl.emit) {
-                creEvent = document.createEvent('Event');
-                creEvent.initEvent(eveName, true, true);
-                creEvent = extend({}, creEvent, {target: el});
+            runArgs.unshift(eveName);
+            runArgs.unshift(el);
 
-                runArgs = args.slice(1);
-                runArgs.unshift(creEvent);
-                runArgs.unshift(args[0]);
-
-                eveCtrl.emit.apply(eveCtrl, runArgs);
-            }
-        }
+            propaEmit.apply(null, runArgs);
+        });
     }
 
     return this;
@@ -146,4 +171,27 @@ export function emit(/* eve, args... */) {
     var args = extend([], arguments);
     args.unshift(emitProxy);
     return allProxy.apply(this, args);
+}
+
+function offProxy(eve) {
+    var el = element(this), dels;
+
+    if (el && isTrueString(eve)) {
+        dels = eve.split(" ");
+
+        each(dels, function(index, eveName) {
+            var evePre  = getPrefix(eveName),
+                eveCtrl = dataEvent(el, evePre);
+
+            if (eveCtrl && eveCtrl.off) {
+                eveCtrl.off(eveName);
+            }
+        });
+    }
+
+    return this;
+}
+
+export function off(eve, setAll) {
+    return allProxy.call(this, offProxy, eve, setAll);
 }
