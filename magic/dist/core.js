@@ -2115,12 +2115,12 @@ function fixEvent(event, scope) {
     return fix;
 }
 
-function addProxy$1(bind, eve, select, callback) {
+function addProxy$1(bind, eve, select, callback, extScope) {
     var el = element(this), adds, scope, handle;
 
     if (el && isTrueString(eve) && isFunction(callback)) {
         adds = eve.split(" ");
-        scope = RootMagic$1(el);
+        scope = extScope || RootMagic$1(el);
 
         for(var i=0; i<adds.length; i++) {
             var eveName = getPrefix(adds[i]),
@@ -2148,8 +2148,14 @@ function addProxy$1(bind, eve, select, callback) {
 function addFixArgs(proxy, bind, args) {
     var copy = extend([], args);
 
+    // 修复 select 参数
     if (isFunction(copy[1])) {
         copy.splice(1, 0, null);
+    }
+
+    // 修复 extScope 参数
+    if (!isObject(copy[3])) {
+        copy.splice(3, 0, null);
     }
 
     copy.unshift(bind);
@@ -2158,11 +2164,12 @@ function addFixArgs(proxy, bind, args) {
     return copy;
 }
 
-function on(eve, select, callback, setAll) {
+function on(eve, select, callback, extScope, setAll) {
     return allProxy.apply(this, addFixArgs(addProxy$1, "on", arguments));
 }
 
-function once() {
+function once(eve, select, callback, extScope, setAll) {
+
     return allProxy.apply(this, addFixArgs(addProxy$1, "once", arguments));
 }
 
