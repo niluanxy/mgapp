@@ -2142,12 +2142,16 @@ function addProxy$1(bind, eve, select, callback, extScope) {
                 eveCtrl = Creater$1();
                 dataEvent(el, evePre, eveCtrl);
 
-                // 添加原生事件监听支持
+                // 绑定到原生事件，从而保证事件执行顺序
                 el.addEventListener(evePre, function(event) {
-                    // 防止重复触发绑定的事件
-                    if (event.magicCalled !== true) {
-                        eveCtrl.emit(evePre, event);
+                    var args = event.originalArgs, eveName;
+
+                    if (!args || !args.length) {
+                        args = [event.type];
                     }
+
+                    args.splice(1, 0, event);
+                    eveCtrl.emit.apply(eveCtrl, args);
                 });
             }
 
@@ -2197,31 +2201,31 @@ function propaEmit(/* el, eveName, args... */) {
     var args = $.extend([], arguments),
         el = element(args[0]), eveName = args[1], evePre;
 
-    args = slice(args, 2);
+    args = slice(args, 1);
     evePre = getPrefix(eveName);
 
     do {
-        var creEvent = new Event(evePre,{bubbles:false, cancelable:true}),
-            eveCtrl = dataEvent(el, evePre), runArgs, runEvent;
+        var creEvent, eveCtrl, runArgs;
 
-        runEvent = extend({}, creEvent, {target: el});
-        
-        if (eveCtrl && eveCtrl.emit) {
-            runArgs = extend([], args);
-            runArgs.unshift(runEvent);
-            runArgs.unshift(eveName);
+        runArgs = extend([], args);
+        creEvent = new Event(evePre, {
+            bubbles: false, cancelable: true,
+        });
 
-            eveCtrl.emit.apply(eveCtrl, runArgs);
-        }
-
-        // 触发原生DOM同名事件，为 false 不触发
-        if (runEvent.magicImmediation !== false) {
-            creEvent.magicCalled = true;
+        if (evePre === eveName) {
+            creEvent.originalArgs = runArgs;
             el.dispatchEvent(creEvent);
+        } else {
+            eveCtrl = dataEvent(el, evePre);
+
+            if (eveCtrl && eveCtrl.emit) {
+                runArgs.splice(1, 0, creEvent);
+                eveCtrl.emit.apply(eveCtrl, runArgs);
+            }
         }
 
         // 尝试手动进行事件冒泡，为 false 不冒泡
-        if (runEvent.magicPropagation !== false) {
+        if (creEvent.magicPropagation !== false) {
             el = el.parentNode;
         } else {
             return;
