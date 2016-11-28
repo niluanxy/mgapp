@@ -4,6 +4,7 @@ import "CORE_MODULE/dom/main.js";
 import "CORE_MODULE/style/main.js";
 import "CORE_MODULE/event/main.js";
 import "CORE_MODULE/util/main.js";
+import "CORE_STATIC/main.js";
 
 try {
     if (typeof window === "object") {

@@ -292,39 +292,6 @@ var _READY = (function(win, doc) {
     };
 })(window, document);
 
-var isArray$1 = Array.isArray;
-
-/* 判断是否为一个纯净的对象 */
-function isObject$1(obj) {
-    if (typeof obj !== "object" ||
-         obj.nodeType || obj === window) {
-        return false;
-    }
-
-    if ( obj.constructor &&
-            !({}).hasOwnProperty.call( obj.constructor.prototype, "isPrototypeOf" ) ) {
-        return false;
-    }
-
-    return true;
-}
-
-function isElement$1(object) {
-    return object instanceof Element || object === document;
-}
-
-function isFunction$1(call) {
-    return typeof call == "function";
-}
-
-
-
-
-
-function isTrueString$1(string) {
-    return string && typeof string == "string";
-}
-
 /**
  * 对数组或者对象，执行指定的回调参数
  * 
@@ -332,7 +299,7 @@ function isTrueString$1(string) {
  * @param  {Function} callback [执行操作的函数]
  */
 function each(object, callback) {
-    if (!object || !isFunction$1(callback)) return;
+    if (!object || !isFunction(callback)) return;
 
     for(var key in object) {
         var item = object[key];
@@ -377,9 +344,9 @@ function trim(string) {
  */
 function element(object) {
     if (object) {
-        if (isElement$1(object)) {
+        if (isElement(object)) {
             return object;
-        } else if (isElement$1(object[0])) {
+        } else if (isElement(object[0])) {
             return object[0];
         }
     }
@@ -437,13 +404,13 @@ function extend(/* deep, target, obj..., last */) {
                     continue;
                 }
 
-                if (deep && copy && ( isArray$1(copy) || isObject$1(copy) ) ) {
+                if (deep && copy && ( isArray(copy) || isObject(copy) ) ) {
 
                     // 深度复制时，判断是否需要创建新空间
-                    if (isArray$1(copy)) {
-                        clone = src && isArray$1(src) ? src : [];
+                    if (isArray(copy)) {
+                        clone = src && isArray(src) ? src : [];
                     } else {
-                        clone = src && isObject$1(src) ? src : {};
+                        clone = src && isObject(src) ? src : {};
                     }
 
                     target[name] = extend(deep, clone, copy, pass);
@@ -564,188 +531,11 @@ Creater.fn = Creater.prototype = Magic.prototype = Prototype;
 
 var RootMagic$1 = Creater;
 
-/**
- * 检测字符串是否可以创建为 dom 元素
- */
-function check$1(text) {
-    if (typeof text === "string") {
-        // 去除字符串中的换行符等
-        var txt = text.replace(/[\r\n]/g,"");
-
-        if (txt[0] === "<" &&
-         txt[ txt.length - 1 ] === ">" &&
-         txt.length >= 3) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/**
- * 尝试将 text 转为 dom 对象
- *
- * @param       {String}    text - 要转换的DOM字符串
- * @return      {Element}   包含转换好的DOM的一个Body对象
- * @author      mufeng      <smufeng@gmail.com>
- * @version     0.1         <2015-05-30>
- */
-function make$1(text, context) {
-    var ret, i, div, tmp, cont, node = [], fragment; // 最终返回的 dom 对象
-
-    if (check$1(text)) {
-        // 修复执行上下文环境
-        context = context && context.nodeType ? context.ownerDocument || context : document;
-        fragment = context.createDocumentFragment();
-
-        // 创建一个临时的div对象并插入字符串
-        div = fragment.appendChild( context.createElement("div") );
-        div.innerHTML = text;
-
-        for(i=0; tmp = div.childNodes[i]; i++) node[i] = tmp;
-
-        // 清除 fragment 的内容
-        fragment.textContent = "";
-        for(i=0; tmp=node[i]; i++) fragment.appendChild(tmp);
-
-        ret = fragment; // 设置返回对象
-    } else if (text instanceof Element || text instanceof DocumentFragment) {
-        ret = text;     // 如果是DOM元素直接返回
-    }
-
-    return ret;    // 返回DOM对象
-}
-
-/**
- * 一个简单的JS查询器
- *
- * @param       {String}  select - 查找元素的CSS字符串
- * @param       {Object}  el     - 从何处开始查找元素
- * 
- * @returns     {Array}  返回查找结果数组
- * 
- * @author      mufeng  <smufeng@gmail.com>
- * @version     0.3     <2015-06-05>
- */
-
-/**
- * 对数组或者对象，执行指定的回调参数
- * 
- * @param  {Object}   object   [被操作的数组或者对象]
- * @param  {Function} callback [执行操作的函数]
- */
-
-
-/**
- * 从给定字符串中，查找给定字符串或正则
- */
-
-
-/**
- * 类数组 slice 方法模拟
- */
-function slice$1(array, start, end) {
-    var ret = [], aend = end || array.length;
-
-    for(var i=start||0; i<aend; i++) {
-        ret.push(array[i]);
-    }
-
-    return ret;
-}
-
-
-
-/**
- * 尝试从 Magic 对象返回一个 element 对象
- */
-function element$1(object) {
-    if (object) {
-        if (isElement$1(object)) {
-            return object;
-        } else if (isElement$1(object[0])) {
-            return object[0];
-        }
-    }
-
-    return null;
-}
-
-/**
- * 合并一个或多个对象到目标对象
- *
- * @param       {Object}    deep     - 是否深度复制
- * @param       {Object}    target   - 目标对象
- * @param       {Object}    obj...   - 要合并一个或多个对象
- * @param       {Boolean}   ignore   - 是否忽略无效值(null,undefined)，默认不忽略
- * @author      mufeng  <smufeng@gmail.com>
- * @version     0.1     <2015-04-10>
- */
-function extend$1(/* deep, target, obj..., last */) {
-    var i = 1, argv = arguments, len = argv.length,
-        target = argv[0], name, copy, clone,
-        pass = false, deep = false;
-
-    // 如果最后一个变量是 true ，表示忽略无效字段
-    if (argv[len-1] === true) {
-        pass = argv[len-1];
-        len--;
-    }
-
-    // 如果第一个变量是 true，设置深度复制
-    if (argv[0] === true) {
-        deep = argv[0];
-        target = argv[1];
-        i++;
-    }
-
-    // 如果只有一个参数时，合并到自身
-    if (i === len) {
-        target = this;      // 重置复制对象句柄
-        i = 0;              // 重置开始复制的对象下标
-    }
-
-    for(; i < len; i++) {
-        if (argv[i] != null) {
-            for(name in argv[i]) {
-                var src  = target[name],
-                    copy = argv[i][name];
-
-                // 跳过指向自身，防止死循环
-                if (target === copy) {
-                    continue;
-                }
-
-                // 若设置忽略无效值，则忽略
-                if (pass && copy == undefined) {
-                    continue;
-                }
-
-                if (deep && copy && ( isArray$1(copy) || isObject$1(copy) ) ) {
-
-                    // 深度复制时，判断是否需要创建新空间
-                    if (isArray$1(copy)) {
-                        clone = src && isArray$1(src) ? src : [];
-                    } else {
-                        clone = src && isObject$1(src) ? src : {};
-                    }
-
-                    target[name] = extend$1(deep, clone, copy, pass);
-                } else if (copy !== undefined) {
-                    target[name] = copy;
-                }
-            }
-        }
-    }
-
-    return target;     // 返回合并后的对象
-}
-
 function eachProxy(/* call, args... */) {
     var call = arguments[0], args;
 
-    if (isFunction$1(call)) {
-        args = slice$1(arguments, 1);
+    if (isFunction(call)) {
+        args = slice(arguments, 1);
 
         for(var i=0; i<this.length; i++) {
             call.apply(this[i], args);
@@ -757,9 +547,9 @@ function eachProxy(/* call, args... */) {
 
 // 尝试读取或者写入指定的对象
 function keyProxy(aKey, aVal, empty) {
-    var el = element$1(this);
+    var el = element(this);
 
-    if (el && isTrueString$1(aKey)) {
+    if (el && isTrueString(aKey)) {
         if (aVal === undefined) {
             return el[aKey];
         } else if (empty && aVal !== undefined) {
@@ -781,7 +571,7 @@ function allProxy(/* call args... setAll */) {
     last = arguments[len-1];
     
     len = last === true ? len-1 : len;
-    args = slice$1(arguments, 1, len);
+    args = slice(arguments, 1, len);
 
     if (last === true) {
         args.unshift(call);
@@ -799,7 +589,7 @@ function domGet(html) {
     if (html instanceof RootMagic$1) {
         create = html[0];
     } else {
-        create = make$1(html);
+        create = make(html);
     }
 
     return create;
@@ -1241,57 +1031,6 @@ function dataEvent(el, aKey, aVal) {
     return tryVal(el, NAME_EVENT, aKey, aVal);
 }
 
-function domGet$1(html) {
-    var create = null;
-
-    if (html instanceof RootMagic$1) {
-        create = html[0];
-    } else {
-        create = make$1(html);
-    }
-
-    return create;
-}
-
-
-
-function appendProxy$1(html) {
-    var el = element(this), dom;
-
-    if (el && el.nodeType === 1 &&
-        (dom = domGet$1(html)) ) {
-        el.appendChild(dom);
-    }
-
-    return this;
-}
-
-function append$1(html, setAll) {
-    return allProxy.call(this, appendProxy$1, html, setAll);
-}
-
-
-
-
-
-
-
-
-
-function removeProxy$2() {
-    var el = element(this), parent;
-
-    if (el && (parent = el.parentNode)) {
-        parent.removeChild(el);
-    }
-
-    return this;
-}
-
-function remove$1(setAll) {
-    return allProxy.call(this, removeProxy$2, setAll);
-}
-
 /**
  * TODO: 添加CSS采用拼接字符串的方式，这样删除可以从
  * 尾部删除CSS，可以不干扰样式代码别人自定义的样式
@@ -1394,8 +1133,8 @@ function offset(relative) {
             css.call(clone, "height", "0px");
 
             render = element(RootMagic$1(render));
-            append$1.call(relative, render);
-            append$1.call(render, clone);
+            append.call(relative, render);
+            append.call(render, clone);
 
             // 先设置对象高度为0，无干扰获取宽度等信息
             fix.push(clone.getBoundingClientRect());
@@ -1407,7 +1146,7 @@ function offset(relative) {
             fix.push(clone.getBoundingClientRect());
 
             docElem = clone.ownerDocument.documentElement;
-            remove$1.call(render); // 删除创建的临时节点
+            remove.call(render); // 删除创建的临时节点
         }
     }
 
@@ -1556,19 +1295,19 @@ function keyTest(name) {
     return name.match(reg);
 }
 
-function isFunction$2(call) {
+function isFunction$1(call) {
     return typeof call == "function";
 }
 
-function isObject$2(object) {
+function isObject$1(object) {
     return object && typeof object == "object";
 }
 
-function isArray$2(array) {
+function isArray$1(array) {
     return array && array instanceof Array;
 }
 
-function isString$2(str) {
+function isString$1(str) {
     return str && typeof str == "string";
 }
 
@@ -1578,10 +1317,10 @@ function pathFind(paths, str, parent) {
     var arr = str.split("/"), par = null;
 
     for(var i=0; i<arr.length; i++) {
-        if (isString$2(arr[i])) {
+        if (isString$1(arr[i])) {
             var key = keyFix(arr[i]);
 
-            if (!isObject$2(paths[key])) {
+            if (!isObject$1(paths[key])) {
                 return null;
             } else {
                 par = paths;
@@ -1599,10 +1338,10 @@ function pathAdd(paths, str) {
     var arr = str.split("/");
 
     for(var i=0; i<arr.length; i++) {
-        if (isString$2(arr[i])) {
+        if (isString$1(arr[i])) {
             var key = keyFix(arr[i]);
 
-            if (!isObject$2(paths[key])) {
+            if (!isObject$1(paths[key])) {
                 paths[key] = {};
             }
 
@@ -1616,7 +1355,7 @@ function pathAdd(paths, str) {
 function arrayCopy(array) {
     var copy = [];
 
-    if (isArray$2(array)) {
+    if (isArray$1(array)) {
         for(var i=0; i<array.length; i++) {
             copy.push(array[i]);
         }
@@ -1672,7 +1411,7 @@ function pathObjectAdd(paths, str, key) {
 
     var path = pathAdd(paths, str);
 
-    if ( !(isObject$2(path[key])) ) {
+    if ( !(isObject$1(path[key])) ) {
         path[key] = {};
     }
 
@@ -1687,7 +1426,7 @@ function pathObjectPush(paths, str, key, call, content) {
 
     path = pathObjectAdd(paths, space, key);
 
-    if (!isArray$2(path[first])) {
+    if (!isArray$1(path[first])) {
         path[first] = [];
     }
 
@@ -1708,7 +1447,7 @@ function pathObjectDel(paths, str, key, call) {
     path = pathFind(paths, space);
     arrs = path[key];
 
-    if (isObject$2(arrs)) {
+    if (isObject$1(arrs)) {
         if (eves === first && call === undefined) {
             delete arrs[eves];
         } else {
@@ -1795,7 +1534,7 @@ function eventEmit(paths, eName, eFirst, before) {
     function getCalls(paths, type, eves) {
         var arrs = [];
 
-        if (isObject$2(paths[type])) {
+        if (isObject$1(paths[type])) {
             paths = paths[type];
             arrs  = paths[eves] || [];
         }
@@ -1835,7 +1574,7 @@ function eventEmit(paths, eName, eFirst, before) {
         }
     }
 
-    if (isObject$2(paths)) {
+    if (isObject$1(paths)) {
         var actions = ["patch", "catch", "call"];
 
         for(var i=0; i<actions.length; i++) {
@@ -1870,7 +1609,7 @@ Emitter.prototype = Prototype$1;
 
 // 添加一个事件对象
 Prototype$1.on = function(eve, call, content) {
-    if (isString$2(eve) && isFunction$2(call)) {
+    if (isString$1(eve) && isFunction$1(call)) {
         pathObjectPush(this.tables, eve, "call", call, content);
     }
 
@@ -1879,7 +1618,7 @@ Prototype$1.on = function(eve, call, content) {
 
 // 添加一个一次性的事件对象
 Prototype$1.once = function(eve, call, content) {
-    if (isString$2(eve) && isFunction$2(call)) {
+    if (isString$1(eve) && isFunction$1(call)) {
         var that = this, once;
 
         once = function() {
@@ -1895,7 +1634,7 @@ Prototype$1.once = function(eve, call, content) {
 
 // 移除一个事件
 Prototype$1.off = function(eve, call) {
-    if (isString$2(eve)) {
+    if (isString$1(eve)) {
         pathObjectDel(this.tables, eve, "call", call);
     }
 
@@ -1904,7 +1643,7 @@ Prototype$1.off = function(eve, call) {
 
 // 在元素上添加捕获事件
 Prototype$1.catch = function(eve, call, content) {
-    if (isString$2(eve) && isFunction$2(call)) {
+    if (isString$1(eve) && isFunction$1(call)) {
         pathObjectPush(this.tables, eve, "catch", call, content);
     }
 
@@ -1913,7 +1652,7 @@ Prototype$1.catch = function(eve, call, content) {
 
 // 在元素上移除捕获事件
 Prototype$1.uncatch = function(eve, call) {
-    if (isString$2(eve)) {
+    if (isString$1(eve)) {
         pathObjectDel(this.tables, eve, "catch", call);
     }
 
@@ -1922,7 +1661,7 @@ Prototype$1.uncatch = function(eve, call) {
 
 // 在元素上添加一个修饰器
 Prototype$1.patch = function(eve, call) {
-    if (isString$2(eve) && isFunction$2(call)) {
+    if (isString$1(eve) && isFunction$1(call)) {
         pathObjectPush(this.tables, eve, "patch", call, content);
     }
 
@@ -1931,7 +1670,7 @@ Prototype$1.patch = function(eve, call) {
 
 // 在元素上移除一个修饰器
 Prototype$1.unpatch = function(eve, call) {
-    if (isString$2(eve)) {
+    if (isString$1(eve)) {
         pathObjectDel(this.tables, eve, "patch", call);
     }
 
@@ -1943,12 +1682,12 @@ Prototype$1.emit = function(/* eve, args... */) {
     var runs = eventArgs.apply(null, arguments),
         path, eves, first;
 
-    if (isString$2(runs.eves)) {
+    if (isString$1(runs.eves)) {
         first = runs.first;
         eves  = runs.eves;
         path  = pathFind(this.tables, runs.space);
 
-        if (isObject$2(path)) {
+        if (isObject$1(path)) {
             eventEmit(path, eves, first, {
                 arguments: runs.args,
                 propagation: true,
@@ -1964,7 +1703,7 @@ Prototype$1.dispatch = function(/* eve, args... */) {
     var pathCall = [], run = eventArgs(arguments),
         space, before, maps = this.tables;
 
-    if (isString$2(run.eves)) {
+    if (isString$1(run.eves)) {
         if (run.space === "") {
             pathCall.push(maps);
         } else {
@@ -1973,7 +1712,7 @@ Prototype$1.dispatch = function(/* eve, args... */) {
             for(var i=0; i<spaces.length; i++) {
                 var key = keyFix(spaces[i]);
 
-                if (isObject$2(maps[key])) {
+                if (isObject$1(maps[key])) {
                     pathCall.push(maps[key]);
                     maps = maps[key];
                 } else {
@@ -2009,7 +1748,7 @@ Prototype$1.broadcast = function(/* eve, args... */) {
     path = pathFind(this.tables, run.space);
     eName = run.eves; eFirst = run.first;
 
-    if (path && isString$2(eName)) {
+    if (path && isString$1(eName)) {
         // 忽略自身，则直接从子级开始执行
         if (run.pass === true) {
             calls = eventChild(path, eFirst, eName);
@@ -2056,12 +1795,6 @@ try {
     }
 } catch(e) {}
 
-function parent$1() {
-    var el = element(this);
-
-    return RootMagic$1(el && el.parentNode);
-}
-
 function getPrefix(eve) {
     var find = eve.match(/[^\.]*\./);
 
@@ -2076,7 +1809,7 @@ function checkIn(event, select) {
     if (event) {
         if (isTrueString(select)) {
             var target = event.target,
-                $finds = parent$1.call(target);
+                $finds = parent.call(target);
 
             $finds.find(select).each(function(key, ele) {
                 if (ele === target) return true;
@@ -2363,7 +2096,7 @@ function tplProxy(template, data) {
 
     if (el && isTrueString(template) && isObject(data)) {
         tpls = templayed(template)(data);
-        append$1.call(el, tpls);
+        append.call(el, tpls);
     }
 
     return this;
@@ -2378,6 +2111,90 @@ var other$1 = Object.freeze({
 });
 
 RootMagic$1.fn.extend(data$1, other$1);
+
+function isfun(call) {
+    return typeof call == "function";
+}
+
+function Promise() {
+    this.next = null;
+    this.resolved = null;
+    this.rejected = null;
+
+    return this;
+}
+
+Promise.prototype.then = function(resolve, reject) {
+    if (isfun(resolve)) this.resolved = resolve;
+    if (isfun(reject))  this.rejected = reject;
+
+    this.next = new Defer();
+
+    return this.next.promise;
+};
+
+function Defer() {
+    this.status = 'pending';
+    this.promise = new Promise();
+
+    return this;
+}
+
+function fireCall(status, value) {
+    var promise = this.promise, nextDefer, call, ret;
+
+    if (status == "resolve") {
+        this.status = "resolved";
+        call = promise.resolved;
+    } else {
+        this.status = "rejected";
+        call = promise.rejected;
+    }
+    
+    nextDefer = promise.next;
+    ret = isfun(call) ? call(value) : undefined;
+
+    if (nextDefer && nextDefer[status]) {
+        if (ret && ret.then) {
+            ret.then(function(value) {
+                nextDefer.resolve(value);
+            }, function(reason) {
+                nextDefer.reject(reason);
+            });
+        } else {
+            nextDefer[status](ret);
+        }
+    }
+
+    return ret;
+}
+
+Defer.prototype.resolve = function(value) {
+    return fireCall.call(this, "resolve", value);
+};
+
+Defer.prototype.reject = function(reason) {
+    return fireCall.call(this, "reject", reason);
+};
+
+function tpl$1(template, data) {
+    if (isTrueString(template) && data) {
+        return templayed(template)(data);
+    } else {
+        return "";
+    }
+}
+
+function defer() {
+    return new Defer();
+}
+
+var util = Object.freeze({
+	tpl: tpl$1,
+	defer: defer
+});
+
+RootMagic$1.extend(util);
 
 try {
     if (typeof window === "object") {
