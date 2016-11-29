@@ -1,5 +1,5 @@
 import {element} from "CORE_FUNCTION/tools.js";
-import {isNumber, isElement} from "CORE_FUNCTION/check.js";
+import {isNumber, isElement} from "LIB_MINJS/check.js";
 import RootMagic from "CORE_MAGIC/main.js";
 
 export function index() {

@@ -1,4 +1,4 @@
-import {isTrueString} from "CORE_FUNCTION/check.js";
+import {isTrueString} from "LIB_MINJS/check.js";
 import {allProxy} from "CORE_FUNCTION/proxy.js";
 import {element, trim} from "CORE_FUNCTION/tools.js";
 

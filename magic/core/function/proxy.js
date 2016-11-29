@@ -1,4 +1,4 @@
-import {isTrueString, isFunction} from "./check.js";
+import {isTrueString, isFunction} from "LIB_MINJS/check.js";
 import {slice, element} from "./tools.js";
 
 export function eachProxy(/* call, args... */) {

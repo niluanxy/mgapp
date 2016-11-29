@@ -1,3 +1,5 @@
+import {isFunction, isObject, isArray, isTrueString} from "./check.js";
+
 var Emitter, Prototype = {}, $KEY = "##_";
 
 // 获取到修饰后的 key 值
@@ -12,29 +14,13 @@ function keyTest(name) {
     return name.match(reg);
 }
 
-function isFunction(call) {
-    return typeof call == "function";
-}
-
-function isObject(object) {
-    return object && typeof object == "object";
-}
-
-function isArray(array) {
-    return array && array instanceof Array;
-}
-
-function isString(str) {
-    return str && typeof str == "string";
-}
-
 // 在 列表树 中根据路径查询对象
 // 如果没有值会返回 null
 function pathFind(paths, str, parent) {
     var arr = str.split("/"), par = null;
 
     for(var i=0; i<arr.length; i++) {
-        if (isString(arr[i])) {
+        if (isTrueString(arr[i])) {
             var key = keyFix(arr[i]);
 
             if (!isObject(paths[key])) {
@@ -55,7 +41,7 @@ function pathAdd(paths, str) {
     var arr = str.split("/");
 
     for(var i=0; i<arr.length; i++) {
-        if (isString(arr[i])) {
+        if (isTrueString(arr[i])) {
             var key = keyFix(arr[i]);
 
             if (!isObject(paths[key])) {
@@ -326,7 +312,7 @@ Emitter.prototype = Prototype;
 
 // 添加一个事件对象
 Prototype.on = function(eve, call, content) {
-    if (isString(eve) && isFunction(call)) {
+    if (isTrueString(eve) && isFunction(call)) {
         pathObjectPush(this.tables, eve, "call", call, content);
     }
 
@@ -335,7 +321,7 @@ Prototype.on = function(eve, call, content) {
 
 // 添加一个一次性的事件对象
 Prototype.once = function(eve, call, content) {
-    if (isString(eve) && isFunction(call)) {
+    if (isTrueString(eve) && isFunction(call)) {
         var that = this, once;
 
         once = function() {
@@ -351,7 +337,7 @@ Prototype.once = function(eve, call, content) {
 
 // 移除一个事件
 Prototype.off = function(eve, call) {
-    if (isString(eve)) {
+    if (isTrueString(eve)) {
         pathObjectDel(this.tables, eve, "call", call);
     }
 
@@ -360,7 +346,7 @@ Prototype.off = function(eve, call) {
 
 // 在元素上添加捕获事件
 Prototype.catch = function(eve, call, content) {
-    if (isString(eve) && isFunction(call)) {
+    if (isTrueString(eve) && isFunction(call)) {
         pathObjectPush(this.tables, eve, "catch", call, content);
     }
 
@@ -369,7 +355,7 @@ Prototype.catch = function(eve, call, content) {
 
 // 在元素上移除捕获事件
 Prototype.uncatch = function(eve, call) {
-    if (isString(eve)) {
+    if (isTrueString(eve)) {
         pathObjectDel(this.tables, eve, "catch", call);
     }
 
@@ -378,7 +364,7 @@ Prototype.uncatch = function(eve, call) {
 
 // 在元素上添加一个修饰器
 Prototype.patch = function(eve, call) {
-    if (isString(eve) && isFunction(call)) {
+    if (isTrueString(eve) && isFunction(call)) {
         pathObjectPush(this.tables, eve, "patch", call, content);
     }
 
@@ -387,7 +373,7 @@ Prototype.patch = function(eve, call) {
 
 // 在元素上移除一个修饰器
 Prototype.unpatch = function(eve, call) {
-    if (isString(eve)) {
+    if (isTrueString(eve)) {
         pathObjectDel(this.tables, eve, "patch", call);
     }
 
@@ -399,7 +385,7 @@ Prototype.emit = function(/* eve, args... */) {
     var runs = eventArgs.apply(null, arguments),
         path, eves, first;
 
-    if (isString(runs.eves)) {
+    if (isTrueString(runs.eves)) {
         first = runs.first;
         eves  = runs.eves;
         path  = pathFind(this.tables, runs.space);
@@ -420,7 +406,7 @@ Prototype.dispatch = function(/* eve, args... */) {
     var pathCall = [], run = eventArgs(arguments),
         space, before, maps = this.tables;
 
-    if (isString(run.eves)) {
+    if (isTrueString(run.eves)) {
         if (run.space === "") {
             pathCall.push(maps);
         } else {
@@ -465,7 +451,7 @@ Prototype.broadcast = function(/* eve, args... */) {
     path = pathFind(this.tables, run.space);
     eName = run.eves; eFirst = run.first;
 
-    if (path && isString(eName)) {
+    if (path && isTrueString(eName)) {
         // 忽略自身，则直接从子级开始执行
         if (run.pass === true) {
             calls = eventChild(path, eFirst, eName);

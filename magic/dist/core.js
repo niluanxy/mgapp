@@ -520,11 +520,19 @@ Creater = function(select, context) {
 
 each([Creater, Magic], function(index, object) {
     extend(this, {
-        extend: extend,
+        extend: function() {
+            var args = extend([], arguments);
+            args.unshift(this);
+            extend.apply(null, args);
+        },
         query: query,
-        each: each
+        each: function(callback) {
+            each(this, callback);
+        }
     }, _CHECK);
 });
+
+Creater.config = {};
 
 // 对象继承链修复
 Creater.fn = Creater.prototype = Magic.prototype = Prototype;
@@ -1295,32 +1303,16 @@ function keyTest(name) {
     return name.match(reg);
 }
 
-function isFunction$1(call) {
-    return typeof call == "function";
-}
-
-function isObject$1(object) {
-    return object && typeof object == "object";
-}
-
-function isArray$1(array) {
-    return array && array instanceof Array;
-}
-
-function isString$1(str) {
-    return str && typeof str == "string";
-}
-
 // 在 列表树 中根据路径查询对象
 // 如果没有值会返回 null
 function pathFind(paths, str, parent) {
     var arr = str.split("/"), par = null;
 
     for(var i=0; i<arr.length; i++) {
-        if (isString$1(arr[i])) {
+        if (isTrueString(arr[i])) {
             var key = keyFix(arr[i]);
 
-            if (!isObject$1(paths[key])) {
+            if (!isObject(paths[key])) {
                 return null;
             } else {
                 par = paths;
@@ -1338,10 +1330,10 @@ function pathAdd(paths, str) {
     var arr = str.split("/");
 
     for(var i=0; i<arr.length; i++) {
-        if (isString$1(arr[i])) {
+        if (isTrueString(arr[i])) {
             var key = keyFix(arr[i]);
 
-            if (!isObject$1(paths[key])) {
+            if (!isObject(paths[key])) {
                 paths[key] = {};
             }
 
@@ -1355,7 +1347,7 @@ function pathAdd(paths, str) {
 function arrayCopy(array) {
     var copy = [];
 
-    if (isArray$1(array)) {
+    if (isArray(array)) {
         for(var i=0; i<array.length; i++) {
             copy.push(array[i]);
         }
@@ -1411,7 +1403,7 @@ function pathObjectAdd(paths, str, key) {
 
     var path = pathAdd(paths, str);
 
-    if ( !(isObject$1(path[key])) ) {
+    if ( !(isObject(path[key])) ) {
         path[key] = {};
     }
 
@@ -1426,7 +1418,7 @@ function pathObjectPush(paths, str, key, call, content) {
 
     path = pathObjectAdd(paths, space, key);
 
-    if (!isArray$1(path[first])) {
+    if (!isArray(path[first])) {
         path[first] = [];
     }
 
@@ -1447,7 +1439,7 @@ function pathObjectDel(paths, str, key, call) {
     path = pathFind(paths, space);
     arrs = path[key];
 
-    if (isObject$1(arrs)) {
+    if (isObject(arrs)) {
         if (eves === first && call === undefined) {
             delete arrs[eves];
         } else {
@@ -1534,7 +1526,7 @@ function eventEmit(paths, eName, eFirst, before) {
     function getCalls(paths, type, eves) {
         var arrs = [];
 
-        if (isObject$1(paths[type])) {
+        if (isObject(paths[type])) {
             paths = paths[type];
             arrs  = paths[eves] || [];
         }
@@ -1574,7 +1566,7 @@ function eventEmit(paths, eName, eFirst, before) {
         }
     }
 
-    if (isObject$1(paths)) {
+    if (isObject(paths)) {
         var actions = ["patch", "catch", "call"];
 
         for(var i=0; i<actions.length; i++) {
@@ -1609,7 +1601,7 @@ Emitter.prototype = Prototype$1;
 
 // 添加一个事件对象
 Prototype$1.on = function(eve, call, content) {
-    if (isString$1(eve) && isFunction$1(call)) {
+    if (isTrueString(eve) && isFunction(call)) {
         pathObjectPush(this.tables, eve, "call", call, content);
     }
 
@@ -1618,7 +1610,7 @@ Prototype$1.on = function(eve, call, content) {
 
 // 添加一个一次性的事件对象
 Prototype$1.once = function(eve, call, content) {
-    if (isString$1(eve) && isFunction$1(call)) {
+    if (isTrueString(eve) && isFunction(call)) {
         var that = this, once;
 
         once = function() {
@@ -1634,7 +1626,7 @@ Prototype$1.once = function(eve, call, content) {
 
 // 移除一个事件
 Prototype$1.off = function(eve, call) {
-    if (isString$1(eve)) {
+    if (isTrueString(eve)) {
         pathObjectDel(this.tables, eve, "call", call);
     }
 
@@ -1643,7 +1635,7 @@ Prototype$1.off = function(eve, call) {
 
 // 在元素上添加捕获事件
 Prototype$1.catch = function(eve, call, content) {
-    if (isString$1(eve) && isFunction$1(call)) {
+    if (isTrueString(eve) && isFunction(call)) {
         pathObjectPush(this.tables, eve, "catch", call, content);
     }
 
@@ -1652,7 +1644,7 @@ Prototype$1.catch = function(eve, call, content) {
 
 // 在元素上移除捕获事件
 Prototype$1.uncatch = function(eve, call) {
-    if (isString$1(eve)) {
+    if (isTrueString(eve)) {
         pathObjectDel(this.tables, eve, "catch", call);
     }
 
@@ -1661,7 +1653,7 @@ Prototype$1.uncatch = function(eve, call) {
 
 // 在元素上添加一个修饰器
 Prototype$1.patch = function(eve, call) {
-    if (isString$1(eve) && isFunction$1(call)) {
+    if (isTrueString(eve) && isFunction(call)) {
         pathObjectPush(this.tables, eve, "patch", call, content);
     }
 
@@ -1670,7 +1662,7 @@ Prototype$1.patch = function(eve, call) {
 
 // 在元素上移除一个修饰器
 Prototype$1.unpatch = function(eve, call) {
-    if (isString$1(eve)) {
+    if (isTrueString(eve)) {
         pathObjectDel(this.tables, eve, "patch", call);
     }
 
@@ -1682,12 +1674,12 @@ Prototype$1.emit = function(/* eve, args... */) {
     var runs = eventArgs.apply(null, arguments),
         path, eves, first;
 
-    if (isString$1(runs.eves)) {
+    if (isTrueString(runs.eves)) {
         first = runs.first;
         eves  = runs.eves;
         path  = pathFind(this.tables, runs.space);
 
-        if (isObject$1(path)) {
+        if (isObject(path)) {
             eventEmit(path, eves, first, {
                 arguments: runs.args,
                 propagation: true,
@@ -1703,7 +1695,7 @@ Prototype$1.dispatch = function(/* eve, args... */) {
     var pathCall = [], run = eventArgs(arguments),
         space, before, maps = this.tables;
 
-    if (isString$1(run.eves)) {
+    if (isTrueString(run.eves)) {
         if (run.space === "") {
             pathCall.push(maps);
         } else {
@@ -1712,7 +1704,7 @@ Prototype$1.dispatch = function(/* eve, args... */) {
             for(var i=0; i<spaces.length; i++) {
                 var key = keyFix(spaces[i]);
 
-                if (isObject$1(maps[key])) {
+                if (isObject(maps[key])) {
                     pathCall.push(maps[key]);
                     maps = maps[key];
                 } else {
@@ -1748,7 +1740,7 @@ Prototype$1.broadcast = function(/* eve, args... */) {
     path = pathFind(this.tables, run.space);
     eName = run.eves; eFirst = run.first;
 
-    if (path && isString$1(eName)) {
+    if (path && isTrueString(eName)) {
         // 忽略自身，则直接从子级开始执行
         if (run.pass === true) {
             calls = eventChild(path, eFirst, eName);
@@ -2112,9 +2104,53 @@ var other$1 = Object.freeze({
 
 RootMagic$1.fn.extend(data$1, other$1);
 
-function isfun(call) {
-    return typeof call == "function";
-}
+/**
+ * references:
+ * https://github.com/YuzuJS/setImmediate
+ * https://dbaron.org/log/20100309-faster-timeouts
+ */
+
+var fastCall$1 = (function() {
+    var run = self, pre = "~_fast_call$", doc, addEvent;
+
+    addEvent = run.addEventListener || run.attachEvent;
+    doc = run.document;
+
+    if (run.setImmediate) {
+        return run.setImmediate;
+    } else if (run.process && run.process.nextTick) {
+        return run.process.nextTick;
+    } else if (run.postMessage) {
+        var calls = [];
+
+        addEvent("message", function(e) {
+            if (e.source === run && e.data === pre) {
+                calls.shift()();
+            }
+        }, false);
+
+        return function(callback) {
+            calls.push(callback);
+            run.postMessage(pre, "*");
+        }
+    } else if (doc && doc.createElement) {
+        var html = doc.documentElement, script;
+            
+        return function(callback) {
+            script = doc.createElement("script");
+
+            script.onreadystatechange = function () {
+                callback();
+                html.removeChild(script);
+                script = null;
+            };
+
+            html.appendChild(script);
+        }
+    } else {
+        return run.setTimeout;
+    }
+})();
 
 function Promise() {
     this.next = null;
@@ -2125,8 +2161,8 @@ function Promise() {
 }
 
 Promise.prototype.then = function(resolve, reject) {
-    if (isfun(resolve)) this.resolved = resolve;
-    if (isfun(reject))  this.rejected = reject;
+    if (isFunction(resolve)) this.resolved = resolve;
+    if (isFunction(reject))  this.rejected = reject;
 
     this.next = new Defer();
 
@@ -2141,32 +2177,35 @@ function Defer() {
 }
 
 function fireCall(status, value) {
-    var promise = this.promise, nextDefer, call, ret;
+    var that = this, promise = that.promise,
+        nextDefer, call, ret;
 
-    if (status == "resolve") {
-        this.status = "resolved";
-        call = promise.resolved;
-    } else {
-        this.status = "rejected";
-        call = promise.rejected;
-    }
-    
-    nextDefer = promise.next;
-    ret = isfun(call) ? call(value) : undefined;
-
-    if (nextDefer && nextDefer[status]) {
-        if (ret && ret.then) {
-            ret.then(function(value) {
-                nextDefer.resolve(value);
-            }, function(reason) {
-                nextDefer.reject(reason);
-            });
+    fastCall$1(function() {
+        if (status == "resolve") {
+            that.status = "resolved";
+            call = promise.resolved;
         } else {
-            nextDefer[status](ret);
+            that.status = "rejected";
+            call = promise.rejected;
         }
-    }
 
-    return ret;
+        nextDefer = promise.next;
+        ret = isFunction(call) ? call(value) : undefined;
+
+        if (nextDefer && nextDefer[status]) {
+            if (ret && ret.then) {
+                ret.then(function(value) {
+                    nextDefer.resolve(value);
+                }, function(reason) {
+                    nextDefer.reject(reason);
+                });
+            } else {
+                nextDefer[status](ret);
+            }
+        }
+    });
+
+    return this;
 }
 
 Defer.prototype.resolve = function(value) {
@@ -2189,12 +2228,101 @@ function defer() {
     return new Defer();
 }
 
+function random(min, max) {
+    if (min && max && min != max) {
+        return parseInt(Math.random()*(max-min+1)+min,10);
+    } else {
+        return (''+Math.random()).replace(/\D/g, '').replace(/^0*/, '');
+    }
+}
+
+function time() {
+    return new Date().getTime();
+}
+
+var fastCall = fastCall$1;
+
 var util = Object.freeze({
 	tpl: tpl$1,
-	defer: defer
+	defer: defer,
+	random: random,
+	time: time,
+	fastCall: fastCall
 });
 
-RootMagic$1.extend(util);
+RootMagic$1.config.fetchTimeout = 5000;
+var config = RootMagic$1.config;
+
+function on$1(obj, name, call) {
+    return obj.addEventListener(name, call);
+}
+
+function getScript(data) {
+
+}
+
+function _ajax(method, url, data, option, timeout) {
+    var defer = new Defer(), opt, xhr, out;
+
+    xhr = new XMLHttpRequest();
+
+    on$1(xhr, "load", function() {
+        var res = {
+            tip : this.statusText,
+            code: this.status,
+            data: this.response,
+        };
+
+        if (method === "JSONP") {
+            defer.resolve(getScript(res));
+        } else {
+            defer.resolve(res);
+        }
+    });
+
+    // 请求超时处理代码
+    if ((out = timeout || config.fetchTimeout)) {
+        setTimeout(function() {
+            defer.reject({
+                tip : "Request Time Out",
+                code: 504,
+                data: {},
+            });
+        }, out);
+    }
+
+    xhr.open(method, url);
+    xhr.send();
+
+    return defer.promise;
+}
+
+function fetch(url, data, option, timeout) {
+    var option = option || {}, method;
+
+    method = option.method || "GET";
+
+    if (!isTrueString(url)) {
+        var error = new Defer();
+
+        console.log("whty");
+        error.reject({
+            tip : "Url Is Not Found",
+            code: 404,
+            data: {},
+        });
+
+        return error.promise;
+    } else {
+        return _ajax(method, url, data, option, timeout);
+    }
+}
+
+var http = Object.freeze({
+	fetch: fetch
+});
+
+RootMagic$1.extend(util, http);
 
 try {
     if (typeof window === "object") {

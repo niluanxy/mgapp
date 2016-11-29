@@ -1,4 +1,4 @@
-import {isTrueString, isObject} from "CORE_FUNCTION/check.js";
+import {isTrueString, isObject} from "LIB_MINJS/check.js";
 import {allProxy} from "CORE_FUNCTION/proxy.js";
 import {append} from "CORE_MODULE/dom/editer/main.js";
 import {element} from "CORE_FUNCTION/tools.js";

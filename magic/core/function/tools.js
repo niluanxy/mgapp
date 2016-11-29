@@ -1,4 +1,4 @@
-import {isFunction, isArray, isElement, isObject, isTrueString} from "./check.js";
+import {isFunction, isArray, isElement, isObject, isTrueString} from "LIB_MINJS/check.js";
 
 /**
  * 对数组或者对象，执行指定的回调参数

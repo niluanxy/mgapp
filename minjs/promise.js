@@ -1,6 +1,5 @@
-function isfun(call) {
-    return typeof call == "function";
-}
+import fastCall from "./fastcall.js";
+import {isFunction} from "./check.js";
 
 function Promise() {
     this.next = null;
@@ -11,8 +10,8 @@ function Promise() {
 }
 
 Promise.prototype.then = function(resolve, reject) {
-    if (isfun(resolve)) this.resolved = resolve;
-    if (isfun(reject))  this.rejected = reject;
+    if (isFunction(resolve)) this.resolved = resolve;
+    if (isFunction(reject))  this.rejected = reject;
 
     this.next = new Defer();
 
@@ -27,32 +26,35 @@ function Defer() {
 }
 
 function fireCall(status, value) {
-    var promise = this.promise, nextDefer, call, ret;
+    var that = this, promise = that.promise,
+        nextDefer, call, ret;
 
-    if (status == "resolve") {
-        this.status = "resolved";
-        call = promise.resolved;
-    } else {
-        this.status = "rejected";
-        call = promise.rejected;
-    }
-    
-    nextDefer = promise.next;
-    ret = isfun(call) ? call(value) : undefined;
-
-    if (nextDefer && nextDefer[status]) {
-        if (ret && ret.then) {
-            ret.then(function(value) {
-                nextDefer.resolve(value);
-            }, function(reason) {
-                nextDefer.reject(reason);
-            });
+    fastCall(function() {
+        if (status == "resolve") {
+            that.status = "resolved";
+            call = promise.resolved;
         } else {
-            nextDefer[status](ret);
+            that.status = "rejected";
+            call = promise.rejected;
         }
-    }
 
-    return ret;
+        nextDefer = promise.next;
+        ret = isFunction(call) ? call(value) : undefined;
+
+        if (nextDefer && nextDefer[status]) {
+            if (ret && ret.then) {
+                ret.then(function(value) {
+                    nextDefer.resolve(value);
+                }, function(reason) {
+                    nextDefer.reject(reason);
+                });
+            } else {
+                nextDefer[status](ret);
+            }
+        }
+    });
+
+    return this;
 }
 
 Defer.prototype.resolve = function(value) {

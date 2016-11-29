@@ -1,5 +1,5 @@
 import * as _DOM  from "./dom.js";
-import * as _CHECK from "CORE_FUNCTION/check.js";
+import * as _CHECK from "LIB_MINJS/check.js";
 import _READY from "./ready.js";
 import { each as _EACH, slice as _SLICE, extend as _EXTEND} from "CORE_FUNCTION/tools.js";
 
@@ -97,11 +97,19 @@ Creater = function(select, context) {
 
 _EACH([Creater, Magic], function(index, object) {
     _EXTEND(this, {
-        extend: _EXTEND,
+        extend: function() {
+            var args = _EXTEND([], arguments);
+            args.unshift(this);
+            _EXTEND.apply(null, args);
+        },
         query: _DOM.query,
-        each: _EACH
+        each: function(callback) {
+            _EACH(this, callback);
+        }
     }, _CHECK);
 });
+
+Creater.config = {};
 
 // 对象继承链修复
 Creater.fn = Creater.prototype = Magic.prototype = Prototype;
