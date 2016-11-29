@@ -194,3 +194,29 @@ gulp.task("build", function() {
 gulp.task("clean", function() {
     clear_mixin();
 })
+
+gulp.task("test", function() {
+    var defer = Q.defer();
+
+    setTimeout(function() {
+        defer.resolve();
+    }, 1000);
+
+    defer.promise.then(function() {
+        log("hello 111");
+
+        var ne = Q.defer();
+
+        ne.reject("test no", "111");
+        log("new resolve: "+(new Date()).getTime())
+
+        return ne.promise;
+    }, function(response, ext) {
+        log("error 111:"+response + ext)
+    }).fail(function(response) {
+        log("error 222:"+response+(new Date()).getTime())
+        return "test no 333"
+    }).then(function(response) {
+        log("hello 333:"+response)
+    })
+})
