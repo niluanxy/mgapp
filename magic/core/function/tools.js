@@ -10,8 +10,9 @@ export function each(object, callback) {
     if (!object || !isFunction(callback)) return;
 
     for(var key in object) {
-        var item = object[key];
-        callback.apply(item, [key, item]);
+        var item = object[key], runs = [key, item];
+
+        if (callback.apply(item, runs) === false) break;
     }
 };
 

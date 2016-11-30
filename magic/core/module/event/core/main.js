@@ -19,14 +19,17 @@ function getPrefix(eve) {
 function checkIn(event, select) {
     if (event) {
         if (isTrueString(select)) {
-            var target = event.target,
+            var target = event.target, ret,
                 $finds = parent.call(target);
 
             $finds.find(select).each(function(key, ele) {
-                if (ele === target) return true;
+                if (ele === target) {
+                    ret = true;
+                    return false;
+                }
             });
 
-            return false;
+            return !!ret;
         } else {
             return true;
         }
@@ -99,14 +102,16 @@ function addProxy(bind, eve, select, callback, extScope) {
                 });
             }
 
-            eveCtrl[bind](eveName, function(event) {
-                if (checkIn(event, select)) {
-                    var args = extend([], arguments);
+            (function(Selecter) {
+                eveCtrl[bind](eveName, function(event) {
+                    if (checkIn(event, Selecter)) {
+                        var args = extend([], arguments);
 
-                    args[0] = fixEvent(event, this);
-                    callback.apply(scope, args);
-                }
-            });
+                        args[0] = fixEvent(event, this);
+                        callback.apply(scope, args);
+                    }
+                });
+            })(select);
         });
     }
 

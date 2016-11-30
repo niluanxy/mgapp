@@ -1,6 +1,7 @@
 import templayed from "LIB_MINJS/templayed.js";
 import Defer from "LIB_MINJS/promise.js";
 import fastBase from "LIB_MINJS/fastcall.js";
+import emitterBase from "LIB_MINJS/emitter.js";
 import {isTrueString} from "LIB_MINJS/check.js";
 
 export function tpl(template, data) {
@@ -28,3 +29,5 @@ export function time() {
 }
 
 export var fastCall = fastBase;
+
+export var emitter = emitterBase;

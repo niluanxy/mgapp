@@ -122,6 +122,15 @@ function isObject(obj) {
     return true;
 }
 
+// 检测是否为一个空对象
+function isEmptyObject(obj) {
+    var count = 0;
+
+    for(var key in obj) count++;
+
+    return count===0;
+}
+
 function isElement(object) {
     return object instanceof Element || object === document;
 }
@@ -145,12 +154,17 @@ function isTrueString(string) {
 var _CHECK = Object.freeze({
 	isArray: isArray,
 	isObject: isObject,
+	isEmptyObject: isEmptyObject,
 	isElement: isElement,
 	isFunction: isFunction,
 	isString: isString,
 	isNumber: isNumber,
 	isTrueString: isTrueString
 });
+
+var $config = {
+    classActive: "active",
+};
 
 /*! 
  * onDomReady.js 1.4.0 (c) 2013 Tubal Martin - MIT license
@@ -302,8 +316,9 @@ function each(object, callback) {
     if (!object || !isFunction(callback)) return;
 
     for(var key in object) {
-        var item = object[key];
-        callback.apply(item, [key, item]);
+        var item = object[key], runs = [key, item];
+
+        if (callback.apply(item, runs) === false) break;
     }
 }
 
@@ -521,9 +536,16 @@ Creater = function(select, context) {
 each([Creater, Magic], function(index, object) {
     extend(this, {
         extend: function() {
-            var args = extend([], arguments);
-            args.unshift(this);
-            extend.apply(null, args);
+            var args = extend([], arguments), fix = 0;
+
+            if (args[0] === true) fix = 1;
+
+            // 第一个对象非 {}，合并到自身
+            if (!isEmptyObject(args[fix])) {
+                args.splice(fix, 0, this);
+            }
+
+            return extend.apply(this, args);
         },
         query: query,
         each: function(callback) {
@@ -532,10 +554,9 @@ each([Creater, Magic], function(index, object) {
     }, _CHECK);
 });
 
-Creater.config = {};
-
 // 对象继承链修复
 Creater.fn = Creater.prototype = Magic.prototype = Prototype;
+Creater.config = $config;
 
 var RootMagic$1 = Creater;
 
@@ -710,6 +731,116 @@ var editer = Object.freeze({
 	remove: remove
 });
 
+function hasClass(cls) {
+    var el = element(this), result, arrays, test, clsName;
+
+    if (isTrueString(cls) && el && (clsName = el.className)) {
+        test = cls.replace(/\s+/, ' ').split(" ");
+        result = true;
+
+        for(var i=0; i<test.length; i++) {
+            var reg = new RegExp("(^|\\s)" + test[i] + "(\\s|$)");
+
+            if (!reg.test(clsName)) {
+                result = false;
+                break;
+            }
+        }
+
+        return result;
+    } else {
+        return false;
+    }
+}
+
+function addProxy(cls) {
+    var el = element(this), adds, clsName;
+
+    if (isTrueString(cls) && el && el.className !== undefined) {
+        adds = cls.replace(/\s+/, ' ').split(" ");
+        clsName = el.className || "";
+        clsName = clsName.replace(/\s+/, ' ');
+        clsName = clsName ? clsName.split(" ") : [];
+
+        for(var i=0; i<adds.length; i++) {
+            if (!hasClass.call(el, adds[i])) {
+                clsName.push(adds[i]);
+            }
+        }
+
+        el.className = clsName.join(" ");
+    }
+
+    return this;
+}
+
+function addClass(cls, setAll) {
+    return allProxy.call(this, addProxy, cls, setAll);
+}
+
+function removeProxy$1(cls) {
+    var el = element(this), dels, clsName;
+
+    if (isTrueString(cls) && el && el.className !== undefined) {
+        dels = cls.replace(/\s+/, ' ').split(" ");
+        clsName = el.className || "";
+        clsName = clsName.replace(/\s+/, ' ');
+
+        for(var i=0; i<dels.length; i++) {
+            var reg = new RegExp("(^|\\s)" + dels[i] + "(\\s|$)", 'g');
+
+            clsName = trim(clsName.replace(reg, ' '));
+        }
+
+        el.className = clsName;
+    }
+
+    return this;
+}
+
+function removeClass(cls, setAll) {
+    return allProxy.call(this, removeProxy$1, cls, setAll);
+}
+
+/**
+ * 切换对象的某个类，已包含时移除，未包含时添加
+ *
+ * @param       {String}    cls - 要切换的类名
+ * @param       {Boolean}   set - 是否强制设置
+ *
+ * @author      mufeng  <smufeng@gmail.com>
+ * @version     0.2     <2016-11-22>
+ */
+function toggleProxy(cls, set) {
+    var el = element(this);
+
+    if (set != undefined) {
+        // 有 SET 时，为真添加，否则删除
+        if (set == true) {
+            addProxy.call(el, cls);
+        } else {
+            removeProxy$1.call(el, cls);
+        }
+    } else if (hasClass.call(el, cls)) {
+        removeProxy$1.call(el, cls);
+    } else {
+        addProxy.call(el, cls);
+    }
+
+    return this;
+}
+
+function toggleClass(cls, set, setAll) {
+    return allProxy.call(this, toggleProxy, cls, set, setAll);
+}
+
+var clase = Object.freeze({
+	hasClass: hasClass,
+	addClass: addClass,
+	removeClass: removeClass,
+	toggleClass: toggleClass
+});
+
 function index() {
     var par = parent.call(this), items;
 
@@ -746,6 +877,18 @@ function children(search) {
 function eq(el, checkAll) {
     if (isNumber(el)) {
         return RootMagic$1(this[el]);
+    } if (isString(el)) {
+        var test = trim(el.replace(".", ' ')), arrs = [];
+
+        for(var i=0; i<this.length; i++) {
+            var item = this[i];
+
+            if (hasClass.call(item, test)) {
+                arrs.push(item);
+            }
+        }
+
+        return RootMagic$1(arrs);
     } else if (isElement(el)) {
         return this[0] === el;
     } else if (el instanceof RootMagic$1) {
@@ -886,116 +1029,6 @@ var attrbute = Object.freeze({
 });
 
 RootMagic$1.fn.extend(attrbute, editer, search);
-
-function hasClass(cls) {
-    var el = element(this), result, arrays, test, clsName;
-
-    if (isTrueString(cls) && el && (clsName = el.className)) {
-        test = cls.replace(/\s+/, ' ').split(" ");
-        result = true;
-
-        for(var i=0; i<test.length; i++) {
-            var reg = new RegExp("(^|\\s)" + test[i] + "(\\s|$)");
-
-            if (!reg.test(clsName)) {
-                result = false;
-                break;
-            }
-        }
-
-        return result;
-    } else {
-        return false;
-    }
-}
-
-function addProxy(cls) {
-    var el = element(this), adds, clsName;
-
-    if (isTrueString(cls) && el && el.className !== undefined) {
-        adds = cls.replace(/\s+/, ' ').split(" ");
-        clsName = el.className || "";
-        clsName = clsName.replace(/\s+/, ' ');
-        clsName = clsName ? clsName.split(" ") : [];
-
-        for(var i=0; i<adds.length; i++) {
-            if (!hasClass.call(el, adds[i])) {
-                clsName.push(adds[i]);
-            }
-        }
-
-        el.className = clsName.join(" ");
-    }
-
-    return this;
-}
-
-function addClass(cls, setAll) {
-    return allProxy.call(this, addProxy, cls, setAll);
-}
-
-function removeProxy$1(cls) {
-    var el = element(this), dels, clsName;
-
-    if (isTrueString(cls) && el && el.className !== undefined) {
-        dels = cls.replace(/\s+/, ' ').split(" ");
-        clsName = el.className || "";
-        clsName = clsName.replace(/\s+/, ' ');
-
-        for(var i=0; i<dels.length; i++) {
-            var reg = new RegExp("(^|\\s)" + dels[i] + "(\\s|$)", 'g');
-
-            clsName = trim(clsName.replace(reg, ' '));
-        }
-
-        el.className = clsName;
-    }
-
-    return this;
-}
-
-function removeClass(cls, setAll) {
-    return allProxy.call(this, removeProxy$1, cls, setAll);
-}
-
-/**
- * 切换对象的某个类，已包含时移除，未包含时添加
- *
- * @param       {String}    cls - 要切换的类名
- * @param       {Boolean}   set - 是否强制设置
- *
- * @author      mufeng  <smufeng@gmail.com>
- * @version     0.2     <2016-11-22>
- */
-function toggleProxy(cls, set) {
-    var el = element(this);
-
-    if (set != undefined) {
-        // 有 SET 时，为真添加，否则删除
-        if (set == true) {
-            addProxy.call(el, cls);
-        } else {
-            removeProxy$1.call(el, cls);
-        }
-    } else if (hasClass.call(el, cls)) {
-        removeProxy$1.call(el, cls);
-    } else {
-        addProxy.call(el, cls);
-    }
-
-    return this;
-}
-
-function toggleClass(cls, set, setAll) {
-    return allProxy.call(this, toggleProxy, cls, set, setAll);
-}
-
-var clase = Object.freeze({
-	hasClass: hasClass,
-	addClass: addClass,
-	removeClass: removeClass,
-	toggleClass: toggleClass
-});
 
 var NAME_STYLE = "_MG_STYLE_";
 var NAME_EVENT = "_MG_EVENT_";
@@ -1800,14 +1833,17 @@ function getPrefix(eve) {
 function checkIn(event, select) {
     if (event) {
         if (isTrueString(select)) {
-            var target = event.target,
+            var target = event.target, ret,
                 $finds = parent.call(target);
 
             $finds.find(select).each(function(key, ele) {
-                if (ele === target) return true;
+                if (ele === target) {
+                    ret = true;
+                    return false;
+                }
             });
 
-            return false;
+            return !!ret;
         } else {
             return true;
         }
@@ -1880,14 +1916,16 @@ function addProxy$1(bind, eve, select, callback, extScope) {
                 });
             }
 
-            eveCtrl[bind](eveName, function(event) {
-                if (checkIn(event, select)) {
-                    var args = extend([], arguments);
+            (function(Selecter) {
+                eveCtrl[bind](eveName, function(event) {
+                    if (checkIn(event, Selecter)) {
+                        var args = extend([], arguments);
 
-                    args[0] = fixEvent(event, this);
-                    callback.apply(scope, args);
-                }
-            });
+                        args[0] = fixEvent(event, this);
+                        callback.apply(scope, args);
+                    }
+                });
+            })(select);
         });
     }
 
@@ -2242,17 +2280,17 @@ function time() {
 
 var fastCall = fastCall$1;
 
+var emitter = Creater$1;
+
 var util = Object.freeze({
 	tpl: tpl$1,
 	defer: defer,
 	random: random,
 	time: time,
-	fastCall: fastCall
+	fastCall: fastCall,
+	emitter: emitter
 });
 
-RootMagic$1.config.fetchTimeout = 5000;
-
-var config = RootMagic$1.config;
 var errorTpl = {
         e404: { response: {}, statusCode: 404, statusText: "Url Is Not Found" },
         e504: { response: {}, statusCode: 504, statusText: "Request Time Out" },
@@ -2260,6 +2298,7 @@ var errorTpl = {
 var header = {
         post: "application/x-www-form-urlencoded;charset=UTF-8",
     };
+$config.fetchTimeout = 5000;
 
 function isOption(option) {
     var check = "body method header";
@@ -2327,7 +2366,7 @@ function _ajax(method, url, data, option, timeout) {
     });
 
     // 请求超时处理代码
-    xhr.timeout = timeout || config.fetchTimeout;
+    xhr.timeout = timeout || $config.fetchTimeout;
 
     try {
         if (method === "GET") {
@@ -2357,7 +2396,7 @@ function _fetch(method, url, data, option, timeout) {
     init.method = method;
     extend(init, option);
 
-    init.timeout = timeout || config.fetchTimeout;
+    init.timeout = timeout || $config.fetchTimeout;
     if (!init.headers) init.headers = {};
     headers = init.headers;
 

@@ -15,6 +15,15 @@ export function isObject(obj) {
     return true;
 };
 
+// 检测是否为一个空对象
+export function isEmptyObject(obj) {
+    var count = 0;
+
+    for(var key in obj) count++;
+
+    return count===0;
+}
+
 export function isElement(object) {
     return object instanceof Element || object === document;
 }

@@ -1,0 +1,1 @@
+import "MUI/tabs/main.js";

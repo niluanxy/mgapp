@@ -1,5 +1,6 @@
-import {element} from "CORE_FUNCTION/tools.js";
-import {isNumber, isElement} from "LIB_MINJS/check.js";
+import {element, trim} from "CORE_FUNCTION/tools.js";
+import {isNumber, isString, isElement} from "LIB_MINJS/check.js";
+import {hasClass} from "CORE_MODULE/style/class/main.js";
 import RootMagic from "CORE_MAGIC/main.js";
 
 export function index() {
@@ -38,6 +39,18 @@ export function children(search) {
 export function eq(el, checkAll) {
     if (isNumber(el)) {
         return RootMagic(this[el]);
+    } if (isString(el)) {
+        var test = trim(el.replace(".", ' ')), arrs = [];
+
+        for(var i=0; i<this.length; i++) {
+            var item = this[i];
+
+            if (hasClass.call(item, test)) {
+                arrs.push(item);
+            }
+        }
+
+        return RootMagic(arrs);
     } else if (isElement(el)) {
         return this[0] === el;
     } else if (el instanceof RootMagic) {

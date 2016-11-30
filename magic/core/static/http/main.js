@@ -1,18 +1,17 @@
 import Defer from "LIB_MINJS/promise.js";
 import {strFind, each, extend} from "CORE_FUNCTION/tools.js";
 import {isTrueString, isNumber, isObject} from "LIB_MINJS/check.js";
+import $config from "CORE_MAGIC/config.js";
 import RootMagic from "CORE_MAGIC/main.js";
 
-RootMagic.config.fetchTimeout = 5000;
-
-var config = RootMagic.config,
-    errorTpl = {
+var errorTpl = {
         e404: { response: {}, statusCode: 404, statusText: "Url Is Not Found" },
         e504: { response: {}, statusCode: 504, statusText: "Request Time Out" },
     },
     header = {
         post: "application/x-www-form-urlencoded;charset=UTF-8",
     };
+$config.fetchTimeout = 5000;
 
 function isOption(option) {
     var check = "body method header";
@@ -80,7 +79,7 @@ function _ajax(method, url, data, option, timeout) {
     });
 
     // 请求超时处理代码
-    xhr.timeout = timeout || config.fetchTimeout;
+    xhr.timeout = timeout || $config.fetchTimeout;
 
     try {
         if (method === "GET") {
@@ -110,7 +109,7 @@ function _fetch(method, url, data, option, timeout) {
     init.method = method;
     extend(init, option);
 
-    init.timeout = timeout || config.fetchTimeout;
+    init.timeout = timeout || $config.fetchTimeout;
     if (!init.headers) init.headers = {};
     headers = init.headers;
 

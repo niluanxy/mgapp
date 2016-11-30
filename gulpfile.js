@@ -143,42 +143,64 @@ function clear_mixin() {
  =================================================*/
 function task_build_magic() {
     var defer_all = Q.defer(), defer_core = Q.defer(),
-        defer_mui = Q.defer(), defer_mixin = Q.defer(),
+        defer_mui = Q.defer(), plugins,
 
     DIR_CORE = DIR_MAGIC+"core/",
-    DIR_MUI  = DIR_MAGIC+"MUI/";
+    DIR_MUI  = DIR_MAGIC+"mui/";
+
+    plugins = [
+        rollupAlias(DIR_MAGIC_ALIAS),
+        rollupReplace({
+            exclude: 'node_modules/**',
+            ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
+        }),
+        (process.env.NODE_ENV === 'production' && rollupUglify()),
+    ];
 
     clear_magic().then(function() {
         rollup({
             entry: DIR_CORE+"build.js",
             format: 'umd',
             moduleName: "Magic",
-
-            plugins: [
-                rollupAlias(DIR_MAGIC_ALIAS),
-                rollupReplace({
-                    exclude: 'node_modules/**',
-                    ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
-                }),
-                (process.env.NODE_ENV === 'production' && rollupUglify()),
-            ],
+            plugins: plugins,
         })
-        .pipe(source('core.js'))
+        .pipe(source('magic.js'))
         .pipe(gulp.dest(DIST_MAGIC))
         .on("finish", function() {
             log("--- magic core build finish");
             defer_core.resolve();
         });
 
+        gulp.src([DIR_CORE+"build.js",
+            DIR_MUI+"build.js"])
+        .pipe(concat("concat.js"))
+        .pipe(gulp.dest(DIST_MAGIC))
+        .on("finish", function() {
+            rollup({
+                entry: DIST_MAGIC+"/concat.js",
+                format: 'umd',
+                moduleName: "Magic",
+                plugins: plugins,
+            })
+            .pipe(source('magic.ui.js'))
+            .pipe(gulp.dest(DIST_MAGIC))
+            .on("finish", function() {
+                log("--- magic mui build finish");
+                del(DIST_MAGIC+"/concat.js");
+                defer_mui.resolve();
+            });
+        });
+
         return Q.all([
             defer_core.promise,
-        ])
+            defer_mui.promise,
+        ]);
     }).then(function() {
         log("magic task all finish");
         defer_all.resolve();
     });
 
-    return defer_core.promise;
+    return defer_all.promise;
 }
 
 function clear_magic() {

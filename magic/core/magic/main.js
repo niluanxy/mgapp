@@ -1,5 +1,6 @@
 import * as _DOM  from "./dom.js";
 import * as _CHECK from "LIB_MINJS/check.js";
+import _CONFIG from "./config.js";
 import _READY from "./ready.js";
 import { each as _EACH, slice as _SLICE, extend as _EXTEND} from "CORE_FUNCTION/tools.js";
 
@@ -98,9 +99,16 @@ Creater = function(select, context) {
 _EACH([Creater, Magic], function(index, object) {
     _EXTEND(this, {
         extend: function() {
-            var args = _EXTEND([], arguments);
-            args.unshift(this);
-            _EXTEND.apply(null, args);
+            var args = _EXTEND([], arguments), fix = 0;
+
+            if (args[0] === true) fix = 1;
+
+            // 第一个对象非 {}，合并到自身
+            if (!_CHECK.isEmptyObject(args[fix])) {
+                args.splice(fix, 0, this);
+            }
+
+            return _EXTEND.apply(this, args);
         },
         query: _DOM.query,
         each: function(callback) {
@@ -109,9 +117,8 @@ _EACH([Creater, Magic], function(index, object) {
     }, _CHECK);
 });
 
-Creater.config = {};
-
 // 对象继承链修复
 Creater.fn = Creater.prototype = Magic.prototype = Prototype;
+Creater.config = _CONFIG;
 
 export default Creater;
