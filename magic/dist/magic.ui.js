@@ -321,6 +321,7 @@ function each(object, callback) {
     for(var key in object) {
         var item = object[key], runs = [key, item];
 
+        if (key === "length") return;
         if (callback.apply(item, runs) === false) break;
     }
 }
@@ -338,6 +339,17 @@ function strFind(strs, find) {
     }
 
     return -1;
+}
+
+function arrayRemove(arrs, find, all) {
+    for(var i=0; i<arrs.length; i++) {
+        if (arrs[i] === find) {
+            arrs.splice(i--, 1);
+            if (all !== true) return arrs;
+        }
+    }
+
+    return arrs;
 }
 
 /**
@@ -952,13 +964,19 @@ function text(text, setAll) {
     return allProxy.call(this, keyProxy, "innerText", text, true, setAll);
 }
 
+function tag() {
+    var el = element(this);
+
+    return (el ? el.tagName : "").toLowerCase();
+}
+
 /**
  * 表单元素设置值或读取值
  */
 function valProxy(aVal) {
     var el = element(this), type, aValue;
 
-    if (el && el.tagName === "INPUT") {
+    if (el && tag.call(el) === "input") {
         type = _attr.call(el, "type") || "";
         type = type.toUpperCase();
 
@@ -1035,6 +1053,7 @@ var attrbute = Object.freeze({
 	html: html,
 	outerHtml: outerHtml,
 	text: text,
+	tag: tag,
 	val: val,
 	checked: checked,
 	attr: attr,
@@ -1240,7 +1259,8 @@ function showProxy(display) {
 
     if (cssProxy.call(el, "display") == "none") {
         cache = dataStyle(el, "display");
-        show = display || cache || "block";
+        show = display || cache;
+        show = show && show != "none" ? show : "block";
         cssProxy.call(el, "display", show);
     }
 
@@ -2580,11 +2600,126 @@ Tabs.prototype.destory = function() {
     this.$el.remove();
 };
 
-RootMagic$1.fn.extend({
-    tabs: function(options) {
-        return new Tabs(this[0], options).init();
+// 绑定到 RootMagic 调用链上
+RootMagic$1.fn.extend({tabs: function(options) {
+    return new Tabs(this[0], options).init();
+}});
+
+var CFG$1 = $config.popup = {
+    insertTo : "body", 
+
+    wrapIndex: 100,
+    wrapClass: "pop-wrap",
+    itemClass: "pop-item",
+};
+var SHOWS = "UI_POPUP_SHOW";
+var INDEX = "UI_POPUP_INDEX";
+
+/**
+ * option: {
+ *     insertTo: [string || DOM] 要插入的位置
+ *     animate : [string] 动画样式
+ * }
+ */
+function Popup(el, option) {
+    this.$el = RootMagic$1(el);
+    this.$wrap  = null;
+    this.isHide = true;
+    this.option = extend({}, $config.ui, CFG$1, option);
+}
+
+Popup.prototype.init = function() {
+    var opt = this.option, $insert, $wrap;
+
+    $insert = RootMagic$1(opt.insertTo);
+    $wrap = $insert.children("."+opt.wrapClass);
+
+    if (!$wrap.length) {
+        var createHtml = '<div class="' + opt.wrapClass +
+                '" style="z-index:' + opt.wrapIndex + ';"></div>';
+
+        if ($insert.tag() != "body" && $insert.css("position") == "static") {
+            $insert.css("position", "relative");
+        }
+
+        $wrap = RootMagic$1(createHtml).appendTo($insert);
     }
-});
+
+
+    // 当前容器若第一次创建，则初始化相关数据
+    if (!$wrap.data[SHOWS]) {
+        $wrap.data(SHOWS, []).data(INDEX, 0);
+    }
+    this.$wrap = $wrap;
+
+    this.$el.wrap('<div class="'+opt.itemClass+'"></div>');
+    this.$el = this.$el.parent();
+    this.$el.appendTo($wrap);
+
+    this.$el.hide();
+    this.$el.hide();
+
+    return this;
+};
+
+Popup.prototype.show = function(animate) {
+    var anim = animate || this.option.animate,
+        $wrap = this.$wrap,
+        show  = $wrap.data(SHOWS),
+        index = $wrap.data(INDEX);
+
+    this.$wrap.show();
+    this.$el.css("z-index", ++index)
+        .addClass(anim)
+        .show().attr("show", "true");
+
+    this.isHide = false;
+
+    // 更新 WRAP 对象相关数据
+    show.push(this.$el);
+    $wrap.data(INDEX, index);
+
+    return this;
+};
+
+Popup.prototype.hide = function() {
+    var needShow = false, $wrap = this.$wrap,
+        shows = $wrap.data(SHOWS), index = $wrap.data(INDEX),
+        elidx = parseInt(this.$el.css("z-index"));
+
+    this.$el.hide().attr("show", "false");
+    this.isHide = true;
+
+    //  更新容器相关 UI 记录数据
+    if (arrayRemove(shows, this.$el).length) needShow = true;
+    if (elidx == index) $wrap.data(INDEX, elidx-1);
+
+    !needShow && this.$wrap.hide();
+
+    return this;
+};
+
+Popup.prototype.toggle = function(set) {
+    var toggle = set || this.isHide;
+    
+    toggle ? this.show() : this.hide();
+
+    return this;
+};
+
+Popup.prototype.destroy = function() {
+    this.$el.remove();
+};
+
+// 绑定到 RootMagic 调用链上
+RootMagic$1.fn.extend({popup: function(el, option) {
+    var ext = extend({}, option, {insertTo: this[0]});
+    return new Popup(el, ext).init();
+}});
+
+RootMagic$1.extend({popup: function(el, option) {
+    return new Popup(el, option).init();
+}});
 
 try {
     if (typeof window === "object") {

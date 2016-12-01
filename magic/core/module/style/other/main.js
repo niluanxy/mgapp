@@ -160,7 +160,8 @@ function showProxy(display) {
 
     if (cssProxy.call(el, "display") == "none") {
         cache = dataStyle(el, "display");
-        show = display || cache || "block";
+        show = display || cache;
+        show = show && show != "none" ? show : "block";
         cssProxy.call(el, "display", show);
     }
 

@@ -14,13 +14,19 @@ export function text(text, setAll) {
     return allProxy.call(this, keyProxy, "innerText", text, true, setAll);
 }
 
+export function tag() {
+    var el = element(this);
+
+    return (el ? el.tagName : "").toLowerCase();
+}
+
 /**
  * 表单元素设置值或读取值
  */
 function valProxy(aVal) {
     var el = element(this), type, aValue;
 
-    if (el && el.tagName === "INPUT") {
+    if (el && tag.call(el) === "input") {
         type = _attr.call(el, "type") || "";
         type = type.toUpperCase();
 

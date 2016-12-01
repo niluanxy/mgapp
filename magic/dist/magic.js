@@ -321,6 +321,7 @@ function each(object, callback) {
     for(var key in object) {
         var item = object[key], runs = [key, item];
 
+        if (key === "length") return;
         if (callback.apply(item, runs) === false) break;
     }
 }
@@ -339,6 +340,8 @@ function strFind(strs, find) {
 
     return -1;
 }
+
+
 
 /**
  * 类数组 slice 方法模拟
@@ -952,13 +955,19 @@ function text(text, setAll) {
     return allProxy.call(this, keyProxy, "innerText", text, true, setAll);
 }
 
+function tag() {
+    var el = element(this);
+
+    return (el ? el.tagName : "").toLowerCase();
+}
+
 /**
  * 表单元素设置值或读取值
  */
 function valProxy(aVal) {
     var el = element(this), type, aValue;
 
-    if (el && el.tagName === "INPUT") {
+    if (el && tag.call(el) === "input") {
         type = _attr.call(el, "type") || "";
         type = type.toUpperCase();
 
@@ -1035,6 +1044,7 @@ var attrbute = Object.freeze({
 	html: html,
 	outerHtml: outerHtml,
 	text: text,
+	tag: tag,
 	val: val,
 	checked: checked,
 	attr: attr,
@@ -1240,7 +1250,8 @@ function showProxy(display) {
 
     if (cssProxy.call(el, "display") == "none") {
         cache = dataStyle(el, "display");
-        show = display || cache || "block";
+        show = display || cache;
+        show = show && show != "none" ? show : "block";
         cssProxy.call(el, "display", show);
     }
 

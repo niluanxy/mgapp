@@ -60,8 +60,7 @@ Tabs.prototype.destory = function() {
     this.$el.remove();
 }
 
-RootMagic.fn.extend({
-    tabs: function(options) {
-        return new Tabs(this[0], options).init();
-    }
-});
+// 绑定到 RootMagic 调用链上
+RootMagic.fn.extend({tabs: function(options) {
+    return new Tabs(this[0], options).init();
+}});

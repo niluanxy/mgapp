@@ -4,7 +4,7 @@
 
 @mixin popup($class: pop, $prefix: $config-prefix) {
     .#{$prefix+$class} {
-        &-wraper {
+        &-wrap {
             display: none;
             width: 100%;
             height: 100%;

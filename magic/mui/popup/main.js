@@ -1,0 +1,119 @@
+import RootMagic from "CORE_MAGIC/main.js";
+import {fixStyle} from "MUI/tools/main.js";
+import {isFunction} from "LIB_MINJS/check.js";
+import {extend, arrayRemove} from "CORE_FUNCTION/tools.js";
+import $config from "CORE_MAGIC/config.js";
+
+var CFG = $config.popup = {
+    insertTo : "body", 
+
+    wrapIndex: 100,
+    wrapClass: "pop-wrap",
+    itemClass: "pop-item",
+}, SHOWS = "UI_POPUP_SHOW", INDEX = "UI_POPUP_INDEX";
+
+/**
+ * option: {
+ *     insertTo: [string || DOM] 要插入的位置
+ *     animate : [string] 动画样式
+ * }
+ */
+function Popup(el, option) {
+    this.$el = RootMagic(el);
+    this.$wrap  = null;
+    this.isHide = true;
+    this.option = extend({}, $config.ui, CFG, option);
+}
+
+Popup.prototype.init = function() {
+    var opt = this.option, $insert, $wrap;
+
+    $insert = RootMagic(opt.insertTo);
+    $wrap = $insert.children("."+opt.wrapClass);
+
+    if (!$wrap.length) {
+        var createHtml = '<div class="' + opt.wrapClass +
+                '" style="z-index:' + opt.wrapIndex + ';"></div>';
+
+        if ($insert.tag() != "body" && $insert.css("position") == "static") {
+            $insert.css("position", "relative");
+        }
+
+        $wrap = RootMagic(createHtml).appendTo($insert);
+    }
+
+
+    // 当前容器若第一次创建，则初始化相关数据
+    if (!$wrap.data[SHOWS]) {
+        $wrap.data(SHOWS, []).data(INDEX, 0);
+    }
+    this.$wrap = $wrap;
+
+    this.$el.wrap('<div class="'+opt.itemClass+'"></div>');
+    this.$el = this.$el.parent();
+    this.$el.appendTo($wrap);
+
+    this.$el.hide();
+    this.$el.hide();
+
+    return this;
+}
+
+Popup.prototype.show = function(animate) {
+    var anim = animate || this.option.animate,
+        $wrap = this.$wrap,
+        show  = $wrap.data(SHOWS),
+        index = $wrap.data(INDEX);
+
+    this.$wrap.show();
+    this.$el.css("z-index", ++index)
+        .addClass(anim)
+        .show().attr("show", "true");
+
+    this.isHide = false;
+
+    // 更新容器 UI 数据
+    show.push(this.$el);
+    $wrap.data(INDEX, index);
+
+    return this;
+}
+
+Popup.prototype.hide = function() {
+    var needShow = false, $wrap = this.$wrap,
+        shows = $wrap.data(SHOWS), index = $wrap.data(INDEX),
+        elidx = parseInt(this.$el.css("z-index"));
+
+    this.$el.hide().attr("show", "false");
+    this.isHide = true;
+
+    //  更新容器 UI 数据
+    if (arrayRemove(shows, this.$el).length) needShow = true;
+    if (elidx == index) $wrap.data(INDEX, elidx-1);
+
+    !needShow && this.$wrap.hide();
+
+    return this;
+}
+
+Popup.prototype.toggle = function(set) {
+    var toggle = set || this.isHide;
+    
+    toggle ? this.show() : this.hide();
+
+    return this;
+}
+
+Popup.prototype.destroy = function() {
+    this.$el.remove();
+}
+
+// 绑定到 RootMagic 调用链上
+RootMagic.fn.extend({popup: function(el, option) {
+    var ext = extend({}, option, {insertTo: this[0]});
+    return new Popup(el, ext).init();
+}});
+
+RootMagic.extend({popup: function(el, option) {
+    return new Popup(el, option).init();
+}})

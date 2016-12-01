@@ -12,6 +12,7 @@ export function each(object, callback) {
     for(var key in object) {
         var item = object[key], runs = [key, item];
 
+        if (key === "length") return;
         if (callback.apply(item, runs) === false) break;
     }
 };
@@ -29,6 +30,17 @@ export function strFind(strs, find) {
     }
 
     return -1;
+}
+
+export function arrayRemove(arrs, find, all) {
+    for(var i=0; i<arrs.length; i++) {
+        if (arrs[i] === find) {
+            arrs.splice(i--, 1);
+            if (all !== true) return arrs;
+        }
+    }
+
+    return arrs;
 }
 
 /**
