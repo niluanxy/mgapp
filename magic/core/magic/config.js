@@ -1,3 +1,6 @@
 export default {
-    classActive: "active",
+    ui: {
+        style : "primary",
+        active: "active",
+    },
 }

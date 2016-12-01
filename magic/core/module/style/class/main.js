@@ -1,6 +1,6 @@
 import {isTrueString} from "LIB_MINJS/check.js";
 import {allProxy} from "CORE_FUNCTION/proxy.js";
-import {element, trim} from "CORE_FUNCTION/tools.js";
+import {element, trim, each} from "CORE_FUNCTION/tools.js";
 
 export function hasClass(cls) {
     var el = element(this), result, arrays, test, clsName;
@@ -9,16 +9,25 @@ export function hasClass(cls) {
         test = cls.replace(/\s+/, ' ').split(" ");
         result = true;
 
-        for(var i=0; i<test.length; i++) {
-            var reg = new RegExp("(^|\\s)" + test[i] + "(\\s|$)");
+        each(test, function(index, value) {
+            var reg = new RegExp("(^|\\s)" + value + "(\\s|$)");
 
             if (!reg.test(clsName)) {
-                result = false;
-                break;
+                return result = false;
             }
-        }
+        });
 
         return result;
+    } else {
+        return false;
+    }
+}
+
+export function regClass(reg) {
+    var el = element(this), clsName;
+
+    if (isTrueString(reg) && el && (clsName = el.className)) {
+        return clsName.match(new RegExp(reg));
     } else {
         return false;
     }

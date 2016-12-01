@@ -1,16 +1,23 @@
 import RootMagic from "CORE_MAGIC/main.js";
+import {fixStyle} from "MUI/tools/main.js";
 import {isFunction} from "LIB_MINJS/check.js";
 import {extend} from "CORE_FUNCTION/tools.js";
 import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.tabs = {
-    active: $config.classActive,
+    prefix: "tabs",
+
     wrapClass: "",
     itemClass: "tabs-item",
 };
 
 /**
  * options: {
+ *     style: [string] 默认的样式
+ *     
+ *     wrapClass: [string] 父容器额外添加的 class
+ *     itemClass: [string] 子容器额外添加的 class
+ *     
  *     onSelect : [function] 选择某个项目时调用
  * }
  */
@@ -18,17 +25,14 @@ function Tabs(el, option) {
     this.$el = RootMagic(el);
     this.index  = 0;
     this.value  = null;
-    this.option = extend({}, CFG, option);
+    this.option = extend({}, $config.ui, CFG, option);
 }
 
 Tabs.prototype.init = function() {
-    var that = this, $el = this.$el,
-        opt = this.option, itemClass = opt.itemClass;
+    var that = this, $el = this.$el, opt = this.option;
 
-    $el.addClass(opt.wrapClass)
-       .children().addClass(itemClass, true);
-
-    $el.on("click", "."+itemClass, function(e) {
+    fixStyle($el, opt)
+    .on("click", "."+opt.itemClass, function(e) {
         that.select(RootMagic(e.target).index());
     });
 

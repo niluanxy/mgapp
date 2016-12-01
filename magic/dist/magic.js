@@ -163,7 +163,10 @@ var _CHECK = Object.freeze({
 });
 
 var $config = {
-    classActive: "active",
+    ui: {
+        style : "primary",
+        active: "active",
+    },
 };
 
 /*! 
@@ -738,16 +741,25 @@ function hasClass(cls) {
         test = cls.replace(/\s+/, ' ').split(" ");
         result = true;
 
-        for(var i=0; i<test.length; i++) {
-            var reg = new RegExp("(^|\\s)" + test[i] + "(\\s|$)");
+        each(test, function(index, value) {
+            var reg = new RegExp("(^|\\s)" + value + "(\\s|$)");
 
             if (!reg.test(clsName)) {
-                result = false;
-                break;
+                return result = false;
             }
-        }
+        });
 
         return result;
+    } else {
+        return false;
+    }
+}
+
+function regClass(reg) {
+    var el = element(this), clsName;
+
+    if (isTrueString(reg) && el && (clsName = el.className)) {
+        return clsName.match(new RegExp(reg));
     } else {
         return false;
     }
@@ -836,6 +848,7 @@ function toggleClass(cls, set, setAll) {
 
 var clase = Object.freeze({
 	hasClass: hasClass,
+	regClass: regClass,
 	addClass: addClass,
 	removeClass: removeClass,
 	toggleClass: toggleClass
