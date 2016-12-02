@@ -5,20 +5,17 @@
 @mixin popup($class: pop, $prefix: $config-prefix) {
     .#{$prefix+$class} {
         &-wrap {
-            display: none;
+            display: block;
             width: 100%;
             height: 100%;
             top: 0; left: 0;
-            pointer-events: none;
             position: absolute;
 
             .#{$prefix+$class}-item {
                 width: 100%;
                 height: 100%;
                 overflow: hidden;
-                display: none;
-                // 让击事件传点到后面去
-                pointer-events: none;
+                display: block;
                 position: absolute;
 
                 >* {

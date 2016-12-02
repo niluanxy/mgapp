@@ -8,6 +8,7 @@ var CFG = $config.popup = {
     insertTo : "body", 
 
     wrapIndex: 100,
+    hideClass: "hide",
     wrapClass: "pop-wrap",
     itemClass: "pop-item",
 }, SHOWS = "UI_POPUP_SHOW", INDEX = "UI_POPUP_INDEX";
@@ -18,7 +19,7 @@ var CFG = $config.popup = {
  *     animate : [string] 动画样式
  * }
  */
-function Popup(el, option) {
+export default function Popup(el, option) {
     this.$el = RootMagic(el);
     this.$wrap  = null;
     this.isHide = true;
@@ -26,13 +27,14 @@ function Popup(el, option) {
 }
 
 Popup.prototype.init = function() {
-    var opt = this.option, $insert, $wrap;
+    var opt = this.option, $insert, $wrap, hideClass;
 
+    hideClass = opt.hideClass;
     $insert = RootMagic(opt.insertTo);
     $wrap = $insert.children("."+opt.wrapClass);
 
     if (!$wrap.length) {
-        var createHtml = '<div class="' + opt.wrapClass +
+        var createHtml = '<div class="' + opt.wrapClass + " "+ hideClass +
                 '" style="z-index:' + opt.wrapIndex + ';"></div>';
 
         if ($insert.tag() != "body" && $insert.css("position") == "static") {
@@ -44,31 +46,28 @@ Popup.prototype.init = function() {
 
 
     // 当前容器若第一次创建，则初始化相关数据
-    if (!$wrap.data[SHOWS]) {
+    if (!$wrap.data(SHOWS)) {
         $wrap.data(SHOWS, []).data(INDEX, 0);
     }
     this.$wrap = $wrap;
 
-    this.$el.wrap('<div class="'+opt.itemClass+'"></div>');
+    this.$el.wrap('<div class="'+opt.itemClass + " " + hideClass +'"></div>');
     this.$el = this.$el.parent();
     this.$el.appendTo($wrap);
-
-    this.$el.hide();
-    this.$el.hide();
 
     return this;
 }
 
-Popup.prototype.show = function(animate) {
-    var anim = animate || this.option.animate,
+Popup.prototype.show = function() {
+    var hide  = this.option.hideClass,
         $wrap = this.$wrap,
         show  = $wrap.data(SHOWS),
         index = $wrap.data(INDEX);
 
-    this.$wrap.show();
+    this.$wrap.removeClass(hide);
     this.$el.css("z-index", ++index)
-        .addClass(anim)
-        .show().attr("show", "true");
+        .removeClass(hide)
+        .attr("show", "true");
 
     this.isHide = false;
 
@@ -81,17 +80,22 @@ Popup.prototype.show = function(animate) {
 
 Popup.prototype.hide = function() {
     var needShow = false, $wrap = this.$wrap,
+        hide  = this.option.hideClass,
         shows = $wrap.data(SHOWS), index = $wrap.data(INDEX),
         elidx = parseInt(this.$el.css("z-index"));
 
-    this.$el.hide().attr("show", "false");
+    this.$el.addClass(hide)
+            .attr("show", "false");
     this.isHide = true;
 
     //  更新容器 UI 数据
     if (arrayRemove(shows, this.$el).length) needShow = true;
     if (elidx == index) $wrap.data(INDEX, elidx-1);
-
-    !needShow && this.$wrap.hide();
+    
+    if (!needShow) {
+        $wrap.addClass(hide);
+        $wrap.data(INDEX, 0);
+    }
 
     return this;
 }

@@ -1,0 +1,5 @@
+@mixin utils($prefix: $config-prefix) {
+    .#{$class-hide} {
+        display: none !important;
+    }
+}

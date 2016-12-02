@@ -21,7 +21,7 @@ var CFG = $config.tabs = {
  *     onSelect : [function] 选择某个项目时调用
  * }
  */
-function Tabs(el, option) {
+export default function Tabs(el, option) {
     this.$el = RootMagic(el);
     this.index  = 0;
     this.value  = null;

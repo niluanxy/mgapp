@@ -1057,8 +1057,8 @@ var NAME_STYLE = "_MG_STYLE_";
 var NAME_EVENT = "_MG_EVENT_";
 var NAME_CORE  = "_MG_CORE_";
 
-function tryVal(el, space, aKey, aVal) {
-    var data = el[space];
+function tryVal(ele, space, aKey, aVal) {
+    var el = element(ele), data = el[space];
     if (!data) data = el[space] = {};
 
     if (aKey && aVal !== undefined) {
@@ -1071,8 +1071,8 @@ function tryVal(el, space, aKey, aVal) {
     return null;
 }
 
-function delKey(el, space, aKey) {
-    var data = el[space];
+function delKey(ele, space, aKey) {
+    var el = element(ele), data = el[space];
 
     if (data) delete data[aKey];
 
