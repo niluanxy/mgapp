@@ -2610,6 +2610,8 @@ var CFG$1 = $config.popup = {
 
     wrapIndex: 100,
     hideClass: "hide",
+    blurClass: "blur",
+
     wrapClass: "pop-wrap",
     itemClass: "pop-item",
 };
@@ -2618,13 +2620,14 @@ var INDEX = "UI_POPUP_INDEX";
 
 /**
  * option: {
+ *     blur:     [DOM] 要模糊化的元素
  *     insertTo: [string || DOM] 要插入的位置
- *     animate : [string] 动画样式
  * }
  */
 function Popup(el, option) {
     this.$el = RootMagic$1(el);
     this.$wrap  = null;
+    this.$blur  = null;
     this.isHide = true;
     this.option = extend({}, $config.ui, CFG$1, option);
 }
@@ -2647,12 +2650,12 @@ Popup.prototype.init = function() {
         $wrap = RootMagic$1(createHtml).appendTo($insert);
     }
 
-
     // 当前容器若第一次创建，则初始化相关数据
     if (!$wrap.data(SHOWS)) {
         $wrap.data(SHOWS, []).data(INDEX, 0);
     }
     this.$wrap = $wrap;
+    this.$blur = RootMagic$1(opt.blur);
 
     this.$el.wrap('<div class="'+opt.itemClass + " " + hideClass +'"></div>');
     this.$el = this.$el.parent();
@@ -2662,12 +2665,13 @@ Popup.prototype.init = function() {
 };
 
 Popup.prototype.show = function() {
-    var hide  = this.option.hideClass,
+    var opt = this.option, hide = opt.hideClass,
         $wrap = this.$wrap,
         show  = $wrap.data(SHOWS),
         index = $wrap.data(INDEX);
 
     this.$wrap.removeClass(hide);
+    this.$blur.addClass(opt.blurClass);
     this.$el.css("z-index", ++index)
         .removeClass(hide)
         .attr("show", "true");

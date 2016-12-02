@@ -34,13 +34,13 @@
             flex-shrink: 0;
         }
 
-        .wrapper {
+        >.wrapper {
             width: 100%;
             height: 100%;
             background-color: #FFFFFF;
         }
 
-        .buttons {
+        >.buttons {
             display: flex;
 
             .button {
