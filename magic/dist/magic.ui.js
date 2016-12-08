@@ -109,6 +109,8 @@ var isArray = Array.isArray;
 
 /* 判断是否为一个纯净的对象 */
 function isObject(obj) {
+    if (obj == null) return false;
+    
     if (typeof obj !== "object" ||
          obj.nodeType || obj === window) {
         return false;
@@ -584,7 +586,7 @@ var KEY_PATCH = "##_patch";
 
 // 获取到修饰后的 key 值
 function keyFix(name, key) {
-    name = name.replace(/^\./g, '');
+    name = name.replace(new RegExp("^"+$KEY+"*", "g"), '');
     return (key || $KEY) + name;
 }
 
@@ -594,31 +596,58 @@ function keyTest(name, key) {
     return name.match(reg);
 }
 
+function keySplit(strs) {
+    strs = strs.replace(/^\/*/, "");
+    strs = strs.replace(/\/*$/, "");
+    strs = strs.replace(/\/+/g, "/");
+
+    if (strs.match(/\(.*\)/)) {
+        strs = strs.replace(/\/(?=\()/g, "~");
+        strs = strs.split("").reverse().join("");
+        strs = strs.replace(/\/(?=\))/g, "~");
+        strs = strs.split("").reverse().join("");
+    } else {
+        strs = strs.replace(/\//g, '~');
+    }
+
+    return strs.split("~");
+}
+
+function keyMatch(key, find) {
+    key = key.replace(new RegExp("^"+$KEY), '');
+
+    return find === key || find.match("^"+key+"$");
+}
+
 // 在 列表树 中根据路径查询对象
 // 如果没有值会返回 null
 function pathFind(paths, str, parent) {
-    var arr = str.split("/"), par = null;
+    var arr = keySplit(str), find, isFind, par = null;
 
-    for(var i=0; i<arr.length; i++) {
-        if (isTrueString(arr[i])) {
-            var key = keyFix(arr[i]);
+    if (arr.length == 1 && arr[0] === "") return paths;
 
-            if (!isObject(paths[key])) {
-                return null;
-            } else {
-                par = paths;
-                paths = paths[key];
+    do {
+        find = arr.shift(); isFind = false;
+
+        if (isTrueString(find)) {
+            for(var key in paths) {
+                if (keyTest(key) && keyMatch(key, find)) {
+                    par = paths;
+                    paths = paths[key];
+                    isFind = true; break;
+                }
             }
         }
-    }
-
-    return parent ? par : paths;
+        
+        if (!isFind) return null;
+        if (arr.length == 0) return parent ? par : paths;
+    } while(true);
 }
 
 // 在 列表树 中根据路径查询对象
 // 如果没有值则会每一级的创建空对象
 function pathAdd(paths, str) {
-    var arr = str.split("/");
+    var arr = keySplit(str);
 
     for(var i=0; i<arr.length; i++) {
         if (isTrueString(arr[i])) {
@@ -1009,7 +1038,7 @@ Prototype$2.dispatch = function(/* eve, args... */) {
         if (run.space === "") {
             pathCall.push(maps);
         } else {
-            spaces = run.space.split("/");
+            spaces = keySplit(run.space);
 
             for(var i=0; i<spaces.length; i++) {
                 var key = keyFix(spaces[i]);
@@ -1150,6 +1179,28 @@ Prototype$1.bindBrower = function() {
     return this;
 };
 
+function transMatch(url) {
+    return url.replace(/:[^/-_]{1,}/g, "([^/]*)")
+}
+
+function transParams(url, match) {
+    var params = {}, reg, name, find;
+
+    if (isString(url) && isString(match)) {
+        reg = new RegExp(transMatch(match));
+        name = match.match(reg);
+        find = url.match(reg);
+
+        for(var i=1; i<name.length; i++) {
+            var key = name[i].replace(/^:/, '');
+
+            params[key] = find[i];
+        }
+    }
+
+    return params;
+}
+
 // 尝试获取给定的路由对象，无参，获取当前路劲
 Prototype$1.fire = function(url) {
     var aUrl, aFind;
@@ -1160,6 +1211,7 @@ Prototype$1.fire = function(url) {
     if ((aFind = this.ctrl.find(aUrl))) {
         aFind = extend({}, aFind);
         aFind.url = aUrl;
+        aFind.params = transParams(url, aFind.match);
     } else {
         aFind = {};
     }
@@ -1183,26 +1235,29 @@ function findPath(maps, prefix) {
     return items;
 }
 
-function addPath(url, option, context) {
-    var route = {}, ctrl = this.ctrl, save,
+function addPath(url, addOption, context) {
+    var route = {}, ctrl = this.ctrl, save, fixUrl,
         dels = "onBefore onEmit onLeave _prefix".split(" ");
 
-    if (isFunction(option)) {
-        route.onEmit = option;
+    if (isFunction(addOption)) {
+        route.onEmit = addOption;
     } else {
-        extend(route, option);
+        extend(route, addOption);
     }
+
+    fixUrl = transMatch(url);
 
     for(var key in route) {
         if (!key.match(/^on/)) continue;
-        var call = route[key], eve = url+" "+key;
+        var call = route[key], eve = fixUrl+" "+key;
 
         eve = eve.replace("on", "on.");
         ctrl.on(eve, call, context);
     }
 
-    save = ctrl.find(url);
+    save = ctrl.find(fixUrl);
     extend(save, route);
+    save["match"] = url;
 
     for(var i=0; i<dels.length; i++) {
         delete save[dels[i]];
@@ -1210,9 +1265,9 @@ function addPath(url, option, context) {
 }
 
 // 添加一条新的路由信息
-Prototype$1.on = function(url, option, context) {
+Prototype$1.on = function(url, addOption, context) {
     if (isString(url)) {
-        addPath.call(this, url, option, context);
+        addPath.call(this, url, addOption, context);
     } else if (isObject(url)) {
         var adds = findPath(url, "/");
 

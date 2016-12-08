@@ -5,7 +5,7 @@ var Emitter, Prototype = {}, $KEY = "/",
 
 // 获取到修饰后的 key 值
 export function keyFix(name, key) {
-    name = name.replace(/^\./g, '');
+    name = name.replace(new RegExp("^"+$KEY+"*", "g"), '');
     return (key || $KEY) + name;
 }
 
@@ -15,31 +15,58 @@ export function keyTest(name, key) {
     return name.match(reg);
 }
 
+export function keySplit(strs) {
+    strs = strs.replace(/^\/*/, "");
+    strs = strs.replace(/\/*$/, "");
+    strs = strs.replace(/\/+/g, "/");
+
+    if (strs.match(/\(.*\)/)) {
+        strs = strs.replace(/\/(?=\()/g, "~");
+        strs = strs.split("").reverse().join("");
+        strs = strs.replace(/\/(?=\))/g, "~");
+        strs = strs.split("").reverse().join("");
+    } else {
+        strs = strs.replace(/\//g, '~');
+    }
+
+    return strs.split("~");
+}
+
+export function keyMatch(key, find) {
+    key = key.replace(new RegExp("^"+$KEY), '');
+
+    return find === key || find.match("^"+key+"$");
+}
+
 // 在 列表树 中根据路径查询对象
 // 如果没有值会返回 null
 function pathFind(paths, str, parent) {
-    var arr = str.split("/"), par = null;
+    var arr = keySplit(str), find, isFind, par = null;
 
-    for(var i=0; i<arr.length; i++) {
-        if (isTrueString(arr[i])) {
-            var key = keyFix(arr[i]);
+    if (arr.length == 1 && arr[0] === "") return paths;
 
-            if (!isObject(paths[key])) {
-                return null;
-            } else {
-                par = paths;
-                paths = paths[key];
+    do {
+        find = arr.shift(); isFind = false;
+
+        if (isTrueString(find)) {
+            for(var key in paths) {
+                if (keyTest(key) && keyMatch(key, find)) {
+                    par = paths;
+                    paths = paths[key];
+                    isFind = true; break;
+                }
             }
         }
-    }
-
-    return parent ? par : paths;
+        
+        if (!isFind) return null;
+        if (arr.length == 0) return parent ? par : paths;
+    } while(true);
 }
 
 // 在 列表树 中根据路径查询对象
 // 如果没有值则会每一级的创建空对象
 function pathAdd(paths, str) {
-    var arr = str.split("/");
+    var arr = keySplit(str);
 
     for(var i=0; i<arr.length; i++) {
         if (isTrueString(arr[i])) {
@@ -430,7 +457,7 @@ Prototype.dispatch = function(/* eve, args... */) {
         if (run.space === "") {
             pathCall.push(maps);
         } else {
-            spaces = run.space.split("/");
+            spaces = keySplit(run.space);
 
             for(var i=0; i<spaces.length; i++) {
                 var key = keyFix(spaces[i]);

@@ -61,6 +61,28 @@ Prototype.bindBrower = function() {
     return this;
 }
 
+function transMatch(url) {
+    return url.replace(/:[^/-_]{1,}/g, "([^/]*)")
+}
+
+function transParams(url, match) {
+    var params = {}, reg, name, find;
+
+    if (isString(url) && isString(match)) {
+        reg = new RegExp(transMatch(match));
+        name = match.match(reg);
+        find = url.match(reg);
+
+        for(var i=1; i<name.length; i++) {
+            var key = name[i].replace(/^:/, '');
+
+            params[key] = find[i];
+        }
+    }
+
+    return params;
+}
+
 // 尝试获取给定的路由对象，无参，获取当前路劲
 Prototype.fire = function(url) {
     var aUrl, aFind;
@@ -71,6 +93,7 @@ Prototype.fire = function(url) {
     if ((aFind = this.ctrl.find(aUrl))) {
         aFind = extend({}, aFind);
         aFind.url = aUrl;
+        aFind.params = transParams(url, aFind.match);
     } else {
         aFind = {};
     }
@@ -94,26 +117,29 @@ function findPath(maps, prefix) {
     return items;
 }
 
-function addPath(url, option, context) {
-    var route = {}, ctrl = this.ctrl, save,
+function addPath(url, addOption, context) {
+    var route = {}, ctrl = this.ctrl, save, fixUrl,
         dels = "onBefore onEmit onLeave _prefix".split(" ");
 
-    if (isFunction(option)) {
-        route.onEmit = option;
+    if (isFunction(addOption)) {
+        route.onEmit = addOption;
     } else {
-        extend(route, option);
+        extend(route, addOption);
     }
+
+    fixUrl = transMatch(url);
 
     for(var key in route) {
         if (!key.match(/^on/)) continue;
-        var call = route[key], eve = url+" "+key;
+        var call = route[key], eve = fixUrl+" "+key;
 
         eve = eve.replace("on", "on.");
         ctrl.on(eve, call, context);
     }
 
-    save = ctrl.find(url);
+    save = ctrl.find(fixUrl);
     extend(save, route);
+    save["match"] = url;
 
     for(var i=0; i<dels.length; i++) {
         delete save[dels[i]];
@@ -121,9 +147,9 @@ function addPath(url, option, context) {
 }
 
 // 添加一条新的路由信息
-Prototype.on = function(url, option, context) {
+Prototype.on = function(url, addOption, context) {
     if (isString(url)) {
-        addPath.call(this, url, option, context);
+        addPath.call(this, url, addOption, context);
     } else if (isObject(url)) {
         var adds = findPath(url, "/");
 
