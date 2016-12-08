@@ -1,5 +1,5 @@
 import {allProxy} from "CORE_FUNCTION/proxy.js";
-import {element} from "CORE_FUNCTION/tools.js";
+import {element} from "LIB_MINJS/utils.js";
 import {dataCore, removeDataCore} from "CORE_MAGIC/tools.js";
 
 function dataProxy(aKey, aVal) {

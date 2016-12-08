@@ -1,7 +1,7 @@
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
     typeof define === 'function' && define.amd ? define(factory) :
-    (global.Magic = factory());
+    (global.$ = factory());
 }(this, (function () { 'use strict';
 
 /**
@@ -161,13 +161,6 @@ var _CHECK = Object.freeze({
 	isNumber: isNumber,
 	isTrueString: isTrueString
 });
-
-var $config = {
-    ui: {
-        style : "primary",
-        active: "active",
-    },
-};
 
 /*! 
  * onDomReady.js 1.4.0 (c) 2013 Tubal Martin - MIT license
@@ -454,6 +447,13 @@ function extend(/* deep, target, obj..., last */) {
     return target;     // 返回合并后的对象
 }
 
+var $config = {
+    ui: {
+        style : "primary",
+        active: "active",
+    },
+};
+
 var Magic;
 var Prototype;
 var Creater;
@@ -574,6 +574,741 @@ Creater.fn = Creater.prototype = Magic.prototype = Prototype;
 Creater.config = $config;
 
 var RootMagic$1 = Creater;
+
+var Emitter;
+var Prototype$2 = {};
+var $KEY = "/";
+var KEY_CALL = "##_call";
+var KEY_CATCH = "##_catch";
+var KEY_PATCH = "##_patch";
+
+// 获取到修饰后的 key 值
+function keyFix(name, key) {
+    name = name.replace(/^\./g, '');
+    return (key || $KEY) + name;
+}
+
+function keyTest(name, key) {
+    var reg = new RegExp("^"+(key || $KEY));
+
+    return name.match(reg);
+}
+
+// 在 列表树 中根据路径查询对象
+// 如果没有值会返回 null
+function pathFind(paths, str, parent) {
+    var arr = str.split("/"), par = null;
+
+    for(var i=0; i<arr.length; i++) {
+        if (isTrueString(arr[i])) {
+            var key = keyFix(arr[i]);
+
+            if (!isObject(paths[key])) {
+                return null;
+            } else {
+                par = paths;
+                paths = paths[key];
+            }
+        }
+    }
+
+    return parent ? par : paths;
+}
+
+// 在 列表树 中根据路径查询对象
+// 如果没有值则会每一级的创建空对象
+function pathAdd(paths, str) {
+    var arr = str.split("/");
+
+    for(var i=0; i<arr.length; i++) {
+        if (isTrueString(arr[i])) {
+            var key = keyFix(arr[i]);
+
+            if (!isObject(paths[key])) {
+                paths[key] = {};
+            }
+
+            paths = paths[key];
+        }
+    }
+
+    return paths;
+}
+
+function arrayCopy(array) {
+    var copy = [];
+
+    if (isArray(array)) {
+        for(var i=0; i<array.length; i++) {
+            copy.push(array[i]);
+        }
+    }
+
+    return copy;
+}
+
+function pathSplit(str) {
+    var space, eves, first, split;
+
+    if (str.match(/^.+\s.+$/)) {
+        split = str.split(" ");
+        space = split[0];
+        eves  = split[1];
+    } else {
+        space = "";
+        eves  = str || "";
+    }
+
+    first = eves.match(/(^[^\.]*)\./);
+    first = first ? first[1] : eves;
+
+    return {space: space, eves: eves, first: first};
+}
+
+// 分离出用户调用的事件名，事件参数
+// 如果第一个参数为 true，表示执行会忽略根元素自身
+function eventArgs(/* args... */) {
+    var ret = {}, split, splice = Array.prototype.splice;
+
+    if (arguments.length >= 2 && arguments[0] === true) {
+        ret.pass = true;
+        split = pathSplit(arguments[1]);
+        ret.args = splice.call(arguments, 2);
+    } else {
+        ret.pass = false;
+        split = pathSplit(arguments[0]);
+        ret.args = splice.call(arguments, 1);
+    }
+    
+    ret.eves  = split.eves;
+    ret.first = split.first;
+    ret.space = split.space;
+
+    return ret;
+}
+
+// 查找给定路劲下的给定对象
+// 没有会创建空对象
+function pathObjectAdd(paths, str, key) {
+    if (!paths || !key) return null;
+
+    var path = pathAdd(paths, str);
+
+    if ( !(isObject(path[key])) ) {
+        path[key] = {};
+    }
+
+    return path[key];
+}
+
+function pathObjectPush(paths, str, key, call, context, shift) {
+    var split = pathSplit(str), path,
+        space = split.space,
+        eves  = split.eves,
+        first = split.first, action;
+
+    path = pathObjectAdd(paths, space, key);
+
+    if (!isArray(path[first])) {
+        path[first] = [];
+    }
+
+    action = shift ? "unshift" : "push";
+    path[first][action]({
+        name: eves, run: call,
+        context: context || window || null
+    });
+}
+
+// 删除给定路劲下的回调对象
+// 未给定回调则删除所有
+function pathObjectDel(paths, str, key, call) {
+    var split = pathSplit(str),
+        space = split.space,
+        eves  = split.eves,
+        first = split.first, path, arrs;
+
+    path = pathFind(paths, space);
+    arrs = path[key];
+
+    if (isObject(arrs)) {
+        if (eves === first && call === undefined) {
+            delete arrs[eves];
+        } else {
+            arrs = arrs[first] || [];
+
+            for(var i=0; i<arrs.length; i++) {
+                var item = arrs[i],
+                    name = item.name, run = item.run;
+
+                if (call && name.match("^"+eves) && call === run) {
+                    arrs.splice(i--, 1);
+                } else if (!call && name.match("^"+eves)) {
+                    arrs.splice(i--, 1);
+                }
+            }
+        }
+    }
+}
+
+// 检测指定对象下，是否有可运行的事件对象
+// 严格模式必须有匹配的事件
+function eventTest(paths, eFirst, strict) {
+    var arrs = "call".split(" "), find = 0;
+
+    for(var i=0; i<arrs.length; i++) {
+        var key = arrs[i], runs;
+
+        runs = paths[key] || {};
+        runs = runs[eFirst] || [];
+    
+        if (!!strict === true) {
+            for(var j=0; j<runs.length; j++) {
+                if (runs[i].name.match("^"+strict)) {
+                    find += 1;
+                }
+            }
+        } else {
+            find += runs.length;
+        }
+    }
+
+    return find > 0;
+}
+
+/**
+ * 获取给定路劲下可以传播事件的对象
+ * 
+ * @param  {String} strict [严格匹配的事件名]
+ */
+function eventChild(paths, eFirst, strict) {
+    var calls = [];
+
+    for(var key in paths) {
+        var item = paths[key], find;
+
+        if (keyTest(key) && eventTest(item, eFirst, strict)) {
+            if (!!strict) {
+                // 严格模式下，至少要有一个完全匹配的事件
+                find = item.call || {};
+                find = find[eFirst] || [];
+
+                for(var j=0; j<find.length; j++) {
+                    if (find[j].name.match("^"+strict)) {
+                        calls.push(item);
+                        break;
+                    }
+                }
+            } else {
+                calls.push(item);
+            }
+        }
+    }
+
+    return calls;
+}
+
+function eventEmit(paths, eName, eFirst, before) {
+    var args, propagation;
+
+    before = before || {};
+    args = before.arguments || [];
+    propagation = !!before.propagation;
+
+    function getCalls(paths, type, eves) {
+        var arrs = [];
+
+        if (isObject(paths[type])) {
+            paths = paths[type];
+            arrs  = paths[eves] || [];
+        }
+
+        return arrs;
+    }
+
+    function callRuns(calls, eves, once) {
+        // 克隆数组，防止数组长度变化
+        var copy = arrayCopy(calls), immediation = true,
+            continer, stopPropa, stopImmed;
+
+        stopPropa = function() { propagation = false; };
+        stopImmed = function(propa) {
+            immediation = false;
+            // 默认也会终止事件冒泡
+            if (propa !== true) propagation = false;
+        };
+
+        continer = function() {
+            this.stopPropagation = stopPropa;
+            this.stopImmediation = stopImmed;
+        };
+
+        for(var i=0; i<copy.length; i++) {
+            var item = copy[i],
+                name = item.name, run = item.run;
+
+            if (name.match("^"+eves)) {
+                continer.prototype = item.context || null;
+                run.apply(new continer, args);
+
+                if (once === true) break;
+            }
+
+            if (!immediation) break;
+        }
+    }
+
+    if (isObject(paths)) {
+        var actions = [KEY_PATCH, KEY_CATCH, KEY_CALL];
+
+        for(var i=0; i<actions.length; i++) {
+            var action = actions[i], eves;
+            eves = getCalls(paths, action, eFirst);
+
+            if (propagation && eves.length > 0) {
+                callRuns(eves, eName, action == KEY_CATCH);
+                if(action === KEY_CATCH) break;
+            }
+        }
+    }
+
+    /**
+     * 返回本次运行后的数据状态
+     */
+    return {
+        propagation: propagation,
+        arguments  : args || [],
+    }
+}
+
+Emitter = function(tables, parent, prefix) {
+    this.tables = tables || {};
+    this.parent = parent || null;
+    this.prefix = prefix || null;
+
+    return this;
+};
+
+Emitter.prototype = Prototype$2;
+
+Prototype$2.find = function(eve, parent) {
+    return pathFind(this.tables, eve, parent);
+};
+
+Prototype$2.remove = function(eve) {
+    if (isTrueString(eve)) {
+        var last, parent = pathFind(this.tables, eve, true);
+
+        last = eve.match(/\/.*$/);
+        last = last ? last[0] : eve;
+        last = keyFix(last.replace("/", ''));
+
+        delete parent[last];
+    }
+
+    return this;
+};
+
+// 添加一个事件对象
+Prototype$2.on = function(eve, call, context, shift) {
+    if (isTrueString(eve) && isFunction(call)) {
+        pathObjectPush(this.tables, eve, KEY_CALL, call, context, shift);
+    }
+
+    return this;
+};
+
+// 添加一个一次性的事件对象
+Prototype$2.once = function(eve, call, context, shift) {
+    if (isTrueString(eve) && isFunction(call)) {
+        var that = this, once;
+
+        once = function() {
+            call.apply(this, arguments);
+            that.off(eve, once);
+        };
+
+        that.on(eve, once, context, shift);
+    }
+
+    return this;
+};
+
+// 移除一个事件
+Prototype$2.off = function(eve, call) {
+    if (isTrueString(eve)) {
+        pathObjectDel(this.tables, eve, KEY_CALL, call);
+    }
+
+    return this;
+};
+
+// 在元素上添加捕获事件
+Prototype$2.catch = function(eve, call, context, shift) {
+    if (isTrueString(eve) && isFunction(call)) {
+        pathObjectPush(this.tables, eve, KEY_CATCH, call, context);
+    }
+
+    return this;
+};
+
+// 在元素上移除捕获事件
+Prototype$2.uncatch = function(eve, call) {
+    if (isTrueString(eve)) {
+        pathObjectDel(this.tables, eve, KEY_CATCH, call);
+    }
+
+    return this;
+};
+
+// 在元素上添加一个修饰器
+Prototype$2.patch = function(eve, call, context, shift) {
+    if (isTrueString(eve) && isFunction(call)) {
+        pathObjectPush(this.tables, eve, KEY_PATCH, call, context, shift);
+    }
+
+    return this;
+};
+
+// 在元素上移除一个修饰器
+Prototype$2.unpatch = function(eve, call) {
+    if (isTrueString(eve)) {
+        pathObjectDel(this.tables, eve, KEY_PATCH, call);
+    }
+
+    return this;
+};
+
+// 在元素上触发事件
+Prototype$2.emit = function(/* eve, args... */) {
+    var runs = eventArgs.apply(null, arguments),
+        path, eves, first;
+
+    if (isTrueString(runs.eves)) {
+        first = runs.first;
+        eves  = runs.eves;
+        path  = pathFind(this.tables, runs.space);
+
+        if (isObject(path)) {
+            eventEmit(path, eves, first, {
+                arguments: runs.args,
+                propagation: true,
+            });
+        }
+    }
+
+    return this;
+};
+
+// 向父元素冒泡这个事件
+Prototype$2.dispatch = function(/* eve, args... */) {
+    var pathCall = [], run = eventArgs.apply(null, arguments),
+        spaces, before, maps = this.tables;
+
+    if (isTrueString(run.eves)) {
+        if (run.space === "") {
+            pathCall.push(maps);
+        } else {
+            spaces = run.space.split("/");
+
+            for(var i=0; i<spaces.length; i++) {
+                var key = keyFix(spaces[i]);
+
+                if (isObject(maps[key])) {
+                    pathCall.push(maps[key]);
+                    maps = maps[key];
+                } else {
+                    return this;
+                }
+            }
+        }
+
+        before = {
+            arguments: run.args,
+            propagation: true,
+        };
+
+        // 如果忽略自身，则移除自身执行数据
+        if (run.pass === true) pathCall.pop();
+
+        for(var i=pathCall.length-1; i>=0; i--) {
+            before = eventEmit(pathCall[i],
+                run.eves, run.first, before);
+
+            if (!before.propagation) break;
+        }
+    }
+
+    return this;
+};
+
+// 向子元素传播这个事件
+Prototype$2.broadcast = function(/* eve, args... */) {
+    var run = eventArgs.apply(null, arguments),
+        calls, path, before, eFirst, eName;
+
+    path = pathFind(this.tables, run.space);
+    eName = run.eves; eFirst = run.first;
+
+    if (path && isTrueString(eName)) {
+        // 忽略自身，则直接从子级开始执行
+        if (run.pass === true) {
+            calls = eventChild(path, eFirst, eName);
+        } else {
+            if (eventTest(path, eFirst, eName)) {
+                calls = [path];
+            } else {
+                return this;
+            }
+        }
+
+        do {
+            var cache = [], child;
+
+            for(var i=0; i<calls.length; i++) {
+                var _args = arrayCopy(run.args);
+
+                _args = eventEmit(calls[i], eName, eFirst, {
+                    arguments: _args,
+                    propagation: true,
+                });
+
+                if (_args.propagation === true) {
+                    child = eventChild(calls[i], eFirst, eName);
+                    cache = cache.concat(child);
+                }
+            }
+
+            calls = cache;
+        } while (calls.length);
+    }
+
+    return this;
+};
+
+// 构造函数，兼容 new 方式创建对象
+var Creater$2 = function() {
+    return new Emitter();
+}; Creater$2.prototype = Prototype$2;
+
+var CFG = {
+    home     : "/home",             // 默认首页
+    mode     : "",                  // 是否启用H5模式，启用则省略 # 符号（后台需rewrite）
+    title    : true,                // 如果有title信息，是否自动更新
+    repath   : true,                // 是否自动跳转到首页
+    replace  : true,                // 自动将参数不同的页面 replace 加载，默认开启
+
+    notCall  : null,                // 页面未找到时候的回调方法
+    notPage  : "",                  // 页面未找到的时候，显示的页面，为空则跳到首页
+
+    onBefore : null,                // 页面跳转前的回调方法
+    onEmit   : null,                // 激活时运行的方法
+    onLeave  : null,                // 页面 成功跳转后 的回调方法
+    onAlways : null,                // 每次点击，不论是否阻止默认跳转，都会执行的方法
+
+    recurse  : false,               // 路由递归触发方式，forward 正序，backward 反序，默认只最后项
+    regexp   : ":[^/-]{1,}",        // 参数匹配正则语句，用于匹配参数信息
+};
+
+var Router = function(maps, option) {
+    this.ctrl = Creater$2();
+    this.option = extend({}, CFG, option);
+
+    this.route = this.ctrl.tables;          // 路由表信息
+    this.stack = [];                        // 路由栈信息
+    this.last  = null;                      // 当前路由信息
+};
+var Prototype$1 = {};
+
+Prototype$1.init = function() {
+    var opt = this.option, fire;
+
+    this.on(this.maps);
+
+    if (opt.repath === true) {
+        fire = opt.home;
+    } else {
+        fire = this.fire();
+
+        if (!isRouteItem(fire)) {
+            if (isFunction(opt.notCall)) {
+                opt.notCall();
+            }
+
+            fire = opt.notPage || opt.home;
+        }
+    }
+
+    this.go(fire, true, false, true);
+
+    return this;
+};
+
+// 监听浏览器前进后台方法
+Prototype$1.bindBrower = function() {
+
+    return this;
+};
+
+// 尝试获取给定的路由对象，无参，获取当前路劲
+Prototype$1.fire = function(url) {
+    var aUrl, aFind;
+
+    aUrl = url || location.hash;
+    aUrl = aUrl.replace(/^#/, '');
+
+    if ((aFind = this.ctrl.find(aUrl))) {
+        aFind = extend({}, aFind);
+        aFind.url = aUrl;
+    } else {
+        aFind = {};
+    }
+
+    return aFind;
+};
+
+function findPath(maps, prefix) {
+    var items = [], fix;
+
+    for(var key in maps) {
+        if (keyTest(key)) {
+            fix = prefix+key;
+            fix = fix.replace(/\/+/g, "/");
+
+            maps[key]._prefix = fix;
+            items.push(maps[key]);
+        }
+    }
+
+    return items;
+}
+
+function addPath(url, option, context) {
+    var route = {}, ctrl = this.ctrl, save,
+        dels = "onBefore onEmit onLeave _prefix".split(" ");
+
+    if (isFunction(option)) {
+        route.onEmit = option;
+    } else {
+        extend(route, option);
+    }
+
+    for(var key in route) {
+        if (!key.match(/^on/)) continue;
+        var call = route[key], eve = url+" "+key;
+
+        eve = eve.replace("on", "on.");
+        ctrl.on(eve, call, context);
+    }
+
+    save = ctrl.find(url);
+    extend(save, route);
+
+    for(var i=0; i<dels.length; i++) {
+        delete save[dels[i]];
+    }
+}
+
+// 添加一条新的路由信息
+Prototype$1.on = function(url, option, context) {
+    if (isString(url)) {
+        addPath.call(this, url, option, context);
+    } else if (isObject(url)) {
+        var adds = findPath(url, "/");
+
+        do {
+            var cache = [], paths;
+
+            for(var i=0; i<adds.length; i++) {
+                var prefix = adds[i]._prefix;
+
+                addPath.call(this, prefix, adds[i], context);
+                paths = findPath(adds[i], prefix);
+                cache = cache.concat(paths);
+            }
+
+            adds = cache;
+        } while (adds.length);
+    }
+    
+    return this;
+};
+
+// 移除一条路由信息，默认不移除子类
+Prototype$1.off = function(url) {
+    this.ctrl.remove(url);
+
+    return this;
+};
+
+function callEvent(url, fireRoute, lastRoute, prevRoute) {
+    var result = false, opt = this.option, ctrl = this.ctrl,
+        args, calls = "onBefore onEmit".split(" ");
+
+    args = [url, fireRoute, lastRoute, prevRoute];
+
+    // 尝试运行上个页面的 leave 方法
+    args.unshift(lastRoute.url + " on.Leave");
+    lastRoute.url && ctrl.emit.apply(ctrl, args);
+    
+    // 添加句柄，用来判断是否执行 emit 方法
+    ctrl.once(url+" on.Emit", function() {
+        result = true;
+    });
+
+    // 执行匹配路由绑定的相关方法
+    for(var i=0; i<calls.length; i++) {
+        var eve = url+" "+calls[i],
+            fix = eve.replace("on", "on.");
+
+        args.shift(); args.unshift(fix);
+
+        ctrl.once(fix, opt[calls[i]], this, true);
+        ctrl.emit.apply(ctrl, args);
+    }
+
+    return result;
+}
+
+// 跳转到给定 URL 或者 路由对象
+Prototype$1.go = function(url, inReplace, outClear, inRefresh) {
+    var clear, refresh, rgo = this.fire(url), args,
+        stack = this.stack, rnow = this.last || {}, rprev;
+
+    rprev   = stack[stack.length-2] || {};
+    clear   = inReplace || rgo.replace || rnow.outClear;
+    refresh = inRefresh !== undefined ? inRefresh : rgo && rgo.refresh;
+
+    if (!rgo.url || (rnow && rgo.url == rnow.url && !refresh)) return this;
+
+    // clear 为真，清除旧的路由信息
+    if (clear) stack.pop();
+    rgo.outClear = true;
+
+    args = [url, rgo, rnow, rprev];
+    if (callEvent.apply(this, args)) {
+        stack.push(rgo); this.last = rgo;
+
+        var onAlways= this.option.onAlways;
+        onAlways && onAlways.apply(this, args);
+    }
+
+    return this;
+};
+
+Prototype$1.back = function(url) {
+
+};
+
+// 从浏览记录中，清除给定的 URL 或通过索引查找
+Prototype$1.clear = function(index) {
+
+};
+
+// 构造函数，兼容 new 方式创建对象
+var Creater$1 = function(maps, option) {
+    return new Router(maps, option);
+}; Creater$1.prototype = Router.prototype = Prototype$1;
 
 function eachProxy(/* call, args... */) {
     var call = arguments[0], args;
@@ -1353,506 +2088,6 @@ var other = Object.freeze({
 
 RootMagic$1.fn.extend(clase, other);
 
-var Emitter;
-var Prototype$1 = {};
-var $KEY = "##_";
-
-// 获取到修饰后的 key 值
-function keyFix(name) {
-    name = name.replace(/^\./g, '');
-    return $KEY + name;
-}
-
-function keyTest(name) {
-    var reg = new RegExp("^"+$KEY);
-
-    return name.match(reg);
-}
-
-// 在 列表树 中根据路径查询对象
-// 如果没有值会返回 null
-function pathFind(paths, str, parent) {
-    var arr = str.split("/"), par = null;
-
-    for(var i=0; i<arr.length; i++) {
-        if (isTrueString(arr[i])) {
-            var key = keyFix(arr[i]);
-
-            if (!isObject(paths[key])) {
-                return null;
-            } else {
-                par = paths;
-                paths = paths[key];
-            }
-        }
-    }
-
-    return parent ? par : paths;
-}
-
-// 在 列表树 中根据路径查询对象
-// 如果没有值则会每一级的创建空对象
-function pathAdd(paths, str) {
-    var arr = str.split("/");
-
-    for(var i=0; i<arr.length; i++) {
-        if (isTrueString(arr[i])) {
-            var key = keyFix(arr[i]);
-
-            if (!isObject(paths[key])) {
-                paths[key] = {};
-            }
-
-            paths = paths[key];
-        }
-    }
-
-    return paths;
-}
-
-function arrayCopy(array) {
-    var copy = [];
-
-    if (isArray(array)) {
-        for(var i=0; i<array.length; i++) {
-            copy.push(array[i]);
-        }
-    }
-
-    return copy;
-}
-
-function pathSplit(str) {
-    var space, eves, first, split;
-
-    if (str.match(/^.+\s.+$/)) {
-        split = str.split(" ");
-        space = split[0];
-        eves  = split[1];
-    } else {
-        space = "";
-        eves  = str || "";
-    }
-
-    first = eves.match(/(^[^\.]*)\./);
-    first = first ? first[1] : eves;
-
-    return {space: space, eves: eves, first: first};
-}
-
-// 分离出用户调用的事件名，事件参数
-// 如果第一个参数为 true，表示执行会忽略根元素自身
-function eventArgs(/* args... */) {
-    var ret = {}, split, splice = Array.prototype.splice;
-
-    if (arguments.length >= 2 && arguments[0] === true) {
-        ret.pass = true;
-        split = pathSplit(arguments[1]);
-        ret.args = splice.call(arguments, 2);
-    } else {
-        ret.pass = false;
-        split = pathSplit(arguments[0]);
-        ret.args = splice.call(arguments, 1);
-    }
-    
-    ret.eves  = split.eves;
-    ret.first = split.first;
-    ret.space = split.space;
-
-    return ret;
-}
-
-// 查找给定路劲下的给定对象
-// 没有会创建空对象
-function pathObjectAdd(paths, str, key) {
-    if (!paths || !key) return null;
-
-    var path = pathAdd(paths, str);
-
-    if ( !(isObject(path[key])) ) {
-        path[key] = {};
-    }
-
-    return path[key];
-}
-
-function pathObjectPush(paths, str, key, call, content) {
-    var split = pathSplit(str), path,
-        space = split.space,
-        eves  = split.eves,
-        first = split.first;
-
-    path = pathObjectAdd(paths, space, key);
-
-    if (!isArray(path[first])) {
-        path[first] = [];
-    }
-
-    path[first].push({
-        name: eves, run: call,
-        content: content || window || null
-    });
-}
-
-// 删除给定路劲下的回调对象
-// 未给定回调则删除所有
-function pathObjectDel(paths, str, key, call) {
-    var split = pathSplit(str),
-        space = split.space,
-        eves  = split.eves,
-        first = split.first, path, arrs;
-
-    path = pathFind(paths, space);
-    arrs = path[key];
-
-    if (isObject(arrs)) {
-        if (eves === first && call === undefined) {
-            delete arrs[eves];
-        } else {
-            arrs = arrs[first] || [];
-
-            for(var i=0; i<arrs.length; i++) {
-                var item = arrs[i],
-                    name = item.name, run = item.run;
-
-                if (call && name.match("^"+eves) && call === run) {
-                    arrs.splice(i--, 1);
-                } else if (!call && name.match("^"+eves)) {
-                    arrs.splice(i--, 1);
-                }
-            }
-        }
-    }
-}
-
-// 检测指定对象下，是否有可运行的事件对象
-// 严格模式必须有匹配的事件
-function eventTest(paths, eFirst, strict) {
-    var arrs = "call".split(" "), find = 0;
-
-    for(var i=0; i<arrs.length; i++) {
-        var key = arrs[i], runs;
-
-        runs = paths[key] || {};
-        runs = runs[eFirst] || [];
-    
-        if (!!strict === true) {
-            for(var j=0; j<runs.length; j++) {
-                if (runs[i].name.match("^"+strict)) {
-                    find += 1;
-                }
-            }
-        } else {
-            find += runs.length;
-        }
-    }
-
-    return find > 0;
-}
-
-/**
- * 获取给定路劲下可以传播事件的对象
- * 
- * @param  {String} strict [严格匹配的事件名]
- */
-function eventChild(paths, eFirst, strict) {
-    var calls = [];
-
-    for(var key in paths) {
-        var item = paths[key], find;
-
-        if (keyTest(key) && eventTest(item, eFirst, strict)) {
-            if (!!strict) {
-                // 严格模式下，至少要有一个完全匹配的事件
-                find = item.call || {};
-                find = find[eFirst] || [];
-
-                for(var j=0; j<find.length; j++) {
-                    if (find[j].name.match("^"+strict)) {
-                        calls.push(item);
-                        break;
-                    }
-                }
-            } else {
-                calls.push(item);
-            }
-        }
-    }
-
-    return calls;
-}
-
-function eventEmit(paths, eName, eFirst, before) {
-    var args, propagation;
-
-    before = before || {};
-    args = before.arguments || [];
-    propagation = !!before.propagation;
-
-    function getCalls(paths, type, eves) {
-        var arrs = [];
-
-        if (isObject(paths[type])) {
-            paths = paths[type];
-            arrs  = paths[eves] || [];
-        }
-
-        return arrs;
-    }
-
-    function callRuns(calls, eves, once) {
-        // 克隆数组，防止数组长度变化
-        var copy = arrayCopy(calls), immediation = true,
-            continer, stopPropa, stopImmed;
-
-        stopPropa = function() { propagation = false; };
-        stopImmed = function(propa) {
-            immediation = false;
-            // 默认也会终止事件冒泡
-            if (propa !== true) propagation = false;
-        };
-
-        continer = function() {
-            this.stopPropagation = stopPropa;
-            this.stopImmediation = stopImmed;
-        };
-
-        for(var i=0; i<copy.length; i++) {
-            var item = copy[i],
-                name = item.name, run = item.run;
-
-            if (name.match("^"+eves)) {
-                continer.prototype = item.content || null;
-                run.apply(new continer, args);
-
-                if (once === true) break;
-            }
-
-            if (!immediation) break;
-        }
-    }
-
-    if (isObject(paths)) {
-        var actions = ["patch", "catch", "call"];
-
-        for(var i=0; i<actions.length; i++) {
-            var action = actions[i], eves;
-            eves = getCalls(paths, action, eFirst);
-
-            if (propagation && eves.length > 0) {
-                callRuns(eves, eName, action == "catch");
-                if(action === "catch") break;
-            }
-        }
-    }
-
-    /**
-     * 返回本次运行后的数据状态
-     */
-    return {
-        propagation: propagation,
-        arguments  : args || [],
-    }
-}
-
-Emitter = function(tables, parent, prefix) {
-    this.tables = tables || {};
-    this.parent = parent || null;
-    this.prefix = prefix || null;
-
-    return this;
-};
-
-Emitter.prototype = Prototype$1;
-
-// 添加一个事件对象
-Prototype$1.on = function(eve, call, content) {
-    if (isTrueString(eve) && isFunction(call)) {
-        pathObjectPush(this.tables, eve, "call", call, content);
-    }
-
-    return this;
-};
-
-// 添加一个一次性的事件对象
-Prototype$1.once = function(eve, call, content) {
-    if (isTrueString(eve) && isFunction(call)) {
-        var that = this, once;
-
-        once = function() {
-            call.apply(this, arguments);
-            that.off(eve, once);
-        };
-
-        that.on(eve, once, content);
-    }
-
-    return this;
-};
-
-// 移除一个事件
-Prototype$1.off = function(eve, call) {
-    if (isTrueString(eve)) {
-        pathObjectDel(this.tables, eve, "call", call);
-    }
-
-    return this;
-};
-
-// 在元素上添加捕获事件
-Prototype$1.catch = function(eve, call, content) {
-    if (isTrueString(eve) && isFunction(call)) {
-        pathObjectPush(this.tables, eve, "catch", call, content);
-    }
-
-    return this;
-};
-
-// 在元素上移除捕获事件
-Prototype$1.uncatch = function(eve, call) {
-    if (isTrueString(eve)) {
-        pathObjectDel(this.tables, eve, "catch", call);
-    }
-
-    return this;
-};
-
-// 在元素上添加一个修饰器
-Prototype$1.patch = function(eve, call) {
-    if (isTrueString(eve) && isFunction(call)) {
-        pathObjectPush(this.tables, eve, "patch", call, content);
-    }
-
-    return this;
-};
-
-// 在元素上移除一个修饰器
-Prototype$1.unpatch = function(eve, call) {
-    if (isTrueString(eve)) {
-        pathObjectDel(this.tables, eve, "patch", call);
-    }
-
-    return this;
-};
-
-// 在元素上触发事件
-Prototype$1.emit = function(/* eve, args... */) {
-    var runs = eventArgs.apply(null, arguments),
-        path, eves, first;
-
-    if (isTrueString(runs.eves)) {
-        first = runs.first;
-        eves  = runs.eves;
-        path  = pathFind(this.tables, runs.space);
-
-        if (isObject(path)) {
-            eventEmit(path, eves, first, {
-                arguments: runs.args,
-                propagation: true,
-            });
-        }
-    }
-
-    return this;
-};
-
-// 向父元素冒泡这个事件
-Prototype$1.dispatch = function(/* eve, args... */) {
-    var pathCall = [], run = eventArgs(arguments),
-        space, before, maps = this.tables;
-
-    if (isTrueString(run.eves)) {
-        if (run.space === "") {
-            pathCall.push(maps);
-        } else {
-            spaces = run.space.split("/");
-
-            for(var i=0; i<spaces.length; i++) {
-                var key = keyFix(spaces[i]);
-
-                if (isObject(maps[key])) {
-                    pathCall.push(maps[key]);
-                    maps = maps[key];
-                } else {
-                    return this;
-                }
-            }
-        }
-
-        before = {
-            arguments: run.args,
-            propagation: true,
-        };
-
-        // 如果忽略自身，则移除自身执行数据
-        if (run.pass === true) pathCall.pop();
-
-        for(var i=pathCall.length-1; i>=0; i--) {
-            before = eventEmit(pathCall[i],
-                run.eves, run.first, before);
-
-            if (!before.propagation) break;
-        }
-    }
-
-    return this;
-};
-
-// 向子元素传播这个事件
-Prototype$1.broadcast = function(/* eve, args... */) {
-    var run = eventArgs(arguments),
-        calls, before, eFirst, eName;
-
-    path = pathFind(this.tables, run.space);
-    eName = run.eves; eFirst = run.first;
-
-    if (path && isTrueString(eName)) {
-        // 忽略自身，则直接从子级开始执行
-        if (run.pass === true) {
-            calls = eventChild(path, eFirst, eName);
-        } else {
-            if (eventTest(path, eFirst, eName)) {
-                calls = [path];
-            } else {
-                return this;
-            }
-        }
-
-        do {
-            var cache = [], child;
-
-            for(var i=0; i<calls.length; i++) {
-                var _args = arrayCopy(run.args);
-
-                _args = eventEmit(calls[i], eName, eFirst, {
-                    arguments: _args,
-                    propagation: true,
-                });
-
-                if (_args.propagation === true) {
-                    child = eventChild(calls[i], eFirst, eName);
-                    cache = cache.concat(child);
-                }
-            }
-
-            calls = cache;
-        } while (calls.length);
-    }
-
-    return this;
-};
-
-// 构造函数，兼容 new 方式创建对象
-var Creater$1 = function() {
-    return new Emitter();
-}; Creater$1.prototype = Prototype$1;
-
-try {
-    if (typeof window === "object") {
-        window.Emitter = Creater$1;
-    }
-} catch(e) {}
-
 function getPrefix(eve) {
     var find = eve.match(/[^\.]*\./);
 
@@ -1933,7 +2168,7 @@ function addProxy$1(bind, eve, select, callback, extScope) {
                 eveCtrl = dataEvent(el, evePre);
 
             if (!eveCtrl || !eveCtrl.on) {
-                eveCtrl = Creater$1();
+                eveCtrl = Creater$2();
                 dataEvent(el, evePre, eveCtrl);
 
                 // 绑定到原生事件，从而保证事件执行顺序
@@ -2313,7 +2548,7 @@ function time() {
 
 var fastCall = fastCall$1;
 
-var emitter = Creater$1;
+var emitter = Creater$2;
 
 var util = Object.freeze({
 	tpl: tpl$1,
@@ -2544,7 +2779,7 @@ function fixStyle($el, opt) {
     return $el;
 }
 
-var CFG = $config.tabs = {
+var CFG$1 = $config.tabs = {
     prefix: "tabs",
 
     wrapClass: "",
@@ -2565,7 +2800,7 @@ function Tabs(el, option) {
     this.$el = RootMagic$1(el);
     this.index  = 0;
     this.value  = null;
-    this.option = extend({}, $config.ui, CFG, option);
+    this.option = extend({}, $config.ui, CFG$1, option);
 }
 
 Tabs.prototype.init = function() {
@@ -2605,7 +2840,7 @@ RootMagic$1.fn.extend({tabs: function(options) {
     return new Tabs(this[0], options).init();
 }});
 
-var CFG$1 = $config.popup = {
+var CFG$2 = $config.popup = {
     insertTo : "body", 
 
     wrapIndex: 100,
@@ -2629,7 +2864,7 @@ function Popup(el, option) {
     this.$wrap  = null;
     this.$blur  = null;
     this.isHide = true;
-    this.option = extend({}, $config.ui, CFG$1, option);
+    this.option = extend({}, $config.ui, CFG$2, option);
 }
 
 Popup.prototype.init = function() {
@@ -2673,8 +2908,7 @@ Popup.prototype.show = function() {
     this.$wrap.removeClass(hide);
     this.$blur.addClass(opt.blurClass);
     this.$el.css("z-index", ++index)
-        .removeClass(hide)
-        .attr("show", "true");
+        .removeClass(hide);
 
     this.isHide = false;
 
@@ -2691,8 +2925,7 @@ Popup.prototype.hide = function() {
         shows = $wrap.data(SHOWS), index = $wrap.data(INDEX),
         elidx = parseInt(this.$el.css("z-index"));
 
-    this.$el.addClass(hide)
-            .attr("show", "false");
+    this.$el.addClass(hide);
     this.isHide = true;
 
     //  更新容器 UI 数据
@@ -2729,14 +2962,8 @@ RootMagic$1.extend({popup: function(el, option) {
     return new Popup(el, option).init();
 }});
 
-try {
-    if (typeof window === "object") {
-        window.Magic = RootMagic$1;
-        if (!window.$) window.$ = RootMagic$1;
-    }
-} catch(e) {}
-
 RootMagic$1.version = "0.5.0";
+RootMagic$1.router = Creater$1;
 
 return RootMagic$1;
 

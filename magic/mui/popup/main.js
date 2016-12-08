@@ -1,7 +1,7 @@
 import RootMagic from "CORE_MAGIC/main.js";
 import {fixStyle} from "MUI/tools/main.js";
 import {isFunction, isElement} from "LIB_MINJS/check.js";
-import {extend, arrayRemove} from "CORE_FUNCTION/tools.js";
+import {extend, arrayRemove} from "LIB_MINJS/utils.js";
 import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.popup = {
@@ -70,8 +70,7 @@ Popup.prototype.show = function() {
     this.$wrap.removeClass(hide);
     this.$blur.addClass(opt.blurClass);
     this.$el.css("z-index", ++index)
-        .removeClass(hide)
-        .attr("show", "true");
+        .removeClass(hide);
 
     this.isHide = false;
 
@@ -88,8 +87,7 @@ Popup.prototype.hide = function() {
         shows = $wrap.data(SHOWS), index = $wrap.data(INDEX),
         elidx = parseInt(this.$el.css("z-index"));
 
-    this.$el.addClass(hide)
-            .attr("show", "false");
+    this.$el.addClass(hide);
     this.isHide = true;
 
     //  更新容器 UI 数据

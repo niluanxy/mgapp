@@ -1,5 +1,5 @@
 import {allProxy} from "CORE_FUNCTION/proxy.js";
-import {element, extend, trim} from "CORE_FUNCTION/tools.js";
+import {element, extend, trim} from "LIB_MINJS/utils.js";
 import {isTrueString} from "LIB_MINJS/check.js";
 import {dataStyle} from "CORE_MAGIC/tools.js";
 import {append, remove} from "CORE_MODULE/dom/editer/main.js";

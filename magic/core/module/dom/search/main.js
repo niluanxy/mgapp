@@ -1,4 +1,4 @@
-import {element, trim} from "CORE_FUNCTION/tools.js";
+import {element, trim} from "LIB_MINJS/utils.js";
 import {isNumber, isString, isElement} from "LIB_MINJS/check.js";
 import {hasClass} from "CORE_MODULE/style/class/main.js";
 import RootMagic from "CORE_MAGIC/main.js";

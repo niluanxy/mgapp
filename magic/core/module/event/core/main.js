@@ -1,7 +1,7 @@
 import Emitter from "LIB_MINJS/emitter.js";
 import {isFunction, isTrueString, isObject} from "LIB_MINJS/check.js";
 import {allProxy} from "CORE_FUNCTION/proxy.js";
-import {element, extend, slice, each} from "CORE_FUNCTION/tools.js";
+import {element, extend, slice, each} from "LIB_MINJS/utils.js";
 import {parent} from "CORE_MODULE/dom/search/main.js";
 import {dataEvent} from "CORE_MAGIC/tools.js";
 import RootMagic from "CORE_MAGIC/main.js";

@@ -1,7 +1,7 @@
 import {isTrueString, isObject} from "LIB_MINJS/check.js";
 import {allProxy} from "CORE_FUNCTION/proxy.js";
 import {append} from "CORE_MODULE/dom/editer/main.js";
-import {element} from "CORE_FUNCTION/tools.js";
+import {element} from "LIB_MINJS/utils.js";
 import templayed from "LIB_MINJS/templayed.js";
 
 function tplProxy(template, data) {

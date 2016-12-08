@@ -1,8 +1,9 @@
-import * as _DOM  from "./dom.js";
+import * as _DOM  from "CORE_FUNCTION/dom.js";
 import * as _CHECK from "LIB_MINJS/check.js";
+import _READY from "LIB_MINJS/ready.js";
+import { each as _EACH, slice as _SLICE, extend as _EXTEND} from "LIB_MINJS/utils.js";
+
 import _CONFIG from "./config.js";
-import _READY from "./ready.js";
-import { each as _EACH, slice as _SLICE, extend as _EXTEND} from "CORE_FUNCTION/tools.js";
 
 var Magic, Prototype, Creater;
 

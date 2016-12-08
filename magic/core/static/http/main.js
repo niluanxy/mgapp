@@ -1,5 +1,5 @@
 import Defer from "LIB_MINJS/promise.js";
-import {strFind, each, extend} from "CORE_FUNCTION/tools.js";
+import {strFind, each, extend} from "LIB_MINJS/utils.js";
 import {isTrueString, isNumber, isObject} from "LIB_MINJS/check.js";
 import $config from "CORE_MAGIC/config.js";
 import RootMagic from "CORE_MAGIC/main.js";

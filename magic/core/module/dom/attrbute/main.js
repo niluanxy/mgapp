@@ -1,4 +1,4 @@
-import {strFind, element} from "CORE_FUNCTION/tools.js";
+import {strFind, element} from "LIB_MINJS/utils.js";
 import {allProxy, keyProxy} from "CORE_FUNCTION/proxy.js";
 import {isTrueString, isString} from "LIB_MINJS/check.js";
 

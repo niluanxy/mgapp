@@ -1,5 +1,5 @@
 import {isTrueString, isFunction} from "LIB_MINJS/check.js";
-import {slice, element} from "./tools.js";
+import {slice, element} from "LIB_MINJS/utils.js";
 
 export function eachProxy(/* call, args... */) {
     var call = arguments[0], args;

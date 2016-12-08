@@ -1,7 +1,7 @@
 import RootMagic from "CORE_MAGIC/main.js";
 import {fixStyle} from "MUI/tools/main.js";
 import {isFunction} from "LIB_MINJS/check.js";
-import {extend} from "CORE_FUNCTION/tools.js";
+import {extend} from "LIB_MINJS/utils.js";
 import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.tabs = {

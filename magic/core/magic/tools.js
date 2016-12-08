@@ -1,4 +1,4 @@
-import {element} from "CORE_FUNCTION/tools.js";
+import {element} from "LIB_MINJS/utils.js";
 
 var NAME_STYLE = "_MG_STYLE_",
     NAME_EVENT = "_MG_EVENT_",

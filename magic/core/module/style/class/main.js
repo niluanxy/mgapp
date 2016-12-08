@@ -1,6 +1,6 @@
 import {isTrueString} from "LIB_MINJS/check.js";
 import {allProxy} from "CORE_FUNCTION/proxy.js";
-import {element, trim, each} from "CORE_FUNCTION/tools.js";
+import {element, trim, each} from "LIB_MINJS/utils.js";
 
 export function hasClass(cls) {
     var el = element(this), result, arrays, test, clsName;

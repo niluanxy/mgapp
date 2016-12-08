@@ -161,7 +161,7 @@ function task_build_magic() {
         rollup({
             entry: DIR_CORE+"build.js",
             format: 'umd',
-            moduleName: "Magic",
+            moduleName: "$",
             plugins: plugins,
         })
         .pipe(source('magic.js'))
@@ -179,7 +179,7 @@ function task_build_magic() {
             rollup({
                 entry: DIST_MAGIC+"/concat.js",
                 format: 'umd',
-                moduleName: "Magic",
+                moduleName: "$",
                 plugins: plugins,
             })
             .pipe(source('magic.ui.js'))

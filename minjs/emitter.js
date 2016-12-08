@@ -1,15 +1,16 @@
 import {isFunction, isObject, isArray, isTrueString} from "./check.js";
 
-var Emitter, Prototype = {}, $KEY = "##_";
+var Emitter, Prototype = {}, $KEY = "/",
+    KEY_CALL = "##_call", KEY_CATCH = "##_catch", KEY_PATCH = "##_patch";
 
 // 获取到修饰后的 key 值
-function keyFix(name) {
+export function keyFix(name, key) {
     name = name.replace(/^\./g, '');
-    return $KEY + name;
+    return (key || $KEY) + name;
 }
 
-function keyTest(name) {
-    var reg = new RegExp("^"+$KEY);
+export function keyTest(name, key) {
+    var reg = new RegExp("^"+(key || $KEY));
 
     return name.match(reg);
 }
@@ -121,11 +122,11 @@ function pathObjectAdd(paths, str, key) {
     return path[key];
 }
 
-function pathObjectPush(paths, str, key, call, content) {
+function pathObjectPush(paths, str, key, call, context, shift) {
     var split = pathSplit(str), path,
         space = split.space,
         eves  = split.eves,
-        first = split.first;
+        first = split.first, action;
 
     path = pathObjectAdd(paths, space, key);
 
@@ -133,9 +134,10 @@ function pathObjectPush(paths, str, key, call, content) {
         path[first] = [];
     };
 
-    path[first].push({
+    action = shift ? "unshift" : "push";
+    path[first][action]({
         name: eves, run: call,
-        content: content || window || null
+        context: context || window || null
     });
 }
 
@@ -267,7 +269,7 @@ function eventEmit(paths, eName, eFirst, before) {
                 name = item.name, run = item.run;
 
             if (name.match("^"+eves)) {
-                continer.prototype = item.content || null;
+                continer.prototype = item.context || null;
                 run.apply(new continer, args);
 
                 if (once === true) break;
@@ -278,15 +280,15 @@ function eventEmit(paths, eName, eFirst, before) {
     };
 
     if (isObject(paths)) {
-        var actions = ["patch", "catch", "call"];
+        var actions = [KEY_PATCH, KEY_CATCH, KEY_CALL];
 
         for(var i=0; i<actions.length; i++) {
             var action = actions[i], eves;
             eves = getCalls(paths, action, eFirst);
 
             if (propagation && eves.length > 0) {
-                callRuns(eves, eName, action == "catch");
-                if(action === "catch") break;
+                callRuns(eves, eName, action == KEY_CATCH);
+                if(action === KEY_CATCH) break;
             }
         }
     }
@@ -310,17 +312,35 @@ Emitter = function(tables, parent, prefix) {
 
 Emitter.prototype = Prototype;
 
+Prototype.find = function(eve, parent) {
+    return pathFind(this.tables, eve, parent);
+}
+
+Prototype.remove = function(eve) {
+    if (isTrueString(eve)) {
+        var last, parent = pathFind(this.tables, eve, true);
+
+        last = eve.match(/\/.*$/);
+        last = last ? last[0] : eve;
+        last = keyFix(last.replace("/", ''));
+
+        delete parent[last];
+    }
+
+    return this;
+}
+
 // 添加一个事件对象
-Prototype.on = function(eve, call, content) {
+Prototype.on = function(eve, call, context, shift) {
     if (isTrueString(eve) && isFunction(call)) {
-        pathObjectPush(this.tables, eve, "call", call, content);
+        pathObjectPush(this.tables, eve, KEY_CALL, call, context, shift);
     }
 
     return this;
 }
 
 // 添加一个一次性的事件对象
-Prototype.once = function(eve, call, content) {
+Prototype.once = function(eve, call, context, shift) {
     if (isTrueString(eve) && isFunction(call)) {
         var that = this, once;
 
@@ -329,7 +349,7 @@ Prototype.once = function(eve, call, content) {
             that.off(eve, once);
         };
 
-        that.on(eve, once, content);
+        that.on(eve, once, context, shift);
     }
 
     return this;
@@ -338,16 +358,16 @@ Prototype.once = function(eve, call, content) {
 // 移除一个事件
 Prototype.off = function(eve, call) {
     if (isTrueString(eve)) {
-        pathObjectDel(this.tables, eve, "call", call);
+        pathObjectDel(this.tables, eve, KEY_CALL, call);
     }
 
     return this;
 }
 
 // 在元素上添加捕获事件
-Prototype.catch = function(eve, call, content) {
+Prototype.catch = function(eve, call, context, shift) {
     if (isTrueString(eve) && isFunction(call)) {
-        pathObjectPush(this.tables, eve, "catch", call, content);
+        pathObjectPush(this.tables, eve, KEY_CATCH, call, context);
     }
 
     return this;
@@ -356,16 +376,16 @@ Prototype.catch = function(eve, call, content) {
 // 在元素上移除捕获事件
 Prototype.uncatch = function(eve, call) {
     if (isTrueString(eve)) {
-        pathObjectDel(this.tables, eve, "catch", call);
+        pathObjectDel(this.tables, eve, KEY_CATCH, call);
     }
 
     return this;
 }
 
 // 在元素上添加一个修饰器
-Prototype.patch = function(eve, call) {
+Prototype.patch = function(eve, call, context, shift) {
     if (isTrueString(eve) && isFunction(call)) {
-        pathObjectPush(this.tables, eve, "patch", call, content);
+        pathObjectPush(this.tables, eve, KEY_PATCH, call, context, shift);
     }
 
     return this;
@@ -374,7 +394,7 @@ Prototype.patch = function(eve, call) {
 // 在元素上移除一个修饰器
 Prototype.unpatch = function(eve, call) {
     if (isTrueString(eve)) {
-        pathObjectDel(this.tables, eve, "patch", call);
+        pathObjectDel(this.tables, eve, KEY_PATCH, call);
     }
 
     return this;
@@ -403,8 +423,8 @@ Prototype.emit = function(/* eve, args... */) {
 
 // 向父元素冒泡这个事件
 Prototype.dispatch = function(/* eve, args... */) {
-    var pathCall = [], run = eventArgs(arguments),
-        space, before, maps = this.tables;
+    var pathCall = [], run = eventArgs.apply(null, arguments),
+        spaces, before, maps = this.tables;
 
     if (isTrueString(run.eves)) {
         if (run.space === "") {
@@ -445,8 +465,8 @@ Prototype.dispatch = function(/* eve, args... */) {
 
 // 向子元素传播这个事件
 Prototype.broadcast = function(/* eve, args... */) {
-    var run = eventArgs(arguments),
-        calls, before, eFirst, eName;
+    var run = eventArgs.apply(null, arguments),
+        calls, path, before, eFirst, eName;
 
     path = pathFind(this.tables, run.space);
     eName = run.eves; eFirst = run.first;
@@ -491,11 +511,5 @@ Prototype.broadcast = function(/* eve, args... */) {
 var Creater = function() {
     return new Emitter();
 }; Creater.prototype = Prototype;
-
-try {
-    if (typeof window === "object") {
-        window.Emitter = Creater;
-    }
-} catch(e) {};
 
 export default Creater;
