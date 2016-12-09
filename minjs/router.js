@@ -1,7 +1,7 @@
 import Emitter from "./emitter.js";
 import {keyTest, keyFix} from "./emitter.js";
 import {isFunction, isString, isObject} from "./check.js";
-import {extend} from "./utils.js";
+import {extend, value} from "./utils.js";
 
 var CFG = {
     home     : "/home",             // 默认首页
@@ -16,6 +16,9 @@ var CFG = {
     onBefore : null,                // 页面跳转前的回调方法
     onEmit   : null,                // 激活时运行的方法
     onLeave  : null,                // 页面 成功跳转后 的回调方法
+
+    onInit   : null,                // 路由初始化时调用的方法
+    onSuccess: null,                // 每次跳转成功后的回调方法
     onAlways : null,                // 每次点击，不论是否阻止默认跳转，都会执行的方法
 
     recurse  : false,               // 路由递归触发方式，forward 正序，backward 反序，默认只最后项
@@ -23,25 +26,35 @@ var CFG = {
 };
 
 var Router = function(maps, option) {
-    this.ctrl = Emitter();
-    this.option = extend({}, CFG, option);
+    var opt = extend({}, CFG, option), ctrl = Emitter();
+
+    this.ctrl = ctrl;
+    this.option = opt;
 
     this.route = this.ctrl.tables;          // 路由表信息
     this.stack = [];                        // 路由栈信息
     this.last  = null;                      // 当前路由信息
+
+    ctrl.on("routeInit", opt.onInit, this);
+    ctrl.on("routeSuccess", opt.onSuccess, this);
+    ctrl.on("routeAlways", opt.onAlways, this);
+
+    ctrl.on("routeNotFound", opt.notCall, this);
+    ctrl.on("routeNotFound", function() {
+        if (opt.notPage) this.go(opt.notPage);
+    }, this);
 }, Prototype = {};
 
 Prototype.init = function() {
     var opt = this.option, fire;
 
     this.on(this.maps);
+    this.ctrl.emit("routeInit");
 
     if (opt.repath === true) {
         fire = opt.home;
     } else {
-        fire = this.fire();
-
-        if (!isRouteItem(fire)) {
+        if (!(fire = this.fire())) {
             if (isFunction(opt.notCall)) {
                 opt.notCall();
             }
@@ -62,7 +75,7 @@ Prototype.bindBrower = function() {
 }
 
 function transMatch(url) {
-    return url.replace(/:[^/-_]{1,}/g, "([^/]*)")
+    return url.replace(/:[^/-_]{1,}/g, "([\\S]+)");
 }
 
 function transParams(url, match) {
@@ -85,7 +98,7 @@ function transParams(url, match) {
 
 // 尝试获取给定的路由对象，无参，获取当前路劲
 Prototype.fire = function(url) {
-    var aUrl, aFind;
+    var aUrl, aFind = null;
 
     aUrl = url || location.hash;
     aUrl = aUrl.replace(/^#/, '');
@@ -94,8 +107,6 @@ Prototype.fire = function(url) {
         aFind = extend({}, aFind);
         aFind.url = aUrl;
         aFind.params = transParams(url, aFind.match);
-    } else {
-        aFind = {};
     }
 
     return aFind;
@@ -178,63 +189,104 @@ Prototype.off = function(url) {
     return this;
 }
 
-function callEvent(url, fireRoute, lastRoute, prevRoute) {
-    var result = false, opt = this.option, ctrl = this.ctrl,
-        args, calls = "onBefore onEmit".split(" ");
-
-    args = [url, fireRoute, lastRoute, prevRoute];
+Prototype.emit = function(url, routeType, routeGo, routeLast, historyAction) {
+    var args = [url, routeType, routeGo, routeLast],
+        OPT = this.option, CTRL = this.ctrl, STACK = this.stack,
+        CALLS = "onBefore onEmit".split(" "), emitResult = false;
 
     // 尝试运行上个页面的 leave 方法
-    args.unshift(lastRoute.url + " on.Leave");
-    lastRoute.url && ctrl.emit.apply(ctrl, args);
-    
-    // 添加句柄，用来判断是否执行 emit 方法
-    ctrl.once(url+" on.Emit", function() {
-        result = true;
+    args.unshift(routeLast.url + " on.Leave");
+    routeLast.url && CTRL.emit.apply(CTRL, args);
+
+    CTRL.once(transMatch(routeGo.match)+" on.Emit", function() { 
+        emitResult = true;
     });
 
-    // 执行匹配路由绑定的相关方法
-    for(var i=0; i<calls.length; i++) {
-        var eve = url+" "+calls[i],
+    for(var i=0; i<CALLS.length; i++) {
+        var eve = url+" "+CALLS[i],
             fix = eve.replace("on", "on.");
 
         args.shift(); args.unshift(fix);
 
-        ctrl.once(fix, opt[calls[i]], this, true);
-        ctrl.emit.apply(ctrl, args);
+        CTRL.once(fix, OPT[CALLS[i]], this);
+        CTRL.emit.apply(CTRL, args);
     }
 
-    return result;
+    // 检测路由是否跳转成功
+    if (emitResult === true) {
+        if (routeLast.outClear) STACK.pop();
+        if (routeType === "back") STACK.pop();
+
+        var cacheLast = STACK[STACK.length-1] || {};
+        if (cacheLast.url === routeGo.url) STACK.pop();
+
+        STACK.push(routeGo); this.last = routeGo;
+
+        args.shift(); args.unshift("routeSuccess");
+        CTRL.emit.apply(CTRL, args);
+
+        // 修改浏览器内置的 history 数据
+        historyAction += "State";
+        if (self.history && self.history[historyAction]) {
+            var state = {
+                url: url,
+                title: routeGo.title,
+            };
+
+            self.history[historyAction](state, state.title, "#"+state.url);
+        }
+    }
+
+    args.shift(); args.unshift("routeAlways");
+    CTRL.emit.apply(CTRL, args);
+
+    return this;
 }
 
 // 跳转到给定 URL 或者 路由对象
 Prototype.go = function(url, inReplace, outClear, inRefresh) {
-    var clear, refresh, rgo = this.fire(url), args,
-        stack = this.stack, rnow = this.last || {}, rprev;
+    var clear, refresh, routeGo, routeLast, routePrev, OPT = this.option,
+        STACK = this.stack, CTRL = this.ctrl, routeType, historyAction;
 
-    rprev   = stack[stack.length-2] || {};
-    clear   = inReplace || rgo.replace || rnow.outClear;
-    refresh = inRefresh !== undefined ? inRefresh : rgo && rgo.refresh;
+    if (url && (routeGo = this.fire(url))) {
+        routePrev = STACK[STACK.length-2] || {};
+        routeLast = this.last || {};
+        routeType = routeGo.url === routePrev.url ? "back" : "go";
 
-    if (!rgo.url || (rnow && rgo.url == rnow.url && !refresh)) return this;
+        clear   = value(inReplace, routeGo.replace, routeLast.outClear);
+        refresh = value(inRefresh, routeGo.refresh);
 
-    // clear 为真，清除旧的路由信息
-    if (clear) stack.pop();
-    rgo.outClear = true;
+        // 当前页面和跳转页面相同时，后续操作判断
+        if (routeGo.url === routeLast.url) {
+            if (refresh) clear = true;
+            else         return this;
+        }
 
-    args = [url, rgo, rnow, rprev];
-    if (callEvent.apply(this, args)) {
-        stack.push(rgo); this.last = rgo;
+        // 如果开启相同参数自动 replace 加载，则自动处理
+        if (OPT.replace && routeGo.match === routeLast.match) {
+            clear = true;
+        }
 
-        var onAlways= this.option.onAlways;
-        onAlways && onAlways.apply(this, args);
+        // 尝试标记页面退出自动清理标记
+        if (clear) routeLast.outClear = true;
+        routeGo.outClear = outClear;
+
+        this.emit(url, routeType, routeGo, routeLast, clear ? "replace" : "push");
+    } else if (url && !routeGo) {
+        CTRL.emit("routeNotFound", url);
     }
 
     return this;
 }
 
-Prototype.back = function(url) {
+Prototype.back = function() {
+    var STACK = this.stack, routeLast = this.last || {}, routeGo;
 
+    if (routeGo = STACK[STACK.length-2]) {
+        this.emit(routeGo.url, "back", routeGo, routeLast, "replace");
+    }
+
+    return this;
 }
 
 // 从浏览记录中，清除给定的 URL 或通过索引查找

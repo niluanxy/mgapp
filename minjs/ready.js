@@ -136,4 +136,6 @@ export default (function(win, doc) {
     onDomReady.isReady = function(){
         return isReady;
     };
+
+    return onDomReady;
 })(window, document);

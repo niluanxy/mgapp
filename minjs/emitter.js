@@ -20,14 +20,8 @@ export function keySplit(strs) {
     strs = strs.replace(/\/*$/, "");
     strs = strs.replace(/\/+/g, "/");
 
-    if (strs.match(/\(.*\)/)) {
-        strs = strs.replace(/\/(?=\()/g, "~");
-        strs = strs.split("").reverse().join("");
-        strs = strs.replace(/\/(?=\))/g, "~");
-        strs = strs.split("").reverse().join("");
-    } else {
-        strs = strs.replace(/\//g, '~');
-    }
+    strs = strs.replace(/(\(.*)(\/)(.*\))/, "$1@$3");
+    strs = strs.replace(/\//g, "~").replace(/\@/g, '\/');
 
     return strs.split("~");
 }

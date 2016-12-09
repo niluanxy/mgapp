@@ -32,6 +32,21 @@ export function strFind(strs, find) {
     return -1;
 }
 
+// 返回真实数据，忽略 undefined 和 null 和 "" 值
+export function value() {
+    var args = arguments, len = args.length;
+
+    for(var i=0; i<len; i++) {
+        var test = args[i];
+
+        if (test !== undefined && test !== null && test !== "") {
+            return test;
+        }
+    }
+
+    return undefined;
+}
+
 export function arrayRemove(arrs, find, all) {
     for(var i=0; i<arrs.length; i++) {
         if (arrs[i] === find) {
