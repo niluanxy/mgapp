@@ -289,7 +289,7 @@ Prototype.back = function(url) {
 
     routeGo = url ? this.fire(url) : STACK[STACK.length-2];
 
-    if (routeGo && routeGo.url) {
+    if (routeGo && routeGo.url && routeGo.url !== routeLast.url) {
         this.emit(routeGo.url, "back", routeGo, routeLast, "replace");
     }
 
