@@ -215,10 +215,15 @@ Prototype.emit = function(url, routeType, routeGo, routeLast, historyAction) {
     // 检测路由是否跳转成功
     if (emitResult === true) {
         if (routeLast.outClear) STACK.pop();
-        if (routeType === "back") STACK.pop();
 
-        var cacheLast = STACK[STACK.length-1] || {};
-        if (cacheLast.url === routeGo.url) STACK.pop();
+        if (routeType === "back") {
+            for(var i=STACK.length-1; i>=0; i--) {
+                var del = STACK[i];
+
+                STACK.pop();
+                if (del.url === routeGo.url) break;
+            }
+        }
 
         STACK.push(routeGo); this.last = routeGo;
 
@@ -279,10 +284,12 @@ Prototype.go = function(url, inReplace, outClear, inRefresh) {
     return this;
 }
 
-Prototype.back = function() {
+Prototype.back = function(url) {
     var STACK = this.stack, routeLast = this.last || {}, routeGo;
 
-    if (routeGo = STACK[STACK.length-2]) {
+    routeGo = url ? this.fire(url) : STACK[STACK.length-2];
+
+    if (routeGo && routeGo.url) {
         this.emit(routeGo.url, "back", routeGo, routeLast, "replace");
     }
 
