@@ -5,10 +5,8 @@ import {extend, value} from "./utils.js";
 
 var CFG = {
     home     : "/home",             // 默认首页
-    mode     : "",                  // 是否启用H5模式，启用则省略 # 符号（后台需rewrite）
-    title    : true,                // 如果有title信息，是否自动更新
     repath   : true,                // 是否自动跳转到首页
-    replace  : true,                // 自动将参数不同的页面 replace 加载，默认开启
+    single   : false,               // 单例模式，相同路由页面 replace 加载，默认开启
 
     notCall  : null,                // 页面未找到时候的回调方法
     notPage  : "",                  // 页面未找到的时候，显示的页面，为空则跳到首页
@@ -22,7 +20,6 @@ var CFG = {
     onAlways : null,                // 每次点击，不论是否阻止默认跳转，都会执行的方法
 
     recurse  : false,               // 路由递归触发方式，forward 正序，backward 反序，默认只最后项
-    regexp   : ":[^/-]{1,}",        // 参数匹配正则语句，用于匹配参数信息
 };
 
 var Router = function(maps, option) {
@@ -33,13 +30,15 @@ var Router = function(maps, option) {
 
     this.route = this.ctrl.tables;          // 路由表信息
     this.stack = [];                        // 路由栈信息
+
     this.last  = null;                      // 当前路由信息
+    this.prev  = null;                      // 上次路由信息
 
     ctrl.on("routeInit", opt.onInit, this);
     ctrl.on("routeSuccess", opt.onSuccess, this);
     ctrl.on("routeAlways", opt.onAlways, this);
 
-    ctrl.on("routeNotFound", opt.notCall, this);
+    ctrl.on("routeNotFound", opt.notCall, this); 
     ctrl.on("routeNotFound", function() {
         if (opt.notPage) this.go(opt.notPage);
     }, this);
@@ -49,6 +48,7 @@ Prototype.init = function() {
     var opt = this.option, fire;
 
     this.on(this.maps);
+    this.bindBrower();
     this.ctrl.emit("routeInit");
 
     if (opt.repath === true) {
@@ -64,12 +64,6 @@ Prototype.init = function() {
     }
 
     this.go(fire, true, false, true);
-
-    return this;
-}
-
-// 监听浏览器前进后台方法
-Prototype.bindBrower = function() {
 
     return this;
 }
@@ -225,7 +219,10 @@ Prototype.emit = function(url, routeType, routeGo, routeLast, historyAction) {
             }
         }
 
-        STACK.push(routeGo); this.last = routeGo;
+        STACK.push(routeGo);
+        this.cache = this.last;
+        this.prev  = STACK[STACK.length-2];
+        this.last  = routeGo;
 
         args.shift(); args.unshift("routeSuccess");
         CTRL.emit.apply(CTRL, args);
@@ -250,15 +247,16 @@ Prototype.emit = function(url, routeType, routeGo, routeLast, historyAction) {
 
 // 跳转到给定 URL 或者 路由对象
 Prototype.go = function(url, inReplace, outClear, inRefresh) {
-    var clear, refresh, routeGo, routeLast, routePrev, OPT = this.option,
-        STACK = this.stack, CTRL = this.ctrl, routeType, historyAction;
+    var clear, refresh, single, routeGo, routeLast, routePrev,
+        STACK = this.stack, OPT = this.option, routeType, historyAction;
 
     if (url && (routeGo = this.fire(url))) {
-        routePrev = STACK[STACK.length-2] || {};
+        routePrev = this.prev || {};
         routeLast = this.last || {};
         routeType = routeGo.url === routePrev.url ? "back" : "go";
 
         clear   = value(inReplace, routeGo.replace, routeLast.outClear);
+        single  = value(routeGo.single, OPT.single);
         refresh = value(inRefresh, routeGo.refresh);
 
         // 当前页面和跳转页面相同时，后续操作判断
@@ -268,7 +266,7 @@ Prototype.go = function(url, inReplace, outClear, inRefresh) {
         }
 
         // 如果开启相同参数自动 replace 加载，则自动处理
-        if (OPT.replace && routeGo.match === routeLast.match) {
+        if (single && routeGo.match === routeLast.match) {
             clear = true;
         }
 
@@ -278,7 +276,7 @@ Prototype.go = function(url, inReplace, outClear, inRefresh) {
 
         this.emit(url, routeType, routeGo, routeLast, clear ? "replace" : "push");
     } else if (url && !routeGo) {
-        CTRL.emit("routeNotFound", url);
+        this.ctrl.emit("routeNotFound", url, routeLast);
     }
 
     return this;
@@ -296,9 +294,22 @@ Prototype.back = function(url) {
     return this;
 }
 
-// 从浏览记录中，清除给定的 URL 或通过索引查找
-Prototype.clear = function(index) {
+// 监听浏览器前进后台方法
+Prototype.bindBrower = function() {
+    var that = this, OPT = that.options, STACK = that.stack;
 
+    self.addEventListener("popstate", function(event) {
+        var action, urlGo, state = event.state,
+            urlPrev  = that.prev ? that.prev.url : null;
+
+        if (state && (urlGo = state.url) && urlGo !== that.last.url) {
+            action = urlGo === urlPrev ? "back" : "go";
+
+            that[action](urlGo);
+        }
+    });
+
+    return this;
 }
 
 // 构造函数，兼容 new 方式创建对象
