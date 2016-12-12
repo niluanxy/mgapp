@@ -5,10 +5,8 @@
  */
 
 var fastCall = (function() {
-    var run = self, pre = "~_fast_call$", doc, addEvent;
-
-    addEvent = run.addEventListener || run.attachEvent;
-    doc = run.document;
+    var run = self, pre = "~_fast_call$", doc = run.document,
+        addEvent = run.addEventListener || run.attachEvent;
 
     if (run.setImmediate) {
         return run.setImmediate;

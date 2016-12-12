@@ -7,6 +7,7 @@ var CFG = {
     home     : "/home",             // 默认首页
     repath   : true,                // 是否自动跳转到首页
     single   : false,               // 单例模式，相同路由页面 replace 加载，默认开启
+    native   : true,                // 尝试响应原生事件，若不关心浏览器事件，请禁用
 
     notCall  : null,                // 页面未找到时候的回调方法
     notPage  : "",                  // 页面未找到的时候，显示的页面，为空则跳到首页
@@ -48,7 +49,7 @@ Prototype.init = function() {
     var opt = this.option, fire;
 
     this.on(this.maps);
-    this.bindBrower();
+    opt.native && this.bindBrower();
     this.ctrl.emit("routeInit");
 
     if (opt.repath === true) {
@@ -282,13 +283,20 @@ Prototype.go = function(url, inReplace, outClear, inRefresh) {
     return this;
 }
 
-Prototype.back = function(url) {
-    var STACK = this.stack, routeLast = this.last || {}, routeGo;
+Prototype.back = function(url, soft) {
+    // 如果开启 native 模式，尝试调用原生方法
 
-    routeGo = url ? this.fire(url) : STACK[STACK.length-2];
+    var STACK = this.stack, routeLast = this.last || {}, routeGo,
+        trySoft = value(soft, !this.option.native);
 
-    if (routeGo && routeGo.url && routeGo.url !== routeLast.url) {
-        this.emit(routeGo.url, "back", routeGo, routeLast, "replace");
+    if (!trySoft && self.history && isFunction(self.history.back)) {
+        self.history.back();
+    } else {
+        routeGo = url ? this.fire(url) : STACK[STACK.length-2];
+
+        if (routeGo && routeGo.url && routeGo.url !== routeLast.url) {
+            this.emit(routeGo.url, "back", routeGo, routeLast, "replace");
+        }
     }
 
     return this;
@@ -300,12 +308,17 @@ Prototype.bindBrower = function() {
 
     self.addEventListener("popstate", function(event) {
         var action, urlGo, state = event.state,
-            urlPrev  = that.prev ? that.prev.url : null;
+            urlPrev = that.prev ? that.prev.url : null,
+            urlLast = that.last ? that.last.url : null;
 
-        if (state && (urlGo = state.url) && urlGo !== that.last.url) {
+        if (state && (urlGo = state.url) && urlGo !== urlLast) {
             action = urlGo === urlPrev ? "back" : "go";
 
-            that[action](urlGo);
+            if (action === "back") {
+                that.back(urlGo, true);
+            } else {
+                that.go(urlGo);
+            }
         }
     });
 
