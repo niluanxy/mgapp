@@ -74,105 +74,27 @@
         })(window, document);
     </script>
 
-    <link rel="stylesheet" href="mixin/dist/mixin.css">
-    <script type="text/javascript" src="magic/dist/magic.ui.js"></script>
+    <link rel="stylesheet" href="dist/mixin.css">
+    <script type="text/javascript" src="dist/magic.ui.js"></script>
 </head>
 <body>
-    <a class="test button-primary">购买</a>
-    <a class="button-second">加入购物车</a>
-    <a class="button-danger">删除</a>
-    <a class="button-stable">不感兴趣</a></br>
-
-    <a class="test button-primary button-clear">购买</a>
-    <a class="test button-second button-clear">加入购物车</a>
-    <a class="test button-danger button-clear">删除</a>
-    <a class="button-stable button-clear">不感兴趣</a>
-
-    <input type="radio" class="radio">
-    <input type="radio" class="radio">
-
-    <input type="checkbox" class="checkbox">
-    <input type="checkbox" class="checkbox">
-
-    <input type="checkbox" class="switch">
-    <input type="checkbox" class="switch">
-
-    <div class="tip">
-        <i class="icon success"></i>
-        <p class="text">操作成功</p>
-    </div>
-
-    <div class="bar-primary bar-header">
-        <a class="button">返回</a>
-        <h3 class="title">一个bar</h3>
-        <a class="button">保存</a>
-    </div>
-
-    <div class="scroll" style="height: 4rem;">
-        <div class="wrapper">
-            <p>line01</p>
-            <p>line02</p>
-            <p>line03</p>
-            <p>line04</p>
-            <p>line05</p>
-            <p>line06</p>
-            <p>line07</p>
-            <p>line08</p>
-            <p id="inview3">line09</p>
-            <p>line10</p>
-        </div>
-    </div>
-
-    <div class="scroll-x">
-        <div class="wrapper">
-            <a class="button-second">button 01</a>
-            <a class="button-second">button 02</a>
-            <a class="button-second">button 03</a>
-            <a class="button-second">button 04</a>
-            <a class="button-second">button 05</a>
-
-            <a id="inview2" class="button-danger">button 01</a>
-            <a class="button-danger">button 02</a>
-            <a class="button-danger">button 03</a>
-            <a class="button-danger">button 04</a>
-            <a class="button-danger">button 05</a>
-            <a class="button-danger">button 03</a>
-            <a class="button-danger">button 04</a>
-            <a class="button-danger">button 05</a>
-        </div>
-    </div>
-
-    <div class="slider">
-        <div class="wrapper">
-            <div class="slider-item"><img src="http://b.zol-img.com.cn/desk/bizhi/start/3/1376978216353.jpg" alt=""></div>
-
-            <div class="slider-item"><img src="http://ps3.tgbus.com/uploadfiles/201103/20110324141937813.jpg"></div>
-        </div>
-
-        <div class="points">
-            <span class="point-item active"></span>
-            <span class="point-item"></span>
-        </div>
-    </div>
-
-    <div class="tabs-primary tabs-striped" style="margin-bottom: 20px;">
-        <div class="tabs-item active">首页</div>
-        <div class="tabs-item">商品</div>
-        <div class="tabs-item">会员</div>
-    </div>
-
-    <a id="inview" class="button-primary">in view</a>
+    <script src="./check.js"></script>
 
     <div class="list">
-        <div class="list-item button-right">
-            hello world 111
-
-            <a class="button-primary">保存</a>
-        </div>
-
-        <div class="list-item">
-            hello world 222
-        </div>
+        <div class="list-item">user</div>
+        <div class="list-item">user/main</div>
+        <div class="list-item">list</div>
+        <div class="list-item">list/good/:goodid</div>
     </div>
+
+    <a id="one" class="button-primary">user</a>
+    <a id="two" class="button-primary">user/main</a>
+    <a id="three" class="button-primary">list</a>
+    <a id="four" class="button-primary">list/good/1001</a>
+    <a id="five" class="button-primary">list/good/2001</a>
+    <a id="six" class="button-primary">list/good/2001 refresh</a>
+
+    <a id="back" class="button-second button-block">back</a>
+    <a id="backone" class="button-second button-block">back user</a>
 </body>
 </html>

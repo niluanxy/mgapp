@@ -45,9 +45,9 @@ var DIR_MIXIN = __dirname + "/mixin/",
     DIST_MIXIN = DIR_MIXIN + "dist",
 
     DIR_MINJS =  __dirname + "/minjs/",
+    DIR_DIST  =  __dirname + "/dist/",
 
-    DIR_MAGIC = __dirname + "/magic/",
-    DIST_MAGIC = DIR_MAGIC + "dist";
+    DIR_MAGIC = __dirname + "/magic/";
 
 var DIR_MAGIC_ALIAS = {
     resolve: ['.jsx', '.js'],
@@ -75,7 +75,7 @@ function log(str, style) {
  * mixin 文件合并脚本函数
  =================================================*/
 function task_concat_mixin() {
-    var DIST_MIXIN = DIR_MIXIN+"dist/",
+    var DIST_MIXIN = DIR_DIST,
         defer_core = Q.defer(),
         defer_uikit = Q.defer(),
         defer_vars = Q.defer(),
@@ -139,6 +139,64 @@ function clear_mixin() {
 }
 
 /**===============================================
+ * minjs 文件合并脚本函数
+ =================================================*/
+function task_build_minjs() {
+    var defer_emit = Q.defer(), defer_route = Q.defer(),
+        defer_all = Q.defer(), plugins;
+
+    plugins = [
+        rollupAlias(DIR_MAGIC_ALIAS),
+        rollupReplace({
+            exclude: 'node_modules/**',
+            ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
+        }),
+        (process.env.NODE_ENV === 'production' && rollupUglify()),
+    ];
+
+    del(DIR_DIST+"emitter.js").then(function() {
+        rollup({
+            entry: DIR_MINJS+"emitter.js",
+            format: 'umd',
+            exports: "named",
+            moduleName: "Emitter",
+            plugins: plugins,
+        })
+        .pipe(source('emitter.js'))
+        .pipe(gulp.dest(DIR_DIST))
+        .on("finish", function() {
+            log("--- minjs emitter.js build finish");
+            defer_emit.resolve();
+        });
+    });
+
+    del(DIR_DIST+"router.js").then(function() {
+        rollup({
+            entry: DIR_MINJS+"router.js",
+            format: 'umd',
+            moduleName: "Router",
+            plugins: plugins,
+        })
+        .pipe(source('router.js'))
+        .pipe(gulp.dest(DIR_DIST))
+        .on("finish", function() {
+            log("--- minjs router.js build finish");
+            defer_route.resolve();
+        });
+    });
+
+    Q.all([
+        defer_emit.promise,
+        defer_route.promise
+    ]).then(function() {
+        log("minjs task all finish");
+        defer_all.resolve();
+    });
+
+    return defer_all.promise;
+}
+
+/**===============================================
  * magic 文件合并脚本函数
  =================================================*/
 function task_build_magic() {
@@ -165,7 +223,7 @@ function task_build_magic() {
             plugins: plugins,
         })
         .pipe(source('magic.js'))
-        .pipe(gulp.dest(DIST_MAGIC))
+        .pipe(gulp.dest(DIR_DIST))
         .on("finish", function() {
             log("--- magic core build finish");
             defer_core.resolve();
@@ -173,20 +231,20 @@ function task_build_magic() {
 
         gulp.src([DIR_CORE+"build.js",
             DIR_MUI+"build.js"])
-        .pipe(concat("concat.js"))
-        .pipe(gulp.dest(DIST_MAGIC))
+        .pipe(concat("_magic_concat.js"))
+        .pipe(gulp.dest(DIR_DIST))
         .on("finish", function() {
             rollup({
-                entry: DIST_MAGIC+"/concat.js",
+                entry: DIR_DIST+"/_magic_concat.js",
                 format: 'umd',
                 moduleName: "$",
                 plugins: plugins,
             })
             .pipe(source('magic.ui.js'))
-            .pipe(gulp.dest(DIST_MAGIC))
+            .pipe(gulp.dest(DIR_DIST))
             .on("finish", function() {
                 log("--- magic mui build finish");
-                del(DIST_MAGIC+"/concat.js");
+                del(DIR_DIST+"/_magic_concat.js");
                 defer_mui.resolve();
             });
         });
@@ -204,13 +262,19 @@ function task_build_magic() {
 }
 
 function clear_magic() {
-    return del(DIST_MAGIC);
+    return Q.all([
+        del(DIR_DIST+"magic.js"),
+        del(DIR_DIST+"magic.ui.js")
+    ]);
 }
 
 gulp.task("build", function() {
-    task_concat_mixin().then(function() {
+    task_concat_mixin()
+    .then(function() {
+        return task_build_minjs();
+    }).then(function() {
         return task_build_magic();
-    })
+    });
 })
 
 gulp.task("clean", function() {

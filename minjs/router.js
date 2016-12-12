@@ -284,11 +284,10 @@ Prototype.go = function(url, inReplace, outClear, inRefresh) {
 }
 
 Prototype.back = function(url, soft) {
-    // 如果开启 native 模式，尝试调用原生方法
-
     var STACK = this.stack, routeLast = this.last || {}, routeGo,
         trySoft = value(soft, !this.option.native);
 
+    // 如果开启 native 模式，尝试调用原生方法
     if (!trySoft && self.history && isFunction(self.history.back)) {
         self.history.back();
     } else {
