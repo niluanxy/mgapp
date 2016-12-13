@@ -13,7 +13,7 @@ var CFG = {
     notPage  : "",                  // 页面未找到的时候，显示的页面，为空则跳到首页
 
     onBefore : null,                // 页面跳转前的回调方法
-    onEmit   : null,                // 激活时运行的方法
+    onEmit   : null,                // 激活时运行的方法，可简写为 on
     onLeave  : null,                // 页面 成功跳转后 的回调方法
 
     onInit   : null,                // 路由初始化时调用的方法
@@ -73,6 +73,10 @@ function transMatch(url) {
     return url.replace(/:[^/-_]{1,}/g, "([\\S]+)");
 }
 
+function transUrl(url, fix) {
+    return url.replace(/^[\#|\/]+/g, fix || '');
+}
+
 function transParams(url, match) {
     var params = {}, reg, name, find;
 
@@ -95,8 +99,7 @@ function transParams(url, match) {
 Prototype.fire = function(url) {
     var aUrl, aFind = null;
 
-    aUrl = url || location.hash;
-    aUrl = aUrl.replace(/^#/, '');
+    aUrl = transUrl(url || location.hash);
 
     if ((aFind = this.ctrl.find(aUrl))) {
         aFind = extend({}, aFind);
@@ -112,8 +115,7 @@ function findPath(maps, prefix) {
 
     for(var key in maps) {
         if (keyTest(key)) {
-            fix = prefix+key;
-            fix = fix.replace(/\/+/g, "/");
+            fix = transUrl(prefix+key, '/');
 
             maps[key]._prefix = fix;
             items.push(maps[key]);
@@ -137,18 +139,20 @@ function addPath(url, addOption, context) {
 
     for(var key in route) {
         if (!key.match(/^on/)) continue;
-        var call = route[key], eve = fixUrl+" "+key;
+        var call = route[key], eve = fixUrl+" ";
 
-        eve = eve.replace("on", "on.");
+        eve += key == "on" ? "onEmit" : key;
+        eve  = eve.replace("on", "on.");
         ctrl.on(eve, call, context);
     }
 
-    save = ctrl.find(fixUrl);
-    extend(save, route);
-    save["match"] = url;
+    if (save = ctrl.find(fixUrl)) {
+        extend(save, route);
+        save["match"] = url;
 
-    for(var i=0; i<dels.length; i++) {
-        delete save[dels[i]];
+        for(var i=0; i<dels.length; i++) {
+            delete save[dels[i]];
+        }
     }
 }
 
@@ -221,7 +225,6 @@ Prototype.emit = function(url, routeType, routeGo, routeLast, historyAction) {
         }
 
         STACK.push(routeGo);
-        this.cache = this.last;
         this.prev  = STACK[STACK.length-2];
         this.last  = routeGo;
 
@@ -250,6 +253,8 @@ Prototype.emit = function(url, routeType, routeGo, routeLast, historyAction) {
 Prototype.go = function(url, inReplace, outClear, inRefresh) {
     var clear, refresh, single, routeGo, routeLast, routePrev,
         STACK = this.stack, OPT = this.option, routeType, historyAction;
+
+    url = transUrl(url || '');
 
     if (url && (routeGo = this.fire(url))) {
         routePrev = this.prev || {};
