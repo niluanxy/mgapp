@@ -39,7 +39,7 @@ export function value() {
     for(var i=0; i<len; i++) {
         var test = args[i];
 
-        if (test !== undefined && test !== null && test !== "") {
+        if (test !== undefined && test !== null) {
             return test;
         }
     }

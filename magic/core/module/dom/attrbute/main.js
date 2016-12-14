@@ -1,13 +1,22 @@
 import {strFind, element} from "LIB_MINJS/utils.js";
 import {allProxy, keyProxy} from "CORE_FUNCTION/proxy.js";
 import {isTrueString, isString} from "LIB_MINJS/check.js";
+import RootMagic from "CORE_MAGIC/main.js";
+
+function textGet(trans) {
+    if (trans instanceof RootMagic) {
+        return html.call(trans);
+    } else {
+        return trans;
+    }
+}
 
 export function html(html, setAll) {
-    return allProxy.call(this, keyProxy, "innerHTML", html, true, setAll);
+    return allProxy.call(this, keyProxy, "innerHTML", textGet(html), true, setAll);
 }
 
 export function outerHtml(html, setAll) {
-    return allProxy.call(this, keyProxy, "outerHTML", html, true, setAll);
+    return allProxy.call(this, keyProxy, "outerHTML", textGet(html), true, setAll);
 }
 
 export function text(text, setAll) {

@@ -7,8 +7,8 @@
     .#{$prefix+$class} {
         display: inline-block;
         position: absolute;
+        text-align: center;
         color: $tip-text-color;
-        fill: #ffffff;
         word-break: break-all;
         @include absolute-align-center;
         border-radius: $tip-border-radius;
@@ -25,7 +25,6 @@
             height: rem($tip-icon-size);
             margin: 0 auto;
             display: block;
-            fill: #ffffff;
             background-size: 100% 100%;
 
             &.loading {
@@ -40,6 +39,17 @@
                 background-image: url($tip-svg-error);
             }
         }
+
+        @content;   // 样式自定义扩展代码位置
+    }
+}
+
+@mixin tip-back($class: tip-back, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background-color: $tip-back-full;
 
         @content;   // 样式自定义扩展代码位置
     }

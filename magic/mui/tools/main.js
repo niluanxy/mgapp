@@ -38,8 +38,9 @@ export function uiExtend() {
     aClass = $cui.prefix + oClass;
     regPre = new RegExp(oClass, "g");
 
-    copy[keyWrap] = copy[keyWrap].replace(regPre, aClass);
-    copy[keyItem] = copy[keyItem].replace(regPre, aClass);
+    if (copy[keyWrap]) copy[keyWrap] = copy[keyWrap].replace(regPre, aClass);
+    if (copy[keyItem]) copy[keyItem] = copy[keyItem].replace(regPre, aClass);
+
     copy[keyClass]= aClass;
 
     return copy;

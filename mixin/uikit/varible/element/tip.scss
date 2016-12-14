@@ -2,7 +2,9 @@ $tip-border-radius:             $border-radius-base !default;
 $tip-padding-vertical:          $padding-large !default;
 $tip-padding-horizontal:        $tip-padding-vertical * 1.6 !default;
 
-$tip-back-color:                rgba(0, 0, 0, 0.7) !default;
+$tip-back-color:                rgba(0, 0, 0, 0.65) !default;
+$tip-back-full:                 rgba(0, 0, 0, 0.45) !default;
+
 $tip-text-color:                #fff !default;
 $tip-icon-size:                 68px !default;
 

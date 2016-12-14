@@ -6,7 +6,6 @@ import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.popup = {
     class: "pop",
-    style: null,
 
     insertTo : "body", 
 
@@ -16,7 +15,7 @@ var CFG = $config.popup = {
 
     wrapClass: "pop-wrap",
     itemClass: "pop-item",
-}, SHOWS = "UI_POPUP_SHOW", INDEX = "UI_POPUP_INDEX";
+}, SHOWS = "UI_POPUP_SHOW", INDEX = "UI_POPUP_INDEX", Prototype = {};
 
 /**
  * option: {
@@ -30,9 +29,9 @@ export default function Popup(el, option) {
     this.$blur  = null;
     this.isHide = true;
     this.option = uiExtend(CFG, option);
-}
+} Popup.prototype = Prototype;
 
-Popup.prototype.init = function() {
+Prototype.init = function() {
     var opt = this.option, $insert, $wrap, hideClass = opt.hideClass;
 
     $insert = RootMagic(opt.insertTo);
@@ -63,7 +62,7 @@ Popup.prototype.init = function() {
     return this;
 }
 
-Popup.prototype.show = function() {
+Prototype.show = function() {
     var opt = this.option, hide = opt.hideClass,
         $wrap = this.$wrap,
         show  = $wrap.data(SHOWS),
@@ -83,7 +82,7 @@ Popup.prototype.show = function() {
     return this;
 }
 
-Popup.prototype.hide = function() {
+Prototype.hide = function() {
     var needShow = false, $wrap = this.$wrap,
         hide  = this.option.hideClass,
         shows = $wrap.data(SHOWS), index = $wrap.data(INDEX),
@@ -104,7 +103,7 @@ Popup.prototype.hide = function() {
     return this;
 }
 
-Popup.prototype.toggle = function(set) {
+Prototype.toggle = function(set) {
     var toggle = set || this.isHide;
     
     toggle ? this.show() : this.hide();
@@ -112,7 +111,7 @@ Popup.prototype.toggle = function(set) {
     return this;
 }
 
-Popup.prototype.destroy = function() {
+Prototype.destroy = function() {
     this.$el.remove();
 }
 

@@ -8,7 +8,7 @@ var CFG = $config.tabs = {
 
     wrapClass: "",
     itemClass: "tabs-item",
-};
+}, Prototype = {};
 
 /**
  * options: {
@@ -25,9 +25,9 @@ export default function Tabs(el, option) {
     this.index  = 0;
     this.value  = null;
     this.option = uiExtend(CFG, option);
-}
+} Tabs.prototype = Prototype;
 
-Tabs.prototype.init = function() {
+Prototype.init = function() {
     var that = this, $el = this.$el;
 
     uiInit($el, this.option, "click", function(e) {
@@ -37,7 +37,7 @@ Tabs.prototype.init = function() {
     return this;
 }
 
-Tabs.prototype.select = function(index) {
+Prototype.select = function(index) {
     var $el = this.$el, opt = this.option,
         $childs = $el.children(),
         actClass = opt.active, $item;
@@ -54,7 +54,7 @@ Tabs.prototype.select = function(index) {
     return this;
 }
 
-Tabs.prototype.destory = function() {
+Prototype.destory = function() {
     this.$el.remove();
 }
 
