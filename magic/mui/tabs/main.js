@@ -1,11 +1,10 @@
 import RootMagic from "CORE_MAGIC/main.js";
-import {fixStyle} from "MUI/tools/main.js";
+import {uiInit, uiExtend} from "MUI/tools/main.js";
 import {isFunction} from "LIB_MINJS/check.js";
-import {extend} from "LIB_MINJS/utils.js";
 import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.tabs = {
-    prefix: "tabs",
+    class: "tabs",
 
     wrapClass: "",
     itemClass: "tabs-item",
@@ -25,14 +24,13 @@ export default function Tabs(el, option) {
     this.$el = RootMagic(el);
     this.index  = 0;
     this.value  = null;
-    this.option = extend({}, $config.ui, CFG, option);
+    this.option = uiExtend(CFG, option);
 }
 
 Tabs.prototype.init = function() {
-    var that = this, $el = this.$el, opt = this.option;
+    var that = this, $el = this.$el;
 
-    fixStyle($el, opt)
-    .on("click", "."+opt.itemClass, function(e) {
+    uiInit($el, this.option, "click", function(e) {
         that.select(RootMagic(e.target).index());
     });
 

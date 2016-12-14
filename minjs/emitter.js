@@ -20,8 +20,7 @@ export function keySplit(strs) {
     strs = strs.replace(/\/*$/, "");
     strs = strs.replace(/\/+/g, "/");
 
-    strs = strs.replace(/(\(.*)(\/)(.*\))/, "$1@$3");
-    strs = strs.replace(/\//g, "~").replace(/\@/g, '\/');
+    strs = strs.replace(/\//g, "~");
 
     return strs.split("~");
 }
@@ -34,7 +33,7 @@ export function keyMatch(key, find) {
 
 // 在 列表树 中根据路径查询对象
 // 如果没有值会返回 null
-function pathFind(paths, str, parent) {
+function pathFind(paths, str, parent, callback) {
     var arr = keySplit(str), find, isFind, par = null;
 
     if (arr.length == 1 && arr[0] === "") return paths;
@@ -47,7 +46,13 @@ function pathFind(paths, str, parent) {
                 if (keyTest(key) && keyMatch(key, find)) {
                     par = paths;
                     paths = paths[key];
-                    isFind = true; break;
+                    isFind = true;
+
+                    if (isFunction(callback)) {
+                        callback(par, paths);
+                    }
+                    
+                    break;
                 }
             }
         }
@@ -59,7 +64,7 @@ function pathFind(paths, str, parent) {
 
 // 在 列表树 中根据路径查询对象
 // 如果没有值则会每一级的创建空对象
-function pathAdd(paths, str) {
+function pathAdd(paths, str, object) {
     var arr = keySplit(str);
 
     for(var i=0; i<arr.length; i++) {
@@ -67,7 +72,7 @@ function pathAdd(paths, str) {
             var key = keyFix(arr[i]);
 
             if (!isObject(paths[key])) {
-                paths[key] = {};
+                paths[key] = object || {};
             }
 
             paths = paths[key];
@@ -333,8 +338,12 @@ Emitter = function(tables, parent, prefix) {
 
 Emitter.prototype = Prototype;
 
-Prototype.find = function(eve, parent) {
-    return pathFind(this.tables, eve, parent);
+Prototype.add = function(eve, object) {
+    return pathAdd(this.tables, eve, object);
+}
+
+Prototype.find = function(eve, parent, callback) {
+    return pathFind(this.tables, eve, parent, callback);
 }
 
 Prototype.remove = function(eve) {

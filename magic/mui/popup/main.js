@@ -1,10 +1,13 @@
 import RootMagic from "CORE_MAGIC/main.js";
-import {fixStyle} from "MUI/tools/main.js";
+import {uiExtend} from "MUI/tools/main.js";
 import {isFunction, isElement} from "LIB_MINJS/check.js";
 import {extend, arrayRemove} from "LIB_MINJS/utils.js";
 import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.popup = {
+    class: "pop",
+    style: null,
+
     insertTo : "body", 
 
     wrapIndex: 100,
@@ -26,13 +29,12 @@ export default function Popup(el, option) {
     this.$wrap  = null;
     this.$blur  = null;
     this.isHide = true;
-    this.option = extend({}, $config.ui, CFG, option);
+    this.option = uiExtend(CFG, option);
 }
 
 Popup.prototype.init = function() {
-    var opt = this.option, $insert, $wrap, hideClass;
+    var opt = this.option, $insert, $wrap, hideClass = opt.hideClass;
 
-    hideClass = opt.hideClass;
     $insert = RootMagic(opt.insertTo);
     $wrap = $insert.children("."+opt.wrapClass);
 

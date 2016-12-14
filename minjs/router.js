@@ -21,6 +21,7 @@ var CFG = {
     onAlways : null,                // 每次点击，不论是否阻止默认跳转，都会执行的方法
 
     recurse  : false,               // 路由递归触发方式，forward 正序，backward 反序，默认只最后项
+    regexp   : ":[^/]{1,}",         // 默认参数匹配替换的正则语句
 };
 
 var Router = function(maps, option) {
@@ -69,26 +70,33 @@ Prototype.init = function() {
     return this;
 }
 
-function transMatch(url) {
-    return url.replace(/:[^/-_]{1,}/g, "([\\S]+)");
+Prototype.transMatch = function(url) {
+    var reg = this.option.regexp || ":[^/-_]{1,}";
+
+    reg = new RegExp(reg, "g");
+
+    return url.replace(reg, "([\\S]+)");
 }
 
-function transUrl(url, fix) {
-    return url.replace(/^[\#|\/]+/g, fix || '');
+Prototype.transUrl = function(url, fix) {
+    return (url || '').replace(/^[\#|\/]+/g, fix || '/');
 }
 
-function transParams(url, match) {
+Prototype.transParams = function(url, match) {
     var params = {}, reg, name, find;
 
+    url = this.transUrl(url);
     if (isString(url) && isString(match)) {
-        reg = new RegExp(transMatch(match));
+        reg = new RegExp(this.transMatch(match));
         name = match.match(reg);
         find = url.match(reg);
 
-        for(var i=1; i<name.length; i++) {
-            var key = name[i].replace(/^:/, '');
+        if (find && find.length == name.length) {
+            for(var i=1; i<name.length; i++) {
+                var key = name[i].replace(/^:/, '');
 
-            params[key] = find[i];
+                params[key] = find[i];
+            }
         }
     }
 
@@ -97,37 +105,48 @@ function transParams(url, match) {
 
 // 尝试获取给定的路由对象，无参，获取当前路劲
 Prototype.fire = function(url) {
-    var aUrl, aFind = null;
+    var aUrl, aFind = null, cacheArr = [], cacheCall;
 
-    aUrl = transUrl(url || location.hash);
+    aUrl = this.transUrl(url || location.hash);
+    cacheCall = function(parent, find) {
+        cacheArr.push(extend({}, find));
+    };
 
-    if ((aFind = this.ctrl.find(aUrl))) {
+    if ((aFind = this.ctrl.find(aUrl, false, cacheCall))) {
         aFind = extend({}, aFind);
         aFind.url = aUrl;
-        aFind.params = transParams(url, aFind.match);
+        aFind.items = cacheArr.reverse();
+        aFind.params = this.transParams(url, aFind.match);
     }
 
     return aFind;
 }
 
-function findPath(maps, prefix) {
-    var items = [], fix;
+Prototype.findPath = function(maps, prefix) {
+    var items = [], fix, finds;
 
-    for(var key in maps) {
+    if (arguments.length == 1) {
+        finds = this.route;
+        prefix = "/";
+    } else {
+        finds = maps;
+    }
+
+    for(var key in finds) {
         if (keyTest(key)) {
-            fix = transUrl(prefix+key, '/');
+            fix = this.transUrl(prefix+key, '/');
 
-            maps[key]._prefix = fix;
-            items.push(maps[key]);
+            finds[key]._prefix = fix;
+            items.push(finds[key]);
         }
     }
 
     return items;
 }
 
-function addPath(url, addOption, context) {
+Prototype.addPath = function(url, addOption, context) {
     var route = {}, ctrl = this.ctrl, save, fixUrl,
-        dels = "onBefore onEmit onLeave _prefix".split(" ");
+        dels = "on onBefore onEmit onLeave _prefix".split(" ");
 
     if (isFunction(addOption)) {
         route.onEmit = addOption;
@@ -135,33 +154,33 @@ function addPath(url, addOption, context) {
         extend(route, addOption);
     }
 
-    fixUrl = transMatch(url);
+    fixUrl = this.transMatch(url);
+    save = ctrl.add(fixUrl);
+    save.match = url;
 
     for(var key in route) {
-        if (!key.match(/^on/)) continue;
-        var call = route[key], eve = fixUrl+" ";
+        if (key.match(/^on/)) {
+            var call = route[key], eve = fixUrl+" ";
 
-        eve += key == "on" ? "onEmit" : key;
-        eve  = eve.replace("on", "on.");
-        ctrl.on(eve, call, context);
+            eve += key == "on" ? "onEmit" : key;
+            eve  = eve.replace(/(\s)(on)/, '$1$2.');
+            ctrl.on(eve, call, context);
+        } if (!key.match(/^\//)) {
+            save[key] = route[key];
+        }
     }
 
-    if (save = ctrl.find(fixUrl)) {
-        extend(save, route);
-        save["match"] = url;
-
-        for(var i=0; i<dels.length; i++) {
-            delete save[dels[i]];
-        }
+    for(var i=0; i<dels.length; i++) {
+        delete save[dels[i]];
     }
 }
 
 // 添加一条新的路由信息
 Prototype.on = function(url, addOption, context) {
     if (isString(url)) {
-        addPath.call(this, url, addOption, context);
+        this.addPath(url, addOption, context);
     } else if (isObject(url)) {
-        var adds = findPath(url, "/");
+        var adds = this.findPath(url, "/");
 
         do {
             var cache = [], paths;
@@ -169,8 +188,8 @@ Prototype.on = function(url, addOption, context) {
             for(var i=0; i<adds.length; i++) {
                 var prefix = adds[i]._prefix;
 
-                addPath.call(this, prefix, adds[i], context);
-                paths = findPath(adds[i], prefix);
+                this.addPath(prefix, adds[i], context);
+                paths = this.findPath(adds[i], prefix);
                 cache = cache.concat(paths);
             }
 
@@ -197,7 +216,7 @@ Prototype.emit = function(url, routeType, routeGo, routeLast, historyAction) {
     args.unshift(routeLast.url + " on.Leave");
     routeLast.url && CTRL.emit.apply(CTRL, args);
 
-    CTRL.once(transMatch(routeGo.match)+" on.Emit", function() { 
+    CTRL.once(this.transMatch(routeGo.match)+" on.Emit", function() { 
         emitResult = true;
     });
 
@@ -254,7 +273,7 @@ Prototype.go = function(url, inReplace, outClear, inRefresh) {
     var clear, refresh, single, routeGo, routeLast, routePrev,
         STACK = this.stack, OPT = this.option, routeType, historyAction;
 
-    url = transUrl(url || '');
+    url = this.transUrl(url);
 
     if (url && (routeGo = this.fire(url))) {
         routePrev = this.prev || {};

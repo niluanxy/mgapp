@@ -1,24 +1,46 @@
-import {isTrueString as isTrue} from "LIB_MINJS/check.js";
+import {isTrueString as isTrue, isFunction} from "LIB_MINJS/check.js";
+import {extend} from "LIB_MINJS/utils.js";
+import $config from "CORE_MAGIC/config.js";
 
-export function fixClass($el, opt) {
-    var retClass = [], prefix = opt.prefix;
+var $cui = $config.ui, keyWrap = "wrapClass",
+    keyItem = "itemClass", keyClass = "class";
 
-    if (isTrue(prefix) && $el.regClass(prefix+"-")) {
-        // 如果有检测到，则样式已经定义，无需自动添加
-    } else if (isTrue(prefix) && isTrue(opt.style)) {
-        retClass.push(prefix+"-"+opt.style);
+export function uiInit($el, opt, bindEve, bindCall) {
+    var aWrap = opt[keyWrap], style = opt.style, eve,
+        aClass = opt[keyClass], rTest = aClass+"(?!-)";
+
+    if (style && !$el.regClass(aClass+"-") && !aWrap.match(rTest)) {
+        aWrap += aClass;
+        aWrap  = aWrap.replace(new RegExp(rTest, 'g'), aClass+"-"+style); 
     }
 
-    if (isTrue(opt.wrapClass)) {
-        retClass.push(opt.wrapClass);
+    $el.addClass(aWrap)
+        .children().addClass(opt[keyItem], true);
+
+    if (isTrue(bindEve) && isFunction(bindCall)) {
+        eve = opt[keyItem].match(aClass+"-item")[0];
+        eve = eve ? "."+eve : null;
+
+        $el.on(bindEve, eve, bindCall);
     }
-
-    return retClass.join(" ");
-}
-
-export function fixStyle($el, opt) {
-    $el.addClass(fixClass($el, opt))
-        .children().addClass(opt.itemClass, true);
 
     return $el;
+}
+
+export function uiExtend() {
+    var args = extend([], arguments), copy,
+        oClass, aClass, regPre;
+
+    args = [{}, $cui].concat(args);
+    copy = extend.apply(null, args);
+
+    oClass = copy.class || "";
+    aClass = $cui.prefix + oClass;
+    regPre = new RegExp(oClass, "g");
+
+    copy[keyWrap] = copy[keyWrap].replace(regPre, aClass);
+    copy[keyItem] = copy[keyItem].replace(regPre, aClass);
+    copy[keyClass]= aClass;
+
+    return copy;
 }
