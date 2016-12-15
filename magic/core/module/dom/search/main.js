@@ -57,7 +57,7 @@ export function eq(el) {
         var cache = [];
 
         this.each(function(i, ele) {
-            if (ele.matches(test)) {
+            if (ele.matches(el)) {
                 cache.push(ele);
             }
         });
@@ -69,11 +69,10 @@ export function eq(el) {
 }
 
 export function below(parent) {
-    var par = RootMagic(parent),
-        check = this.parent();
+    var check = this.parent();
 
     do {
-        if (check.eq(par).length) {
+        if (check.eq(parent).length) {
             return true;
         }
 
