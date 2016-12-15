@@ -1,5 +1,5 @@
-import {element, trim} from "LIB_MINJS/utils.js";
-import {isNumber, isString, isElement} from "LIB_MINJS/check.js";
+import {element, trim, each} from "LIB_MINJS/utils.js";
+import {isNumber, isString, isTrueString, isElement} from "LIB_MINJS/check.js";
 import {hasClass} from "CORE_MODULE/style/class/main.js";
 import RootMagic from "CORE_MAGIC/main.js";
 
@@ -27,43 +27,45 @@ export function parent() {
 }
 
 export function children(search) {
-    var el = element(this);
+    var el = element(this), child = el ? el.children : [];
 
-    if (search) {
-        return RootMagic(search, el);
+    if (isString(search)) {
+        return eq.call(RootMagic(child), search);
     } else {
-        return RootMagic(el && el.children);
+        return RootMagic(child);
     }
 }
 
-export function eq(el, checkAll) {
+/**
+ * 从当前对象中返回新的符合要求的 RootMagic 对象
+ */
+export function eq(el) {
     if (isNumber(el)) {
         return RootMagic(this[el]);
-    } if (isString(el)) {
-        var test = trim(el.replace(".", ' ')), arrs = [];
-
-        for(var i=0; i<this.length; i++) {
-            var item = this[i];
-
-            if (hasClass.call(item, test)) {
-                arrs.push(item);
-            }
-        }
-
-        return RootMagic(arrs);
     } else if (isElement(el)) {
-        return this[0] === el;
-    } else if (el instanceof RootMagic) {
-        if (checkAll === true) {
-            for(var i=0; i<this.length; i++) {
-                if (this[i] !== el[i]) return false;
-            }
+        var find = null;
 
-            return true;
-        } else {
-            return this[0] === el[0];
-        }
+        each(this, function(i, ele) {
+            if (ele == el) {
+                find = ele;
+                return false;
+            }
+        });
+
+        return RootMagic(find);
+    } else if (isTrueString(el)) {
+        var cache = [];
+
+        this.each(function(i, ele) {
+            if (ele.matches(test)) {
+                cache.push(ele);
+            }
+        });
+        
+        return RootMagic(cache);
     }
+
+    return RootMagic();
 }
 
 export function below(parent) {
@@ -71,7 +73,7 @@ export function below(parent) {
         check = this.parent();
 
     do {
-        if (check.eq(par)) {
+        if (check.eq(par).length) {
             return true;
         }
 

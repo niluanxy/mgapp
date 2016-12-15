@@ -9,7 +9,7 @@ var CFG = $config.place = {
     outer    : false,
     float    : false,
     zindex   : 100,
-}, Prototype = {}, OFFSET = {
+}, OFFSET = {
     'top'    : 0,
     'left'   : 0,
     'center' : 0.5,
