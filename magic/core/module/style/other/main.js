@@ -1,6 +1,6 @@
 import {allProxy} from "CORE_FUNCTION/proxy.js";
 import {element, extend, trim} from "LIB_MINJS/utils.js";
-import {isTrueString} from "LIB_MINJS/check.js";
+import {isTrueString, isString} from "LIB_MINJS/check.js";
 import {dataStyle} from "CORE_MAGIC/tools.js";
 import {append, remove} from "CORE_MODULE/dom/editer/main.js";
 import RootMagic from "CORE_MAGIC/main.js";
@@ -94,16 +94,14 @@ export function offset(relative) {
             bottom: height, width: width, height: height
         }
     } else {
-        if (typeof el == "string") {
-            rect  = {top: 0, left: 0, right: 0, bottom: 0};
-            clone = el;
-        } else if (el.getBoundingClientRect) {
-            clone = el.cloneNode(true);
-            rect  = el.getBoundingClientRect();
-            docElem = el.ownerDocument.documentElement;
-        }
+        rect  = {top: 0, left: 0, right: 0, bottom: 0};
+        clone = isString(el) ? el : el.cloneNode(true);
 
         if (!rect.width && !rect.height && relative) {
+            // div 元素浮动后，行为类似 inline-block 元素
+            if (clone.tagName == "DIV") {
+                css.call(clone, "display", "inline-block");
+            }
             css.call(clone, "height", "0px");
 
             render = element(RootMagic(render));
