@@ -1,5 +1,6 @@
 import Emitter from "./emitter.js";
 import {keyTest, keyFix} from "./emitter.js";
+import fastCall from "./fastcall.js";
 import {isFunction, isString, isObject} from "./check.js";
 import {extend, value} from "./utils.js";
 
@@ -32,6 +33,7 @@ var Router = function(maps, option) {
 
     this.route = this.ctrl.tables;          // 路由表信息
     this.stack = [];                        // 路由栈信息
+    this.backBlock = 1;                     // 记录需要back修复系统路由栈的次数
 
     this.last  = null;                      // 当前路由信息
     this.prev  = null;                      // 上次路由信息
@@ -79,7 +81,7 @@ Prototype.transMatch = function(url) {
 }
 
 Prototype.transUrl = function(url, fix) {
-    return (url || '').replace(/^[\#|\/]+/g, fix || '/');
+    return (url || '').replace(/^[\#|\/]*/g, fix || '/');
 }
 
 Prototype.transParams = function(url, match) {
@@ -207,7 +209,7 @@ Prototype.off = function(url) {
     return this;
 }
 
-Prototype.emit = function(url, routeType, routeGo, routeLast, historyAction) {
+Prototype.emit = function(url, routeType, routeGo, routeLast, stateType) {
     var args = [url, routeType, routeGo, routeLast],
         OPT = this.option, CTRL = this.ctrl, STACK = this.stack,
         CALLS = "onBefore onEmit".split(" "), emitResult = false;
@@ -234,11 +236,13 @@ Prototype.emit = function(url, routeType, routeGo, routeLast, historyAction) {
     if (emitResult === true) {
         if (routeLast.outClear) STACK.pop();
 
+        this.backBlock = -1;
         if (routeType === "back") {
             for(var i=STACK.length-1; i>=0; i--) {
                 var del = STACK[i];
 
                 STACK.pop();
+                this.backBlock++;
                 if (del.url === routeGo.url) break;
             }
         }
@@ -251,15 +255,7 @@ Prototype.emit = function(url, routeType, routeGo, routeLast, historyAction) {
         CTRL.emit.apply(CTRL, args);
 
         // 修改浏览器内置的 history 数据
-        historyAction += "State";
-        if (self.history && self.history[historyAction]) {
-            var state = {
-                url: url,
-                title: routeGo.title,
-            };
-
-            self.history[historyAction](state, state.title, "#"+state.url);
-        }
+        this.historyUpdate(routeGo.url, routeGo.title, stateType);
     }
 
     args.shift(); args.unshift("routeAlways");
@@ -307,41 +303,51 @@ Prototype.go = function(url, inReplace, outClear, inRefresh) {
     return this;
 }
 
-Prototype.back = function(url, soft) {
-    var STACK = this.stack, routeLast = this.last || {}, routeGo,
-        trySoft = value(soft, !this.option.native);
+Prototype.back = function(url, native) {
+    var STACK = this.stack, routeLast = this.last || {}, routeGo;
 
-    // 如果开启 native 模式，尝试调用原生方法
-    if (!trySoft && self.history && isFunction(self.history.back)) {
-        self.history.back();
-    } else {
-        routeGo = url ? this.fire(url) : STACK[STACK.length-2];
+    routeGo = url ? this.fire(url) : STACK[STACK.length-2];
 
-        if (routeGo && routeGo.url && routeGo.url !== routeLast.url) {
-            this.emit(routeGo.url, "back", routeGo, routeLast, "replace");
-        }
+    if (routeGo && routeGo.url && routeGo.url !== routeLast.url) {
+        // 如果为 native 触发，则需要添加一条记录以修复返回栈
+        if (native && self.history) self.history.pushState(null, null, null);
+        this.emit(routeGo.url, "back", routeGo, routeLast, "replace");
     }
 
     return this;
 }
 
+Prototype.historyUpdate = function(url, title, stateType) {
+    var that = this, history = self.history;
+
+    if (history && history.pushState && history.back) {
+        if (that.backBlock > 0) {
+            (function(clearCount) {
+                var handle = setInterval(function() {
+                    history.back();
+                    if (--clearCount <= 0) {
+                        clearInterval(handle);
+                    }
+                }, 5);
+            })(that.backBlock);
+        } else if (stateType == "push") {
+            history.pushState(null, title, "#"+url);
+        }
+    }
+}
+
 // 监听浏览器前进后台方法
 Prototype.bindBrower = function() {
-    var that = this, OPT = that.options, STACK = that.stack;
+    var that = this;
 
+    // 所有事件全部认为 back 动作，简化逻辑
     self.addEventListener("popstate", function(event) {
-        var action, urlGo, state = event.state,
-            urlPrev = that.prev ? that.prev.url : null,
-            urlLast = that.last ? that.last.url : null;
+        var block = --that.backBlock, last = that.last;
 
-        if (state && (urlGo = state.url) && urlGo !== urlLast) {
-            action = urlGo === urlPrev ? "back" : "go";
-
-            if (action === "back") {
-                that.back(urlGo, true);
-            } else {
-                that.go(urlGo);
-            }
+        if (block ==  0) {
+            history.replaceState(null, last.title, "#"+last.url);
+        } else if (block < 0) {
+            that.back(null, true);
         }
     });
 
