@@ -8,6 +8,8 @@ var gulp                = require('gulp-param')(require('gulp'), process.argv),
     rename              = require("gulp-rename"),
     autoprefixer        = require("gulp-autoprefixer"),
     shell               = require('gulp-shell'),
+    gulpif              = require("gulp-if"),
+    minifycss           = require("gulp-minify-css"),
     px2rem              = require("gulp-px2rem"),
     rollup              = require("rollup-stream"),
     rollupReplace       = require('rollup-plugin-replace'),
@@ -70,6 +72,7 @@ function log(str, style) {
     console.log("["+_time+"] "+str[style]);
 }
 
+var BUILD_RELEASE = false;
 
 /**===============================================
  * mixin 文件合并脚本函数
@@ -123,6 +126,7 @@ function task_concat_mixin() {
         .pipe(sass())
         .pipe(autoprefixer())
         .pipe(px2rem(px2remConfig))
+        .pipe(gulpif(BUILD_RELEASE, minifycss()))
         .pipe(gulp.dest(DIST_MIXIN))
         .pipe(gulp.dest(DIST_MIXIN))
         .on("finish", function() {
@@ -151,7 +155,7 @@ function task_build_minjs() {
             exclude: 'node_modules/**',
             ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
         }),
-        (process.env.NODE_ENV === 'production' && rollupUglify()),
+        (BUILD_RELEASE && rollupUglify()),
     ];
 
     del(DIR_DIST+"emitter.js").then(function() {
@@ -212,7 +216,7 @@ function task_build_magic() {
             exclude: 'node_modules/**',
             ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
         }),
-        (process.env.NODE_ENV === 'production' && rollupUglify()),
+        (BUILD_RELEASE && rollupUglify()),
     ];
 
     clear_magic().then(function() {
@@ -268,7 +272,9 @@ function clear_magic() {
     ]);
 }
 
-gulp.task("build", function() {
+gulp.task("build", function(r) {
+    BUILD_RELEASE = r ? true : false;
+
     task_concat_mixin()
     .then(function() {
         return task_build_minjs();
