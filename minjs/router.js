@@ -318,7 +318,7 @@ Prototype.back = function(url, native) {
 }
 
 Prototype.historyUpdate = function(url, title, stateType) {
-    var that = this, history = self.history;
+    var that = this, history = self.history, action;
 
     if (history && history.pushState && history.back) {
         if (that.backBlock > 0) {
@@ -330,8 +330,9 @@ Prototype.historyUpdate = function(url, title, stateType) {
                     }
                 }, 5);
             })(that.backBlock);
-        } else if (stateType == "push") {
-            history.pushState(null, title, "#"+url);
+        } else {
+            action = stateType+"State";
+            history[action](null, title, "#"+url);
         }
     }
 }
