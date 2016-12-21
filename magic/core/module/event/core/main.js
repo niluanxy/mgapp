@@ -20,7 +20,7 @@ function checkIn(event, el, select) {
     var target = event.originalTarget || event.target;
 
     if (target && el) {
-        if (select && (!below.call(target, el) || !eq.call([target], select))) {
+        if (select && (!below.call(target, el) || !eq.call([target], select).length)) {
             return false;
         } else {
             return true;
