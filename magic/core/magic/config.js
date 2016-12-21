@@ -3,5 +3,6 @@ export default {
         style : "primary",
         prefix: "",
         active: "active",
+        activeItem: "",
     },
 }

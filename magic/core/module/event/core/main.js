@@ -2,7 +2,7 @@ import Emitter from "LIB_MINJS/emitter.js";
 import {isFunction, isTrueString, isObject} from "LIB_MINJS/check.js";
 import {allProxy} from "CORE_FUNCTION/proxy.js";
 import {element, extend, slice, each} from "LIB_MINJS/utils.js";
-import {parent} from "CORE_MODULE/dom/search/main.js";
+import {parent, below, eq} from "CORE_MODULE/dom/search/main.js";
 import {dataEvent} from "CORE_MAGIC/tools.js";
 import RootMagic from "CORE_MAGIC/main.js";
 
@@ -16,26 +16,18 @@ function getPrefix(eve) {
     }
 }
 
-function checkIn(event, select) {
-    if (event) {
-        if (isTrueString(select)) {
-            var target = event.target, ret,
-                $finds = parent.call(target);
+function checkIn(event, el, select) {
+    var target = event.originalTarget || event.target;
 
-            $finds.find(select).each(function(key, ele) {
-                if (ele === target) {
-                    ret = true;
-                    return false;
-                }
-            });
-
-            return !!ret;
+    if (target && el) {
+        if (select && (!below.call(target, el) || !eq.call([target], select))) {
+            return false;
         } else {
             return true;
         }
-    } else {
-        return false;
     }
+
+    return false;
 }
 
 function fixEvent(event, scope) {
@@ -102,16 +94,16 @@ function addProxy(bind, eve, select, callback, extScope) {
                 });
             }
 
-            (function(Selecter) {
+            (function(Selecter, El) {
                 eveCtrl[bind](eveName, function(event) {
-                    if (checkIn(event, Selecter)) {
+                    if (checkIn(event, El, Selecter)) {
                         var args = extend([], arguments);
 
                         args[0] = fixEvent(event, this);
                         callback.apply(scope, args);
                     }
                 });
-            })(select);
+            })(select, el);
         });
     }
 
@@ -142,14 +134,14 @@ export function on(eve, select, callback, extScope, setAll) {
 }
 
 export function once(eve, select, callback, extScope, setAll) {
-
     return allProxy.apply(this, addFixArgs(addProxy, "once", arguments));
 }
 
 function propaEmit(/* el, eveName, args... */) {
-    var args = $.extend([], arguments),
-        el = element(args[0]), eveName = args[1], evePre;
+    var args = $.extend([], arguments), el,
+        src = element(args[0]), eveName = args[1], evePre;
 
+    el = src;
     args = slice(args, 1);
     evePre = getPrefix(eveName);
 
@@ -163,6 +155,8 @@ function propaEmit(/* el, eveName, args... */) {
 
         if (evePre === eveName) {
             creEvent.originalArgs = runArgs;
+            creEvent.originalTarget = src;
+
             el.dispatchEvent(creEvent);
         } else {
             eveCtrl = dataEvent(el, evePre);

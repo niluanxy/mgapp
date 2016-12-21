@@ -26,6 +26,22 @@ export function parent() {
     return RootMagic(el && el.parentNode);
 }
 
+export function parents(search) {
+    var find = [], el = element(this);
+
+    while(el) {
+        el = el.parentNode;
+
+        if (!el) {
+            break;
+        } else if (!search || matchTest(el, search)) {
+            find.push(el);
+        }
+    };
+
+    return RootMagic(find);
+}
+
 export function children(search) {
     var el = element(this), child = el ? el.children : [];
 
@@ -34,6 +50,10 @@ export function children(search) {
     } else {
         return RootMagic(child);
     }
+}
+
+function matchTest(el, test) {
+    return isString(test) && el.matches && el.matches(test);
 }
 
 /**
@@ -53,11 +73,11 @@ export function eq(el) {
         });
 
         return RootMagic(find);
-    } else if (isTrueString(el)) {
+    } else {
         var cache = [];
 
-        this.each(function(i, ele) {
-            if (ele.matches(el)) {
+        each(this, function(i, ele) {
+            if (matchTest(ele, el)) {
                 cache.push(ele);
             }
         });
@@ -68,16 +88,19 @@ export function eq(el) {
     return RootMagic();
 }
 
-export function below(parent) {
-    var check = this.parent();
+export function below(find) {
+    var check = parent.call(this);
 
-    do {
-        if (check.eq(parent).length) {
-            return true;
-        }
+    if (find) {
+        do {
+            if (check.eq(find).length) {
+                return true;
+            }
 
-        check = check.parent();
-    } while(check.length > 0);
+            check = check.parent();
+        } while(check.length > 0);
+    }
+        
 
     return false;
 }

@@ -11,6 +11,9 @@ var gulp                = require('gulp-param')(require('gulp'), process.argv),
     gulpif              = require("gulp-if"),
     minifycss           = require("gulp-minify-css"),
     px2rem              = require("gulp-px2rem"),
+    browserSync         = require("browser-sync"),
+    throttle            = require('throttle-debounce/throttle'),
+    debounce            = require('throttle-debounce/debounce'),
     rollup              = require("rollup-stream"),
     rollupReplace       = require('rollup-plugin-replace'),
     rollupUglify        = require('rollup-plugin-uglify'),
@@ -43,7 +46,8 @@ var px2remConfig = {
     minPx: 3
 };
 
-var DIR_MIXIN = __dirname + "/mixin/",
+var DIR_WWW   = __dirname + "/",
+    DIR_MIXIN = __dirname + "/mixin/",
     DIST_MIXIN = DIR_MIXIN + "dist",
 
     DIR_MINJS =  __dirname + "/minjs/",
@@ -64,6 +68,10 @@ var DIR_MAGIC_ALIAS = {
     CORE_STATIC: DIR_MAGIC+"core/static",
 };
 
+var reload = throttle(20, function() {
+    browserSync.reload();
+});
+
 function log(str, style) {
     style = style || "info";
 
@@ -77,7 +85,7 @@ var BUILD_RELEASE = false;
 /**===============================================
  * mixin 文件合并脚本函数
  =================================================*/
-function task_concat_mixin() {
+function task_build_mixin() {
     var DIST_MIXIN = DIR_DIST,
         defer_core = Q.defer(),
         defer_uikit = Q.defer(),
@@ -137,6 +145,7 @@ function task_concat_mixin() {
 
     return defer_all.promise;
 }
+gulp.task("dev-build-mixin", task_build_mixin);
 
 function clear_mixin() {
     return del(DIST_MIXIN);
@@ -199,6 +208,7 @@ function task_build_minjs() {
 
     return defer_all.promise;
 }
+gulp.task("dev-build-minjs", task_build_minjs);
 
 /**===============================================
  * magic 文件合并脚本函数
@@ -264,6 +274,7 @@ function task_build_magic() {
 
     return defer_all.promise;
 }
+gulp.task("dev-build-magic", task_build_magic);
 
 function clear_magic() {
     return Q.all([
@@ -275,13 +286,27 @@ function clear_magic() {
 gulp.task("build", function(r) {
     BUILD_RELEASE = r ? true : false;
 
-    task_concat_mixin()
+    task_build_mixin()
     .then(function() {
         return task_build_minjs();
     }).then(function() {
         return task_build_magic();
     });
 })
+
+gulp.task("serve", function() {
+    browserSync.init({
+        server: {
+            baseDir: DIR_WWW
+        }
+    });
+
+    gulp.watch([DIR_MIXIN+"**/*"],    ["dev-build-mixin"]);
+    gulp.watch([DIR_MINJS+"**/*.js"], ["dev-build-minjs"]);
+    gulp.watch([DIR_MAGIC+"**/*.js"], ["dev-build-magic"]);
+
+    gulp.watch([DIR_DIST+"**/*"]).on("change", reload);
+});
 
 gulp.task("clean", function() {
     clear_mixin();
