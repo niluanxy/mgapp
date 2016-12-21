@@ -62,6 +62,7 @@ function fixEvent(event, scope) {
     }
 
     fix.originalEvent = event;
+    if (fix.originalTarget) fix.target = fix.originalTarget;
 
     return fix;
 }

@@ -46,10 +46,6 @@ Gesture.on("end.tap", function(touch, event, scope) {
     touch = touch[0] || {};
 
     if (scope.endTime - TapCore.lastTime < CFG.maxTapTime && notMove(touch)) {
-        console.log("should run once tap");
-        console.log(event);
         RootMagic(event.target).emit("tap");
-    } else {
-        console.log("don't run once tap");
     }
 });
