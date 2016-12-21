@@ -13,6 +13,7 @@ var gesture, emit = Emitter(), coreBind, touchFilter,
                "pointerdown pointermove pointerup ",
     bindTouch = "touchstart touchmove touchend",
     bindMouse = "mousedown mousemove mouseup",
+    touchFind = "changedTouches touches".split(" "),
     touchKeys = "pageX pageY clientX clientY screenX screenY".split(" ");
 
 var touchFilter = function(callback) {
@@ -53,20 +54,25 @@ gesture = {
             // endTouch: [],
 
             getTouch: function(e) {
-                var result = [], cache, len = touchKeys.length;
+                var result = [], cache,
+                    fidLen = touchFind.length,
+                    keyLen = touchKeys.length;
 
-                cache = e && e.touches ? e.touches : [e];
+                each(touchFind, function(i, key) {
+                    if (e[key] && e[key].length) {
+                        cache = e[key]; return false;
+                    }
+                });
+                cache = cache || [e];
 
                 each(cache, function(i, copy) {
                     var touch = {}, key;
 
-                    for(var i=0; i<len; i++) {
-                        key = touchKeys[i];
-
+                    each(touchKeys, function(i, key) {
                         if (copy[key] !== undefined) {
                             touch[key] = copy[key];
                         }
-                    }
+                    });
 
                     result.push(touch);
                 });
@@ -127,12 +133,10 @@ gesture = {
             bindArrs = (bindEves+bindMouse).split(" ");
         }
 
-        for(var i=0; i<bindArrs.length; i++) {
-            var event = bindArrs[i];
-
+        each(bindArrs, function(i, event) {
             DOC[unbind](event, coreBind);
             DOC[bind](event, coreBind, true);
-        }
+        });
     },
 
     on: function(eve, call) {

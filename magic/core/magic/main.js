@@ -40,9 +40,9 @@ Magic = function(select, context) {
     } else if (select instanceof Magic) {
         return select;
     } else if (select && select.length) {
-        var pos = 0, element;
+        var pos = 0, element, len = select.length;
 
-        for(var i=0; i<select.length; i++) {
+        for(var i=0; i<len; i++) {
             element = select[i];
 
             if (element instanceof Element || element === document) {
