@@ -9,7 +9,7 @@ var CFG = $config.tap = {
     activeItem : '.list-item .button [class^="button-"]',
     activeShow : 150,
     activeDelay: 200,
-    activeClear: true,
+    activeClear: true,              // 移动时，是否清除激活效果
 
     pixMove :  5,
     badMove : 30,
@@ -44,7 +44,7 @@ var CFG = $config.tap = {
         this.activeItems.addClass(CFG.active, true);
         this.activeTime = getTime();
     }
-}, delay = setTimeout, delayClear = clearTimeout, tapInit;
+}, delay = setTimeout, delayClear = clearTimeout;
 
 function findActive(target) {
     var finds = RootMagic(), test = CFG.activeItem.split(" "), $test;
@@ -103,8 +103,6 @@ function notMove(touch, mode) {
         if (space < CFG.maxTapTime && notMove(touch)) {
             RootMagic(event.target).emit("tap");
         }
-
-        console.log("has run once =====")
 
         // 如果未添加 active , 不缩减显示时间
         if (actTime <= 0) {
