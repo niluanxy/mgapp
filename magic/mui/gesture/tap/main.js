@@ -6,7 +6,7 @@ import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.tap = {
     active: $config.ui.active,
-    activeItem : '.list-item .button [class^="button-"]',
+    activeItem : '.touch [class|="button"]',
     activeShow : 150,
     activeDelay: 200,
     activeClear: true,              // 移动时，是否清除激活效果
