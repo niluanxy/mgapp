@@ -6,14 +6,15 @@ import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.gesture = {
     delayCall: 12,
+    preventMove: true,
 };
 
 var gesture, emit = Emitter(), coreBind, touchFilter,
     bindEves = "MSPointerDown MSPointerMove MSPointerUp "+
                "pointerdown pointermove pointerup ",
-    bindTouch = "touchstart touchmove touchend",
+    bindTouch = "touchstart touchmove touchend touchcancel",
     bindMouse = "mousedown mousemove mouseup",
-    touchFind = "changedTouches touches".split(" "),
+    touchFind = "changedTouches touches".split(" "), moveListener,
     touchKeys = "pageX pageY clientX clientY screenX screenY".split(" ");
 
 var touchFilter = function(callback) {
@@ -37,8 +38,14 @@ var touchFilter = function(callback) {
     }
 };
 
+moveListener = touchFilter(function(e) {
+    var touch = this.getTouch(e);
+
+    emit.emit("move", touch, e, this);
+});
+
 gesture = {
-    init: function() {
+    coreInit: function() {
         var DOC = document, bindArrs,
         bind = "addEventListener", unbind = "removeEventListener",
         key = "start", keyTime = key+"Time", keyX = key+"X", keyY = key+"Y";
@@ -88,11 +95,13 @@ gesture = {
                 emit.emit("start", touch, e, this);
             }),
 
-            _move: touchFilter(function(e) {
-                var touch = this.getTouch(e);
+            _move: function(e) {
+                if (CFG.preventMove) {
+                    e.preventDefault();
+                }
 
-                emit.emit("move", touch, e, this);
-            }),
+                moveListener.call(this, e);
+            },
 
             _end: touchFilter(function(e) {
                 var time = getTime(), touch = this.getTouch(e);
@@ -120,6 +129,7 @@ gesture = {
                     case 'pointerup':
                     case 'MSPointerUp':
                     case 'mouseup':
+                    case 'touchcancel':
                         this._end(e);
                         break;
                 }
@@ -141,12 +151,18 @@ gesture = {
 
     on: function(eve, call) {
         emit.on(eve, call, coreBind);
+
+        return this;
     },
 
-    off: emit.off,
+    off: function() {
+        emit.off.apply(emit, arguments);
+
+        return this;
+    },
 }
 
-RootMagic(gesture.init);
+RootMagic(gesture.coreInit);
 RootMagic.extend({gesture: gesture});
 
 export default gesture;

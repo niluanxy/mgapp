@@ -78,6 +78,22 @@ Prototype = {
         return this;
     },
 
+    push: function(element) {
+        var find = new Magic(element),
+            start = this.length,
+            end = find.length;
+
+        for(var i=0; i<end; i++) {
+            var fix = start+i;
+
+            this[fix] = find[i];
+        }
+        
+        this.length = start+end;
+
+        return this;
+    },
+
     extend: function() {
         var args = _SLICE(arguments);
 

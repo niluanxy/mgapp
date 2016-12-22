@@ -53,7 +53,7 @@ export function children(search) {
 }
 
 function matchTest(el, test) {
-    return isString(test) && el.matches && el.matches(test);
+    return isTrueString(test) && el.matches && el.matches(test);
 }
 
 /**
