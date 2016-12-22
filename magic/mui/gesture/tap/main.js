@@ -23,14 +23,13 @@ var CFG = $config.tap = {
 }, TapCore = {
     startX: 0,
     startY: 0,
-
-    lastTime : 0,
-    lastInput: null,
+    startTime: 0,
 
     activeTime : 0,
     activeItems: RootMagic(),
     activeHandle: null,
 
+    lastInput: null,
     preventCount: 0,
 
     clearActive: function(saveTime) {
@@ -70,10 +69,10 @@ function notMove(touch, mode) {
     Gesture.off("start.tap").on("start.tap", function(touches, event, scope) {
         var touch = touches[0] || {}, addDelay = CFG.activeDelay || 0;
 
-        if (scope.startTime - TapCore.lastTime > CFG.doubleTime) {
+        if (scope.startTime - TapCore.startTime> CFG.doubleTime) {
             TapCore.startX = touch.pageX;
             TapCore.startY = touch.pageY;
-            TapCore.lastTime = scope.startTime;
+            TapCore.startTime= scope.startTime;
 
             TapCore.clearActive();
             TapCore.activeItems = findActive(event.target);
@@ -97,7 +96,7 @@ function notMove(touch, mode) {
 
     Gesture.off("end.tap").on("end.tap", function(touches, event, scope) {
         var touch = touches[0] || {},
-            space = scope.endTime - TapCore.lastTime,
+            space = scope.endTime - TapCore.startTime
             actTime = TapCore.activeTime, clrDelay = CFG.activeShow;
 
         if (space < CFG.maxTapTime && notMove(touch)) {
