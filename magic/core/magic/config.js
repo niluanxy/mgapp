@@ -2,6 +2,7 @@ export default {
     ui: {
         style : "primary",
         prefix: "",
-        active: "active",
+        active : "active",
+        actived: "actived",
     },
 }

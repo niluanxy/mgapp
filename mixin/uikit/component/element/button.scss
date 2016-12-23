@@ -137,9 +137,9 @@ $button-styles: (
             }
         }
 
-        &.#{$class-disable},
-        &[#{$class-disable}] {
-            @include disabled($button-disable-opacity);
+        &.#{$class-disabled},
+        &[#{$class-disabled}] {
+            @include disabled($button-disabled-opacity);
         }
 
         @content;   // 样式自定义扩展代码位置

@@ -102,7 +102,7 @@ $bar-styles: (
             font-size: rem($bar-button-icon-clear-size);
         }
 
-        &.#{$class-active} {
+        &.#{$class-actived} {
             opacity: $active-opacity;
         }
     }

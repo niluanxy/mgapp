@@ -49,7 +49,7 @@ $tabs-styles: (
             color: $text;
             background-color: $bg-color;
 
-            &.#{$class-active} {
+            &.#{$class-actived} {
                 color: $active-text;
 
                 &:before {
@@ -59,7 +59,7 @@ $tabs-styles: (
         }
 
         &.#{$prefix+$class}-striped, &.#{$prefix+$class}-striped-top {
-            .#{$prefix+$class}-item.#{$class-active} {
+            .#{$prefix+$class}-item.#{$class-actived} {
                 color: $text;
 
                 &:before {
@@ -105,8 +105,8 @@ $tabs-styles: (
     
     @include button-like();
 
-    &.#{$class-disable},
-    &[#{$class-disable}] {
+    &.#{$class-disabled},
+    &[#{$class-disabled}] {
         opacity: .4;
         cursor: default;
         @include pointer-events(none);
@@ -129,7 +129,7 @@ $tabs-styles: (
 
     @at-root { .#{$prefix+$class} {
         &-icon {
-            .tab-item {
+            .tabs-item {
                 padding-top: rem($tabs-padding);
                 font-size: rem($tabs-text-font-size-side-icon);
                 line-height: rem($tabs-text-font-size);
@@ -165,7 +165,7 @@ $tabs-styles: (
         }
 
         &-striped, &-striped-top {
-            .#{$prefix+$class}-item.#{$class-active}:before {
+            .#{$prefix+$class}-item.#{$class-actived}:before {
                 position: absolute;
                 left: 50%;
                 bottom: 0;
@@ -178,13 +178,13 @@ $tabs-styles: (
         }
 
         &-striped {
-            .#{$prefix+$class}-item.#{$class-active}:before {
+            .#{$prefix+$class}-item.#{$class-actived}:before {
                 bottom: 0;
             }
         }
 
         &-striped-top {
-            .#{$prefix+$class}-item.#{$class-active}:before {
+            .#{$prefix+$class}-item.#{$class-actived}:before {
                 top: 0;
             }
         }

@@ -40,7 +40,7 @@ Prototype.init = function() {
 Prototype.select = function(index) {
     var $el = this.$el, opt = this.option,
         $childs = $el.children(),
-        actClass = opt.active, $item;
+        actClass = opt.actived, $item;
 
     $childs.eq("."+actClass).removeClass(actClass);
 
