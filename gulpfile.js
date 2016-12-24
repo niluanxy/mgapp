@@ -1,24 +1,25 @@
-var gulp                = require('gulp-param')(require('gulp'), process.argv),
-    shell               = require('gulp-shell'),
+var gulp                = require("gulp-param")(require("gulp"), process.argv),
+    shell               = require("gulp-shell"),
     Q                   = require("q"),
     del                 = require("del"),
     moment              = require("moment"),
-    colors              = require('colors'),
+    colors              = require("colors"),
     concat              = require("gulp-concat"),
+    replace             = require("gulp-replace"),
     rename              = require("gulp-rename"),
     autoprefixer        = require("gulp-autoprefixer"),
-    shell               = require('gulp-shell'),
+    shell               = require("gulp-shell"),
     gulpif              = require("gulp-if"),
-    minifycss           = require("gulp-minify-css"),
+    minifycss           = require("gulp-clean-css"),
     px2rem              = require("gulp-px2rem"),
     browserSync         = require("browser-sync"),
-    throttle            = require('throttle-debounce/throttle'),
-    debounce            = require('throttle-debounce/debounce'),
+    throttle            = require("throttle-debounce/throttle"),
+    debounce            = require("throttle-debounce/debounce"),
     rollup              = require("rollup-stream"),
-    rollupReplace       = require('rollup-plugin-replace'),
-    rollupUglify        = require('rollup-plugin-uglify'),
+    rollupReplace       = require("rollup-plugin-replace"),
     rollupAlias         = require("rollup-plugin-alias"),
-    source              = require('vinyl-source-stream'),
+    rollupUglify        = require("rollup-plugin-uglify"),
+    source              = require("vinyl-source-stream"),
     webpack             = require("webpack-stream"),
     sass                = require("gulp-sass");
 
@@ -136,7 +137,6 @@ function task_build_mixin() {
         .pipe(px2rem(px2remConfig))
         .pipe(gulpif(BUILD_RELEASE, minifycss()))
         .pipe(gulp.dest(DIST_MIXIN))
-        .pipe(gulp.dest(DIST_MIXIN))
         .on("finish", function() {
             log("mixin build to css finish");
             defer_all.resolve();
@@ -218,7 +218,13 @@ function task_build_magic() {
         defer_mui = Q.defer(), plugins,
 
     DIR_CORE = DIR_MAGIC+"core/",
-    DIR_MUI  = DIR_MAGIC+"mui/";
+    DIR_MUI  = DIR_MAGIC+"mui/",
+
+    oldBuild = BUILD_RELEASE ? /(\w)(\.Magic=)(\w\(\))/
+                             : /(\(global.Magic = factory\(\)\)\;)/,
+    newBuild = BUILD_RELEASE ? '$1$2$3;if("undefined"==typeof define&&!$1.$)$1.$=$3;'
+                             : '$1\n\tif(typeof define === "undefined" && !global.$) '+
+                               'global.$ = factory();';
 
     plugins = [
         rollupAlias(DIR_MAGIC_ALIAS),
@@ -226,17 +232,22 @@ function task_build_magic() {
             exclude: 'node_modules/**',
             ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
         }),
-        (BUILD_RELEASE && rollupUglify()),
+        (BUILD_RELEASE && rollupUglify({
+            mangle: { 
+                except: ['Magic'] 
+            }
+        })),
     ];
 
     clear_magic().then(function() {
         rollup({
             entry: DIR_CORE+"build.js",
             format: 'umd',
-            moduleName: "$",
+            moduleName: "Magic",
             plugins: plugins,
         })
         .pipe(source('magic.js'))
+        .pipe(replace(oldBuild, newBuild))
         .pipe(gulp.dest(DIR_DIST))
         .on("finish", function() {
             log("--- magic core build finish");
@@ -251,10 +262,11 @@ function task_build_magic() {
             rollup({
                 entry: DIR_DIST+"/_magic_concat.js",
                 format: 'umd',
-                moduleName: "$",
+                moduleName: "Magic",
                 plugins: plugins,
             })
             .pipe(source('magic.ui.js'))
+            .pipe(replace(oldBuild, newBuild))
             .pipe(gulp.dest(DIR_DIST))
             .on("finish", function() {
                 log("--- magic mui build finish");
