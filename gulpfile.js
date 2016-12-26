@@ -222,9 +222,9 @@ function task_build_magic() {
 
     oldBuild = BUILD_RELEASE ? /(\w)(\.Magic=)(\w\(\))/
                              : /(\(global.Magic = factory\(\)\)\;)/,
-    newBuild = BUILD_RELEASE ? '$1$2$3;if("undefined"==typeof define&&!$1.$)$1.$=$3;'
+    newBuild = BUILD_RELEASE ? '$1$2$3;if("undefined"==typeof define&&!$1.$)$1.$=$1.Magic;'
                              : '$1\n\tif(typeof define === "undefined" && !global.$) '+
-                               'global.$ = factory();';
+                               'global.$ = global.Magic;';
 
     plugins = [
         rollupAlias(DIR_MAGIC_ALIAS),

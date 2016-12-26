@@ -5,11 +5,13 @@ import Emitter from "LIB_MINJS/emitter.js";
 import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.gesture = {
-    delayCall: 12,
+    delayCall: 4,
     preventMove: true,
 };
 
-var gesture, emit = Emitter(), coreBind, touchFilter,
+var Prototype = {}, touchFilter, moveListener, GestureBindCore,
+    bind = "addEventListener", unbind = "removeEventListener",
+    key = "start", keyTime = key+"Time", keyX = key+"X", keyY = key+"Y",
     bindEves = "MSPointerDown MSPointerMove MSPointerUp "+
                "pointerdown pointermove pointerup ",
     bindTouch = "touchstart touchmove touchend touchcancel",
@@ -17,7 +19,8 @@ var gesture, emit = Emitter(), coreBind, touchFilter,
     touchFind = "changedTouches touches".split(" "), moveListener,
     touchKeys = "pageX pageY clientX clientY screenX screenY".split(" ");
 
-var touchFilter = function(callback) {
+
+touchFilter = function(callback) {
     var handle, lastType, find;
 
     return function(e) {
@@ -41,128 +44,155 @@ var touchFilter = function(callback) {
 moveListener = touchFilter(function(e) {
     var touch = this.getTouch(e);
 
-    emit.emit("move", touch, e, this);
+    this.emit("move", touch, e, this);
 });
 
-gesture = {
-    coreInit: function() {
-        var DOC = document, bindArrs,
-        bind = "addEventListener", unbind = "removeEventListener",
-        key = "start", keyTime = key+"Time", keyX = key+"X", keyY = key+"Y";
+GestureBindCore = {
+    // startTime  :  0,
+    // startTouch : [],
 
-        bind = DOC[bind] ? bind : "attachEvent";
-        unbind = DOC[unbind] ? unbind : "detachEvent"
+    // endTime  : 0,
+    // endTouch : [],
 
-        coreBind = {
-            // startTime :  0,
-            // startTouch: [],
+    getTouch: function(e) {
+        var result = [], cache,
+            fidLen = touchFind.length,
+            keyLen = touchKeys.length;
 
-            // endTime :  0,
-            // endTouch: [],
-
-            getTouch: function(e) {
-                var result = [], cache,
-                    fidLen = touchFind.length,
-                    keyLen = touchKeys.length;
-
-                each(touchFind, function(i, key) {
-                    if (e[key] && e[key].length) {
-                        cache = e[key]; return false;
-                    }
-                });
-                cache = cache || [e];
-
-                each(cache, function(i, copy) {
-                    var touch = {}, key;
-
-                    each(touchKeys, function(i, key) {
-                        if (copy[key] !== undefined) {
-                            touch[key] = copy[key];
-                        }
-                    });
-
-                    result.push(touch);
-                });
-
-                return result;
-            },
-
-            _start: touchFilter(function(e) {
-                var time = getTime(), touch = this.getTouch(e);
-
-                this.startTime = time;
-                this.startTouch = touch;
-                emit.emit("start", touch, e, this);
-            }),
-
-            _move: function(e) {
-                if (CFG.preventMove) {
-                    e.preventDefault();
-                }
-
-                moveListener.call(this, e);
-            },
-
-            _end: touchFilter(function(e) {
-                var time = getTime(), touch = this.getTouch(e);
-
-                this.endTime = time;
-                this.endTouch = touch;
-                emit.emit("end", touch, e, this);
-            }),
-
-            handleEvent: function(e) {
-                switch ( e.type ) {
-                    case 'touchstart':
-                    case 'pointerdown':
-                    case 'MSPointerDown':
-                    case 'mousedown':
-                        this._start(e);
-                        break;
-                    case 'touchmove':
-                    case 'pointermove':
-                    case 'MSPointerMove':
-                    case 'mousemove':
-                        this._move(e);
-                        break;
-                    case 'touchend':
-                    case 'pointerup':
-                    case 'MSPointerUp':
-                    case 'mouseup':
-                    case 'touchcancel':
-                        this._end(e);
-                        break;
-                }
+        each(touchFind, function(i, key) {
+            if (e[key] && e[key].length) {
+                cache = e[key]; return false;
             }
-        };
-
-        // 动态确定生成最终绑定的事件数组
-        if (self.ontouchstart !== undefined) {
-            bindArrs = (bindEves+bindTouch).split(" ");
-        } else {
-            bindArrs = (bindEves+bindMouse).split(" ");
-        }
-
-        each(bindArrs, function(i, event) {
-            DOC[unbind](event, coreBind);
-            DOC[bind](event, coreBind, true);
         });
+        cache = cache || [e];
+
+        each(cache, function(i, copy) {
+            var touch = {}, key;
+
+            each(touchKeys, function(i, key) {
+                if (copy[key] !== undefined) {
+                    touch[key] = copy[key];
+                }
+            });
+
+            result.push(touch);
+        });
+
+        return result;
     },
 
-    on: function(eve, call) {
-        emit.on(eve, call, coreBind);
+    start: touchFilter(function(e) {
+        var time = getTime(), touch = this.getTouch(e);
 
-        return this;
+        this.startTime = time;
+        this.startTouch = touch;
+        this.emit("start", touch, e, this);
+    }),
+
+    move: function(e) {
+        if (CFG.preventMove) e.preventDefault();
+
+        moveListener.call(this, e);
     },
 
-    off: function() {
-        emit.off.apply(emit, arguments);
+    end: touchFilter(function(e) {
+        var time = getTime(), touch = this.getTouch(e);
 
-        return this;
-    },
+        this.endTime = time;
+        this.endTouch = touch;
+        this.emit("end", touch, e, this);
+    }),
+
+    handleEvent: function(e) {
+        switch ( e.type ) {
+            case 'touchstart':
+            case 'pointerdown':
+            case 'MSPointerDown':
+            case 'mousedown':
+                this.start(e);
+                break;
+            case 'touchmove':
+            case 'pointermove':
+            case 'MSPointerMove':
+            case 'mousemove':
+                this.move(e);
+                break;
+            case 'touchend':
+            case 'pointerup':
+            case 'MSPointerUp':
+            case 'mouseup':
+            case 'touchcancel':
+                this.end(e);
+                break;
+        }
+    }
+};
+
+function Gesture(el, option) {
+    var self = this, emitter = Emitter();
+
+    self.el = el || document;
+    self.emit = emitter;
+    self.option = extend({}, CFG, option);
+
+    self.bind = extend({
+        emit: function() {
+            emitter.emit.apply(emitter, arguments);
+        }
+    }, GestureBindCore);
+}; Gesture.prototype = Prototype;
+
+Prototype.init = function() {
+    var bindDom = this.el, DOC = document, bindArrs, bindCore,
+        eveBind = DOC[bind] ? bind : "attachEvent",
+        eveUnbind = DOC[unbind] ? unbind : "detachEvent";
+
+    // 动态确定生成最终绑定的事件数组
+    if (self.ontouchstart !== undefined) {
+        bindArrs = (bindEves+bindTouch).split(" ");
+    } else {
+        bindArrs = (bindEves+bindMouse).split(" ");
+    }
+
+    bindCore = this.bind;
+
+    each(bindArrs, function(i, event) {
+        DOC[unbind](event, bindCore);
+        DOC[bind](event, bindCore, true);
+    });
+
+    return this;
 }
 
-RootMagic(gesture.coreInit);
-RootMagic.extend({gesture: gesture});
+Prototype.on = function(eve, call, scope) {
+    var emit = this.emit;
+    emit.on.apply(emit, arguments);
 
-export default gesture;
+    return this;
+}
+
+Prototype.off = function(eve, call) {
+    var emit = this.emit;
+    emit.off.apply(emit, arguments);
+
+    return this;
+}
+
+function Creater(el, option) {
+    return new Gesture(el, option);
+};
+
+// 创建一个默认的单例对象，用于默认实例
+var single = new Gesture(), proxy = "on off init".split(" ");
+for(var i=0; i<proxy.length; i++) {
+    var key = proxy[i];
+
+    Creater[key] = (function(eveKey) {
+        return function() {
+            single[eveKey].apply(single, arguments);
+            return Creater;
+        }
+    })(key);
+}
+
+export default Creater;

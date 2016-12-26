@@ -83,18 +83,14 @@ function notMove(touch, mode) {
             TapCore.startX = 0;
             TapCore.startY = 0;
         }
-    });
-
-    Gesture.off("move.tap").on("move.tap", function(touches, event, scope) {
+    }).off("move.tap").on("move.tap", function(touches, event, scope) {
         var actClass = CFG.active, touch = touches[0] || {};
 
         // 如果移动了，则清除元素 class 类效果
         if (CFG.activeClear && !notMove(touch)) {
             TapCore.clearActive(true);
         }
-    });
-
-    Gesture.off("end.tap").on("end.tap", function(touches, event, scope) {
+    }).off("end.tap").on("end.tap", function(touches, event, scope) {
         var touch = touches[0] || {},
             space = scope.endTime - TapCore.startTime,
             actTime = TapCore.activeTime, clrDelay = CFG.activeShow;
