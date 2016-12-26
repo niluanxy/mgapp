@@ -9,22 +9,22 @@ var CFG = $config.gesture = {
     preventMove: true,
 };
 
-var Prototype = {}, touchFilter, moveListener, GestureBindCore,
+var Prototype = {}, touchFilter, GestureBindCore,
     bind = "addEventListener", unbind = "removeEventListener",
     key = "start", keyTime = key+"Time", keyX = key+"X", keyY = key+"Y",
     bindEves = "MSPointerDown MSPointerMove MSPointerUp "+
                "pointerdown pointermove pointerup ",
     bindTouch = "touchstart touchmove touchend touchcancel",
     bindMouse = "mousedown mousemove mouseup",
-    touchFind = "changedTouches touches".split(" "), moveListener,
+    touchFind = "changedTouches touches".split(" "),
     touchKeys = "pageX pageY clientX clientY screenX screenY".split(" ");
 
-
-touchFilter = function(callback) {
+touchFilter = function(callback, delay) {
     var handle, lastType, find;
 
     return function(e) {
-        var debounce = CFG.delayCall, type = e.type, context = this;
+        var debounce = delay || CFG.delayCall,
+            type = e.type, context = this;
 
         if (!find && type != lastType) {
             clearTimeout(handle);
@@ -40,12 +40,6 @@ touchFilter = function(callback) {
         }
     }
 };
-
-moveListener = touchFilter(function(e) {
-    var touch = this.getTouch(e);
-
-    this.emit("move", touch, e, this);
-});
 
 GestureBindCore = {
     // startTime  :  0,
@@ -90,9 +84,10 @@ GestureBindCore = {
     }),
 
     move: function(e) {
-        if (CFG.preventMove) e.preventDefault();
+        if (e.cancelable && CFG.preventMove) e.preventDefault();
 
-        moveListener.call(this, e);
+        var touch = this.getTouch(e);
+        this.emit("move", touch, e, this);
     },
 
     end: touchFilter(function(e) {
@@ -142,6 +137,8 @@ function Gesture(el, option) {
     }, GestureBindCore);
 }; Gesture.prototype = Prototype;
 
+Prototype.filter = touchFilter;
+
 Prototype.init = function() {
     var bindDom = this.el, DOC = document, bindArrs, bindCore,
         eveBind = DOC[bind] ? bind : "attachEvent",
@@ -183,7 +180,7 @@ function Creater(el, option) {
 };
 
 // 创建一个默认的单例对象，用于默认实例
-var single = new Gesture(), proxy = "on off init".split(" ");
+var single = new Gesture(), proxy = "on off init filter".split(" ");
 for(var i=0; i<proxy.length; i++) {
     var key = proxy[i];
 

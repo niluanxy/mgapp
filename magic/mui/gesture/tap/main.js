@@ -1,6 +1,6 @@
 import RootMagic from "CORE_MAGIC/main.js";
 import {each} from "LIB_MINJS/utils.js";
-import {time as getTime} from "CORE_STATIC/util/main.js";
+import {time as getTime, throttle} from "CORE_STATIC/util/main.js";
 import Gesture from "MUI/gesture/core/main.js";
 import $config from "CORE_MAGIC/config.js";
 
@@ -14,6 +14,7 @@ var CFG = $config.tap = {
     pixMove :  5,
     badMove : 30,
     moveMode: "pix",
+    throttle: 16,
 
     doubleTime  : 140,
     maxTapTime  : 240,
@@ -83,14 +84,14 @@ function notMove(touch, mode) {
             TapCore.startX = 0;
             TapCore.startY = 0;
         }
-    }).off("move.tap").on("move.tap", function(touches, event, scope) {
+    }).off("move.tap").on("move.tap", throttle(function(touches, event, scope) {
         var actClass = CFG.active, touch = touches[0] || {};
 
         // 如果移动了，则清除元素 class 类效果
         if (CFG.activeClear && !notMove(touch)) {
             TapCore.clearActive(true);
         }
-    }).off("end.tap").on("end.tap", function(touches, event, scope) {
+    }, CFG.throttle)).off("end.tap").on("end.tap", function(touches, event, scope) {
         var touch = touches[0] || {},
             space = scope.endTime - TapCore.startTime,
             actTime = TapCore.activeTime, clrDelay = CFG.activeShow;

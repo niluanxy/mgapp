@@ -56,7 +56,7 @@ function fixEvent(event, scope) {
     }
 
     fix.preventDefault = function() {
-        if (event.bubbles && event.cancelable) {
+        if (event.cancelable) {
             event.preventDefault();
         }
     }
