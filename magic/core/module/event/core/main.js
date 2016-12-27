@@ -72,7 +72,7 @@ function addProxy(bind, eve, select, callback, extScope) {
 
     if (el && isTrueString(eve) && isFunction(callback)) {
         adds = eve.split(" ");
-        scope = extScope || RootMagic(el);
+        scope = extScope || el;
 
         each(adds, function(index, eveName) {
             var evePre  = getPrefix(eveName),

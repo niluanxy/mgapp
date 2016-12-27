@@ -5,19 +5,30 @@ import Emitter from "LIB_MINJS/emitter.js";
 import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.gesture = {
+    passive: true,
     delayCall: 4,
     preventMove: true,
 };
 
-var Prototype = {}, touchFilter, GestureBindCore,
+var Prototype = {}, touchFilter, bindTrans, GestureBindCore, supportsPassive = false,
     bind = "addEventListener", unbind = "removeEventListener",
     key = "start", keyTime = key+"Time", keyX = key+"X", keyY = key+"Y",
-    bindEves = "MSPointerDown MSPointerMove MSPointerUp "+
-               "pointerdown pointermove pointerup ",
-    bindTouch = "touchstart touchmove touchend touchcancel",
-    bindMouse = "mousedown mousemove mouseup",
+    bindStart = "MSPointerDown pointerdown ",
+    bindMove  = "MSPointerMove pointermove ",
+    bindEnd   = "MSPointerUp pointerup ",
+    touchStart = "touchstart", touchMove = "touchmove", touchEnd = "touchend touchcancel",
+    mouseStart = "mousedown", mouseMove = "mousemove", mouseEnd = "mouseup",
     touchFind = "changedTouches touches".split(" "),
     touchKeys = "pageX pageY clientX clientY screenX screenY".split(" ");
+
+try {
+    var opts = Object.defineProperty({}, 'passive', {
+        get: function() {
+            supportsPassive = true;
+        }
+    });
+    window.addEventListener("testPassive", null, opts);
+} catch (e) {}
 
 touchFilter = function(callback, delay) {
     var handle, lastType, find;
@@ -41,13 +52,31 @@ touchFilter = function(callback, delay) {
     }
 };
 
-GestureBindCore = {
-    // startTime  :  0,
-    // startTouch : [],
+bindTrans = function(scope, eveName) {
+    var baseCall = scope[eveName];
+    scope[eveName] = function(e) {
+        baseCall.call(scope, e);
+    }
+};
 
-    // endTime  : 0,
-    // endTouch : [],
+GestureBindCore = function(scope) {
+    var self = this, fix = "start move end".split(" ");
 
+    self.gesture = scope;
+    self.emitter = scope.emit;
+
+    self.startTime = 0;
+    self.startTouch= [];
+    self.endTime   = 0;
+    self.endTouch  = [];
+
+    // 修复绑定事件后 this 对象异常问题
+    each(fix, function(i, eveName) {
+        bindTrans(self, eveName);
+    });
+}
+
+GestureBindCore.prototype = {
     getTouch: function(e) {
         var result = [], cache,
             fidLen = touchFind.length,
@@ -75,52 +104,38 @@ GestureBindCore = {
         return result;
     },
 
-    start: touchFilter(function(e) {
-        var time = getTime(), touch = this.getTouch(e);
+    emit: function() {
+        var self = this, emitter = self.emitter;
 
-        this.startTime = time;
-        this.startTouch = touch;
-        this.emit("start", touch, e, this);
+        emitter.emit.apply(emitter, arguments);
+    },
+
+    start: touchFilter(function(e) {
+        var self = this,
+            time = getTime(), touch = self.getTouch(e);
+
+        self.startTime = time;
+        self.startTouch = touch;
+        self.emit("start", touch, e, self);
     }),
 
     move: function(e) {
-        if (e.cancelable && CFG.preventMove) e.preventDefault();
+        if (e.cancelable && CFG.preventMove) {
+            e.preventDefault();
+        }
 
-        var touch = this.getTouch(e);
-        this.emit("move", touch, e, this);
+        var self = this, touch = this.getTouch(e);
+
+        self.emit("move", touch, e, self);
     },
 
     end: touchFilter(function(e) {
-        var time = getTime(), touch = this.getTouch(e);
+        var self = this, time = getTime(), touch = self.getTouch(e);
 
-        this.endTime = time;
-        this.endTouch = touch;
-        this.emit("end", touch, e, this);
-    }),
-
-    handleEvent: function(e) {
-        switch ( e.type ) {
-            case 'touchstart':
-            case 'pointerdown':
-            case 'MSPointerDown':
-            case 'mousedown':
-                this.start(e);
-                break;
-            case 'touchmove':
-            case 'pointermove':
-            case 'MSPointerMove':
-            case 'mousemove':
-                this.move(e);
-                break;
-            case 'touchend':
-            case 'pointerup':
-            case 'MSPointerUp':
-            case 'mouseup':
-            case 'touchcancel':
-                this.end(e);
-                break;
-        }
-    }
+        self.endTime = time;
+        self.endTouch = touch;
+        self.emit("end", touch, e, self);
+    })
 };
 
 function Gesture(el, option) {
@@ -129,33 +144,48 @@ function Gesture(el, option) {
     self.el = el || document;
     self.emit = emitter;
     self.option = extend({}, CFG, option);
-
-    self.bind = extend({
-        emit: function() {
-            emitter.emit.apply(emitter, arguments);
-        }
-    }, GestureBindCore);
 }; Gesture.prototype = Prototype;
 
 Prototype.filter = touchFilter;
 
 Prototype.init = function() {
-    var bindDom = this.el, DOC = document, bindArrs, bindCore,
-        eveBind = DOC[bind] ? bind : "attachEvent",
-        eveUnbind = DOC[unbind] ? unbind : "detachEvent";
+    var bindDom = this.el, bindArrs,
+        bindCall = "start move end".split(" "),
+        bindCore, eveStart, eveMove, eveEnd,
+        eveBind = bindDom[bind] ? bind : "attachEvent",
+        eveUnbind = bindDom[unbind] ? unbind : "detachEvent";
 
     // 动态确定生成最终绑定的事件数组
-    if (self.ontouchstart !== undefined) {
-        bindArrs = (bindEves+bindTouch).split(" ");
+    if (window.ontouchstart !== undefined) {
+        eveStart = bindStart + touchStart;
+        eveMove  = bindMove + touchMove;
+        eveEnd   = bindEnd + touchEnd;
     } else {
-        bindArrs = (bindEves+bindMouse).split(" ");
+        eveStart = bindStart + mouseStart;
+        eveMove  = bindMove + mouseMove;
+        eveEnd   = bindEnd + mouseEnd;
     }
 
-    bindCore = this.bind;
+    bindArrs = [
+        eveStart.split(" "),
+        eveMove.split(" "),
+        eveEnd.split(" "),
+    ];
 
-    each(bindArrs, function(i, event) {
-        DOC[unbind](event, bindCore);
-        DOC[bind](event, bindCore, true);
+    bindCore = new GestureBindCore(this);
+
+    each(bindArrs, function(i, types) {
+        var bindOption = supportsPassive && i==0 ? {
+            capture: true,
+            passive: true,
+        } : true, call = bindCall[i];
+
+        call = bindCore[call] || null;
+
+        each(types, function(j, event) {
+            bindDom[unbind](event, call);
+            bindDom[bind](event, call, bindOption);
+        });
     });
 
     return this;
