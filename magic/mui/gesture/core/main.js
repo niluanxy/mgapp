@@ -1,5 +1,6 @@
 import RootMagic from "CORE_MAGIC/main.js";
 import {time as getTime} from "CORE_STATIC/util/main.js";
+import {supportPassive} from "CORE_STATIC/platform/main.js";
 import {extend, each} from "LIB_MINJS/utils.js";
 import Emitter from "LIB_MINJS/emitter.js";
 import $config from "CORE_MAGIC/config.js";
@@ -10,7 +11,7 @@ var CFG = $config.gesture = {
     preventMove: true,
 };
 
-var Prototype = {}, touchFilter, bindTrans, GestureBindCore, supportsPassive = false,
+var Prototype = {}, touchFilter, bindTrans, GestureBindCore,
     bind = "addEventListener", unbind = "removeEventListener",
     key = "start", keyTime = key+"Time", keyX = key+"X", keyY = key+"Y",
     bindStart = "MSPointerDown pointerdown ",
@@ -20,15 +21,6 @@ var Prototype = {}, touchFilter, bindTrans, GestureBindCore, supportsPassive = f
     mouseStart = "mousedown", mouseMove = "mousemove", mouseEnd = "mouseup",
     touchFind = "changedTouches touches".split(" "),
     touchKeys = "pageX pageY clientX clientY screenX screenY".split(" ");
-
-try {
-    var opts = Object.defineProperty({}, 'passive', {
-        get: function() {
-            supportsPassive = true;
-        }
-    });
-    window.addEventListener("testPassive", null, opts);
-} catch (e) {}
 
 touchFilter = function(callback, delay) {
     var handle, lastType, find;
@@ -175,7 +167,7 @@ Prototype.init = function() {
     bindCore = new GestureBindCore(this);
 
     each(bindArrs, function(i, types) {
-        var bindOption = supportsPassive && i==0 ? {
+        var bindOption = supportPassive && i==0 ? {
             capture: true,
             passive: true,
         } : true, call = bindCall[i];
