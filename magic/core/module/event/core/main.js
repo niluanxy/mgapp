@@ -174,7 +174,7 @@ function propaEmit(/* el, eveName, args... */) {
         } else {
             return;
         }
-    } while(el.parentNode);
+    } while(el && el.parentNode);
 }
 
 function emitProxy(/* eve, args... */) {
