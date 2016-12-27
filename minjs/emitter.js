@@ -540,6 +540,6 @@ Prototype.broadcast = function(/* eve, args... */) {
 // 构造函数，兼容 new 方式创建对象
 var Creater = function() {
     return new Emitter();
-}; Creater.prototype = Prototype;
+};
 
 export default Creater;

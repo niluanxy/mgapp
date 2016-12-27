@@ -48,6 +48,8 @@ var Router = function(maps, option) {
     }, this);
 }, Prototype = {};
 
+Router.prototype = Prototype;
+
 Prototype.init = function() {
     var opt = this.option, fire;
 
@@ -358,6 +360,6 @@ Prototype.bindBrower = function() {
 // 构造函数，兼容 new 方式创建对象
 var Creater = function(maps, option) {
     return new Router(maps, option);
-}; Creater.prototype = Router.prototype = Prototype;
+};
 
 export default Creater;

@@ -135,7 +135,7 @@ _EACH([Creater, Magic], function(index, object) {
 });
 
 // 对象继承链修复
-Creater.fn = Creater.prototype = Magic.prototype = Prototype;
+Creater.fn = Magic.prototype = Prototype;
 Creater.config = _CONFIG;
 
 export default Creater;

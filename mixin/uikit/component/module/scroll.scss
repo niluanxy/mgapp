@@ -8,44 +8,33 @@
     z-index: 1;
     overflow: hidden;
     position: relative;
+}
 
-    &::-webkit-scrollbar {
-        width: rem(4px);
-        height: rem(4px);
-    }
-
-    &::-webkit-scrollbar-track {
-        box-shadow: inset 0 0 rem(6px) rgba(0,0,0,0.3);
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background-color: darkgrey;
-        outline: 1px solid slategrey;
-    }
+%scroll_body {
+    display: block;
+    width: 100%;
+    position: absolute;
+    top: 0; left: 0;
 }
 
 @mixin scroll($class: scroll, $prefix: $config-prefix) {
     .#{$prefix+$class} {
         @extend %scroll;
 
-        overflow-y: scroll;
+        .#{$prefix+$class} {
+            &_body_y, &_body_x, &_body_all {
+                @extend %scroll_body;
+            }
 
-        &-x {
-            @extend %scroll;
-
-            width: 100%;
-            overflow-x: scroll;
-
-            .wrapper {
+            &_body_x {
                 height: 100%;
                 width: auto;
-                float: left;
-                white-space: nowrap;
             }
-        }
 
-        .wrapper {
-            width: 100%;
+            &_body_all {
+                width: auto;
+                height: auto;
+            }
         }
 
         @content;   // 样式自定义扩展代码位置

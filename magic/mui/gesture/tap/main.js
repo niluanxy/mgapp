@@ -67,13 +67,13 @@ function notMove(touch, mode) {
 }
 
 (Gesture.tapInit = function() {
-    Gesture.off("start.tap").on("start.tap", function(touches, event, scope) {
-        var touch = touches[0] || {}, addDelay = CFG.activeDelay || 0;
+    Gesture.off("start.tap").on("start.tap", function(event, touches) {
+        var self = this, touch = touches[0] || {}, addDelay = CFG.activeDelay || 0;
 
-        if (scope.startTime - TapCore.startTime > CFG.doubleTime) {
+        if (self.startTime - TapCore.startTime > CFG.doubleTime) {
             TapCore.startX = touch.pageX;
             TapCore.startY = touch.pageY;
-            TapCore.startTime = scope.startTime;
+            TapCore.startTime = self.startTime;
 
             TapCore.clearActive();
             TapCore.activeItems = findActive(event.target);
@@ -84,16 +84,16 @@ function notMove(touch, mode) {
             TapCore.startX = 0;
             TapCore.startY = 0;
         }
-    }).off("move.tap").on("move.tap", throttle(function(touches, event, scope) {
+    }).off("move.tap").on("move.tap", throttle(function(event, touches) {
         var actClass = CFG.active, touch = touches[0] || {};
 
         // 如果移动了，则清除元素 class 类效果
         if (CFG.activeClear && !notMove(touch)) {
             TapCore.clearActive(true);
         }
-    }, CFG.throttle)).off("end.tap").on("end.tap", function(touches, event, scope) {
-        var touch = touches[0] || {},
-            space = scope.endTime - TapCore.startTime,
+    }, CFG.throttle)).off("end.tap").on("end.tap", function(event, touches) {
+        var self = this, touch = touches[0] || {},
+            space = self.endTime - TapCore.startTime,
             actTime = TapCore.activeTime, clrDelay = CFG.activeShow;
 
         if (space < CFG.maxTapTime && notMove(touch)) {

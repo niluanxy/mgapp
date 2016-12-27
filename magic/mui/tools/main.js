@@ -1,5 +1,5 @@
 import {isTrueString as isTrue, isFunction} from "LIB_MINJS/check.js";
-import {extend} from "LIB_MINJS/utils.js";
+import {extend, each} from "LIB_MINJS/utils.js";
 import $config from "CORE_MAGIC/config.js";
 
 var $cui = $config.ui, keyWrap = "wrapClass",
@@ -29,7 +29,14 @@ export function uiInit($el, opt, bindEve, bindCall) {
 
 export function uiExtend() {
     var args = extend([], arguments), copy,
-        oClass, aClass, regPre;
+        transArrs, oClass, aClass, regPre;
+
+    if (isTrue(transArrs = args[args.length-1])) {
+        transArrs = transArrs.split(" ");
+        args.pop();
+    } else {
+        transArrs = [keyWrap, keyItem];
+    }
 
     args = [{}, $cui].concat(args);
     copy = extend.apply(null, args);
@@ -38,8 +45,9 @@ export function uiExtend() {
     aClass = $cui.prefix + oClass;
     regPre = new RegExp(oClass, "g");
 
-    if (copy[keyWrap]) copy[keyWrap] = copy[keyWrap].replace(regPre, aClass);
-    if (copy[keyItem]) copy[keyItem] = copy[keyItem].replace(regPre, aClass);
+    each(transArrs, function(i, fixName) {
+        if (copy[fixName]) copy[fixName] = copy[fixName].replace(regPre, aClass);
+    });
 
     copy[keyClass]= aClass;
 
