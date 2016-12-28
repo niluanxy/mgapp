@@ -8,6 +8,7 @@
     z-index: 1;
     overflow: hidden;
     position: relative;
+    touch-action: none;
 }
 
 %scroll_body {
@@ -15,6 +16,7 @@
     width: 100%;
     position: absolute;
     top: 0; left: 0;
+    touch-action: none;
 }
 
 @mixin scroll($class: scroll, $prefix: $config-prefix) {
