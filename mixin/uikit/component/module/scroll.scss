@@ -24,7 +24,7 @@
         @extend %scroll;
 
         .#{$prefix+$class} {
-            &_body_y, &_body_x, &_body_all {
+            &_body, &_body_y, &_body_x, &_body_all {
                 @extend %scroll_body;
             }
 

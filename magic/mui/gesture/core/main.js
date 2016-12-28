@@ -10,13 +10,7 @@ var CFG = $config.gesture = {
     delayCall: 4,
     preventMove: true,
 }, 
-    Prototype = {}, touchFilter, bind = "addEventListener", unbind = "removeEventListener",
-    key = "start", keyTime = key+"Time", keyX = key+"X", keyY = key+"Y",
-    bindStart = "MSPointerDown pointerdown ",
-    bindMove  = "MSPointerMove pointermove ",
-    bindEnd   = "MSPointerUp pointerup ",
-    touchStart = "touchstart", touchMove = "touchmove", touchEnd = "touchend touchcancel",
-    mouseStart = "mousedown", mouseMove = "mousemove", mouseEnd = "mouseup",
+    Prototype = {}, touchFilter,
     touchFind = "changedTouches touches".split(" "),
     touchKeys = "pageX pageY clientX clientY screenX screenY".split(" ");
 
@@ -86,13 +80,16 @@ function Gesture(el, option) {
 Prototype.filter = touchFilter;
 
 Prototype.init = function() {
-    var self = this, bindDom = self.el, bindArrs,
-        bindCall = "_start _move _end".split(" "),
-        bindCore = self.bind, eveStart, eveMove, eveEnd,
-        eveBind = bindDom[bind] ? bind : "attachEvent",
-        eveUnbind = bindDom[unbind] ? unbind : "detachEvent";
+    var bindArrs, eveBind, eveUnbind, eveStart, eveMove, eveEnd,
+        bindCall = "_start _move _end".split(" "), DOC = document,
 
-    // 动态确定生成最终绑定的事件数组
+        bind = "addEventListener", unbind = "removeEventListener",
+        bindStart = "MSPointerDown pointerdown ",
+        bindMove  = "MSPointerMove pointermove ",
+        bindEnd   = "MSPointerUp pointerup ", bindArrs,
+        touchStart = "touchstart", touchMove = "touchmove", touchEnd = "touchend touchcancel",
+        mouseStart = "mousedown", mouseMove = "mousemove", mouseEnd = "mouseup";
+
     if (window.ontouchstart !== undefined) {
         eveStart = bindStart + touchStart;
         eveMove  = bindMove + touchMove;
@@ -109,21 +106,30 @@ Prototype.init = function() {
         eveEnd.split(" "),
     ];
 
-    each(bindArrs, function(i, types) {
-        var bindOption = supportPassive && i==0 ? {
-            capture: true,
-            passive: true,
-        } : true, call = bindCall[i];
+    eveBind = DOC[bind] ? bind : "attachEvent",
+    eveUnbind = DOC[unbind] ? unbind : "detachEvent";
 
-        call = self[call] || null;
+    Prototype.init = function() {
+        var self = this, bindDom = self.el;
 
-        each(types, function(j, event) {
-            bindDom[unbind](event, call);
-            bindDom[bind](event, call, bindOption);
+        each(bindArrs, function(i, types) {
+            var bindOption = supportPassive && i==0 ? {
+                capture: true,
+                passive: !!self.option.passive,
+            } : true, call = bindCall[i];
+
+            call = self[call] || null;
+
+            each(types, function(j, event) {
+                bindDom[unbind](event, call);
+                bindDom[bind](event, call, bindOption);
+            });
         });
-    });
 
-    return this;
+        return self;
+    };
+
+    return this.init();
 }
 
 Prototype.getTouch = function(e) {
