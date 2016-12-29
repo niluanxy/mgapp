@@ -1,6 +1,7 @@
 import RootMagic from "CORE_MAGIC/main.js";
 import {each} from "LIB_MINJS/utils.js";
-import {time as getTime, throttle} from "CORE_STATIC/util/main.js";
+import {time as getTime} from "CORE_STATIC/util/main.js";
+import {throttle} from "CORE_STATIC/function/main.js";
 import Gesture from "MUI/gesture/core/main.js";
 import $config from "CORE_MAGIC/config.js";
 
@@ -17,7 +18,7 @@ var CFG = $config.tap = {
     throttle: 16,
 
     doubleTime  : 140,
-    maxTapTime  : 240,
+    maxTapTime  : 250,
 
     hideKeyboard: true,
     preventClick: false,
@@ -67,8 +68,8 @@ function notMove(touch, mode) {
 }
 
 (Gesture.tapInit = function() {
-    Gesture.off("start.tap").on("start.tap", function(event, touches) {
-        var self = this, touch = touches[0] || {}, addDelay = CFG.activeDelay || 0;
+    Gesture.off("start.tap").on("start.tap", function(event, touch, touches) {
+        var self = this, addDelay = CFG.activeDelay || 0;
 
         if (self.startTime - TapCore.startTime > CFG.doubleTime) {
             TapCore.startX = touch.pageX;
@@ -84,16 +85,15 @@ function notMove(touch, mode) {
             TapCore.startX = 0;
             TapCore.startY = 0;
         }
-    }).off("move.tap").on("move.tap", throttle(function(event, touches) {
-        var actClass = CFG.active, touch = touches[0] || {};
+    }).off("move.tap").on("move.tap", throttle(function(event, touch, touches) {
+        var actClass = CFG.active;
 
         // 如果移动了，则清除元素 class 类效果
         if (CFG.activeClear && !notMove(touch)) {
             TapCore.clearActive(true);
         }
-    }, CFG.throttle)).off("end.tap").on("end.tap", function(event, touches) {
-        var self = this, touch = touches[0] || {},
-            space = self.endTime - TapCore.startTime,
+    }, CFG.throttle)).off("end.tap").on("end.tap", function(event, touch, touches) {
+        var self = this, space = self.endTime - TapCore.startTime,
             actTime = TapCore.activeTime, clrDelay = CFG.activeShow;
 
         if (space < CFG.maxTapTime && notMove(touch)) {

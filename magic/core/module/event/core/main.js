@@ -30,34 +30,58 @@ function checkIn(event, el, select) {
     return false;
 }
 
-function fixEvent(event, scope) {
-    var fix = extend({}, event);
+var copyNames = ("altKey bubbles cancelable cancelable changedTouches composed "+
+                "ctrlKey currentTarget defaultPrevented detail eventPhase isTrusted "+
+                "metaKey path returnValue shiftKey srcElement target "+
+                "targetTouches timeStamp touches type view which").split(" ");
+export function copyEvent(event, scope) {
+    var fix = {};
 
-    fix.stopImmediatePropagation = function() {
-        scope.stopImmediation();
-        if (event.bubbles) {
-            event.stopPropagation();
+    each(copyNames, function(i, key) {
+        if (event[key] !== undefined) {
+            fix[key] = event[key];
         }
-        event.magicImmediation = false;
-        event.magicPropagation = false;
-    }
+    });
 
-    fix.stopImmediation = function() {
-        scope.stopImmediation();
-        event.magicImmediation = false;
-    }
-
-    fix.stopPropagation = function() {
-        scope.stopPropagation();
-        if (event.bubbles) {
-            event.stopPropagation();
+    if (scope) {
+        fix.stopImmediatePropagation = function() {
+            scope.stopImmediation();
+            if (event.bubbles) {
+                event.stopPropagation();
+            }
+            event.magicImmediation = false;
+            event.magicPropagation = false;
         }
-        event.magicPropagation = false;
-    }
 
-    fix.preventDefault = function() {
-        if (event.cancelable) {
+        fix.stopImmediation = function() {
+            scope.stopImmediation();
+            event.magicImmediation = false;
+        }
+
+        fix.stopPropagation = function() {
+            scope.stopPropagation();
+            if (event.bubbles) {
+                event.stopPropagation();
+            }
+            event.magicPropagation = false;
+        }
+
+        fix.preventDefault = function() {
+            if (event.cancelable) {
+                event.preventDefault();
+            }
+        }
+    } else {
+        fix.preventDefault = function() {
             event.preventDefault();
+        }
+
+        fix.stopPropagation = function() {
+            event.stopPropagation();
+        }
+
+        fix.stopImmediatePropagation = function() {
+            event.stopImmediatePropagation();
         }
     }
 
@@ -100,7 +124,7 @@ function addProxy(bind, eve, select, callback, extScope) {
                     if (checkIn(event, El, Selecter)) {
                         var args = extend([], arguments);
 
-                        args[0] = fixEvent(event, this);
+                        args[0] = copyEvent(event, this);
                         callback.apply(scope, args);
                     }
                 });

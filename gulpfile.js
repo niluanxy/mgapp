@@ -315,9 +315,9 @@ gulp.task("serve", function() {
 
     gulp.watch([DIR_MIXIN+"**/*"],    ["dev-build-mixin"]);
     gulp.watch([DIR_MINJS+"**/*.js"], ["dev-build-minjs"]);
-    gulp.watch([DIR_MAGIC+"**/*.js"], ["dev-build-magic"]);
+    gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-magic"]);
 
-    gulp.watch([DIR_DIST+"**/*"]).on("change", reload);
+    gulp.watch([DIR_DIST+"/*"]).on("change", reload);
 });
 
 gulp.task("clean", function() {

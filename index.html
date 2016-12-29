@@ -74,20 +74,28 @@
         })(window, document);
     </script>
 
+    <style>
+        .scroll {
+            background-color: #fafafa;
+        }
+
+        .scroll p {
+            padding: 0 1rem;
+            height: 2.4rem;
+            line-height: 2.4rem;
+            border-bottom: 2px solid #ccc;
+            border-top: 2px solid #fff;
+            font-size: 0.8rem;
+            display: block;
+        }
+    </style>
+    
     <link rel="stylesheet" href="dist/mixin.css">
     <script type="text/javascript" src="dist/magic.ui.js"></script>
 </head>
 <body>
     <script src="./check.js"></script>
-
-    <div class="list">
-        <div class="list-item">user</div>
-        <div class="list-item">user/main</div>
-        <div class="list-item">list</div>
-        <div class="list-item">list/good/:goodid</div>
-    </div>
-
-    <div class="scroll" style="height: 400px;">
+    <div class="scroll" style="height: 1000px;">
         <div>
             <p>0001</p>
             <p>0002</p>

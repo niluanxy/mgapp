@@ -2,38 +2,114 @@ import RootMagic from "CORE_MAGIC/main.js";
 import {time as getTime} from "CORE_STATIC/util/main.js";
 import {supportPassive} from "CORE_STATIC/platform/main.js";
 import {extend, each, element} from "LIB_MINJS/utils.js";
+import fastCall from "LIB_MINJS/fastcall.js";
 import Emitter from "LIB_MINJS/emitter.js";
+import {copyEvent} from "CORE_MODULE/event/core/main.js";
 import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.gesture = {
     passive: true,
-    delayCall: 4,
     preventMove: true,
 }, 
-    Prototype = {}, touchFilter,
-    touchFind = "changedTouches touches".split(" "),
+    Prototype = {}, touchFilter, getTouch, touchSum,
+    touchFind = "changedTouches touches".split(" "), ABS = Math.abs,
     touchKeys = "pageX pageY clientX clientY screenX screenY".split(" ");
 
-touchFilter = function(callback, scope, delay) {
-    var handle, lastType, find;
+getTouch = function(e) {
+    var result = [], cache,
+        fidLen = touchFind.length,
+        keyLen = touchKeys.length;
 
-    return function(e) {
-        var debounce = delay || CFG.delayCall,
-            type = e.type, context = scope || this;
+    each(touchFind, function(i, key) {
+        if (e[key] && e[key].length) {
+            cache = e[key]; return false;
+        }
+    });
+    cache = cache || [e];
 
-        if (!find && type != lastType) {
-            clearTimeout(handle);
+    each(cache, function(i, copy) {
+        var touch = {}, key;
 
+        each(touchKeys, function(i, key) {
+            if (copy[key] !== undefined) {
+                touch[key] = copy[key];
+            }
+        });
+
+        result.push(touch);
+    });
+
+    return result;
+};
+
+touchFilter = function(callback, scope) {
+    var lastTouches = [], lastType = "", lastEvent, lastCount = 0;
+
+    return function(event) {
+        var touches = getTouch(event), type = event.type,
+            sameLast = true, context = scope || this;
+
+        if (touches.length != lastTouches.length) {
+            sameLast = false;
+        } else {
+            each(touches, function(i, touch) {
+                var lastTouch = lastTouches[i];
+
+                if (touch.pageX !== lastTouch.pageY ||
+                    touch.pageY !== lastTouch.pageY) {
+                    sameLast = false; return false;
+                }
+            });
+        }
+
+        if ((!sameLast && lastEvent) || (lastType != type && type.match(/^touch/))) {
+            callback.call(context, event, touches);
+            lastEvent = null; lastCount++;
+        } else {
             lastType = type;
-            find = !!type.match(/^touch/);
+            lastEvent = event;
+            lastTouches = touches;
 
-            handle = setTimeout(function() {
-                find = false;
-                lastType = "";
-                callback.call(context, e);
-            }, debounce || 0);
+            (function(checkCount, runContext) {
+                fastCall(function() {
+                    if (checkCount == lastCount && lastEvent) {
+                        callback.call(runContext, lastEvent, lastTouches);
+                        lastEvent = null;
+                    }
+                });
+            })(lastCount, context);
         }
     }
+};
+
+touchSum = function(self, e, touches) {
+    var nowTouch = touches[0],
+        startTouch = self.startTouch[0],
+        startTime = self.startTime, moveMax, xMax,
+        xmorMax, direction, deltaTime, deltaX, deltaY;
+
+    deltaX = nowTouch.pageX - startTouch.pageX;
+    deltaY = nowTouch.pageY - startTouch.pageY;
+    deltaTime = getTime() - startTime;
+
+    xmorMax  = ABS(deltaX) >= ABS(deltaY);
+    moveMax  = xmorMax ? deltaX : deltaY;
+
+    direction  = xmorMax ? Prototype.MOVE_LEFT : Prototype.MOVE_UP;
+    direction *= moveMax >= 0 ? 2 : 1;
+
+    // 计算结果传递到 event 对象上
+    e.deltaX = deltaX;
+    e.deltaY = deltaY;
+    e.deltaTime = deltaTime;
+
+    e.direction = direction;
+
+    e.velocity  = -moveMax/deltaTime;
+    e.velocityX = -deltaX/deltaTime;
+    e.velocityY = -deltaY/deltaTime;
+
+    return self;
 };
 
 function Gesture(el, option) {
@@ -44,40 +120,53 @@ function Gesture(el, option) {
     self.emitter= emitter;
 
     self.startTime = 0;
-    self.startTouch= [];
+    self.startTouch= [{}];
     self.endTime   = 0;
-    self.endTouch  = [];
+    self.endTouch  = [{}];
 
-    self._start = touchFilter(function(e) {
-        var time = getTime(), touch = self.getTouch(e);
+    self._start = touchFilter(function(e, touches) {
+        self.startTime = getTime();
+        self.startTouch = touches;
 
-        self.startTime = time;
-        self.startTouch = touch;
-        self.emit("start", e, touch);
-    }, self, opt.delayCall);
+        // 初始化 event 对象起始值
+        e.deltaX = 0;
+        e.deltaY = 0;
+        e.deltaTime = 0;
 
-    self._move = function(e) {
-        (function(e) {
-            if (e.cancelable && opt.preventMove) {
-                e.preventDefault();
-            }
+        e.direction = 1;
 
-            var touch = self.getTouch(e);
+        e.velocity  = 0;
+        e.velocityX = 0;
+        e.velocityY = 0; 
 
-            self.emit("move", e, touch);
-        }).call(self, e);
-    };
+        self.emit("start", e, touches[0], touches);
+    }, self);
 
-    self._end = touchFilter(function(e) {
-        var time = getTime(), touch = self.getTouch(e);
+    self._move = touchFilter(function(e, touches) {
+        if (e.cancelable && opt.preventMove) {
+            e.preventDefault();
+        }
 
-        self.endTime = time;
-        self.endTouch = touch;
-        self.emit("end", e, touch);
-    }, self, opt.delayCall);
+        touchSum(self, e, touches)
+            .emit("move", e, touches[0], touches);
+    }, self);
+
+    self._end = touchFilter(function(e, touches) {
+        self.endTime = getTime();
+        self.endTouch = touches;
+
+        touchSum(self, e, touches)
+            .emit("end", e, touches[0], touches);
+    }, self);
 }; Gesture.prototype = Prototype;
 
-Prototype.filter = touchFilter;
+extend(Prototype, {
+    MOVE_NONE :  1,
+    MOVE_LEFT :  2,
+    MOVE_RIGHT:  4,
+    MOVE_UP   :  8,
+    MOVE_DOWN : 16,
+});
 
 Prototype.init = function() {
     var bindArrs, eveBind, eveUnbind, eveStart, eveMove, eveEnd,
@@ -126,37 +215,10 @@ Prototype.init = function() {
             });
         });
 
-        return self;
+        return self.emit("init");
     };
 
     return this.init();
-}
-
-Prototype.getTouch = function(e) {
-    var result = [], cache,
-        fidLen = touchFind.length,
-        keyLen = touchKeys.length;
-
-    each(touchFind, function(i, key) {
-        if (e[key] && e[key].length) {
-            cache = e[key]; return false;
-        }
-    });
-    cache = cache || [e];
-
-    each(cache, function(i, copy) {
-        var touch = {}, key;
-
-        each(touchKeys, function(i, key) {
-            if (copy[key] !== undefined) {
-                touch[key] = copy[key];
-            }
-        });
-
-        result.push(touch);
-    });
-
-    return result;
 }
 
 Prototype.on = function(eve, call, scope) {

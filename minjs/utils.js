@@ -130,18 +130,13 @@ export function extend(/* deep, target, obj..., last */) {
                 var src  = target[name],
                     copy = argv[i][name];
 
-                // 跳过指向自身，防止死循环
-                if (target === copy) {
-                    continue;
-                }
-
-                // 若设置忽略无效值，则忽略
-                if (pass && copy == undefined) {
+                // 若指向自身，跳过，防止死循环
+                // 若设置忽略无效值，跳过
+                if (target === copy || (pass && copy == undefined)) {
                     continue;
                 }
 
                 if (deep && copy && ( isArray(copy) || isObject(copy) ) ) {
-
                     // 深度复制时，判断是否需要创建新空间
                     if (isArray(copy)) {
                         clone = src && isArray(src) ? src : [];
