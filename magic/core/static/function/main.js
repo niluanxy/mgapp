@@ -1,5 +1,5 @@
 import fastBase from "LIB_MINJS/fastcall.js";
-import {time} from "CORE_STATIC/util/main.js";
+import {time} from "CORE_STATIC/utils/main.js";
 import {each} from "LIB_MINJS/utils.js";
 
 export var fast = fastBase;

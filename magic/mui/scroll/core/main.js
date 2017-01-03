@@ -11,6 +11,16 @@ var CFG = $config.scroll = {
 
     wrapClass: "scroll",
     bodyClass: "scroll_body",
+
+    scrollMaxSpend     : 2,
+    scrollAcceleration : 0.0005,
+    boundryAcceleration: 0.03,
+
+
+    lockX: true,
+    lockY: false,
+    
+    onInit: null,
 }, Prototype = {};
 
 function Scroll(el, option) {
@@ -25,11 +35,11 @@ function Scroll(el, option) {
     self.distX = 0;
     self.distY = 0;
 
-    self.minScrollX = -100000;
-    self.minScrollY = -100000;
+    self.minScrollX = 0;
+    self.minScrollY = 0;
 
-    self.maxScrollX = 100000;
-    self.maxScrollY = 100000;
+    self.maxScrollX = 0;
+    self.maxScrollY = 0;
 
     self.emitter = Emitter();
     self.gesture = Gesture(self.$el);
@@ -50,7 +60,7 @@ Prototype.init = function() {
     self.$body = $body;
     self.gesture.init();
 
-    self.bindEvent();
+    self.bindEvent().refresh();
     $emit.emit("init");
 
     return self;
@@ -63,12 +73,13 @@ Prototype.bindEvent = function() {
         thresholdY = self.y;
         $emit.emit("start", e, touch, touches);
     }).off("move.core").on("move.core", function(e, touch, touches) {
-        var handle, oldPrevent = e.preventDefault();
+        var handle, oldPrevent = e.preventDefault;
 
         handle = raf(function() {
             self.translate(null, thresholdY + e.deltaY);
         });
 
+        console.log(e)
         e.preventDefault = function() {
             clearRaf(handle);
             oldPrevent.call(e);
@@ -76,10 +87,38 @@ Prototype.bindEvent = function() {
 
         $emit.emit("scroll", e, touch, touches);
     }).off("end.core").on("end.core", function(e, touch, touches) {
+        console.log("============ end ");
+        console.log("X: "+JSON.stringify(self.computeScroll(e.velocityX)));
+        console.log("Y: "+JSON.stringify(self.computeScroll(e.velocityY)));
         $emit.emit("scroll", e, touch, touches);
     });
 
     return this;
+}
+
+Prototype.refresh = function() {
+    var self = this, $body = self.$body, offset;
+
+    offset = $body.offset() || {};
+
+    self.maxScrollY = -offset.height;
+    self.maxScrollX = -offset.width;
+
+    return self;
+}
+
+Prototype.computeScroll = function(spend) {
+    var self = this, opt = self.option,
+        minus = spend/Math.abs(spend) || 1, 
+        maxSpend = opt.scrollMaxSpend, v, t, a, s, e;
+
+    v = Math.abs(spend) < maxSpend ? spend : maxSpend * minus;
+    a = opt.scrollAcceleration * minus;
+    t = v/a || 0;
+    s = t * v / 2;
+    e = Math.abs(v) > maxSpend ? "circular" : "quadratic";
+
+    return { scroll: s, easing: e, duration: t }
 }
 
 Prototype.translate = function(x, y) {

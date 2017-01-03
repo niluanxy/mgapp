@@ -1,6 +1,6 @@
 import RootMagic from "CORE_MAGIC/main.js";
 import {each} from "LIB_MINJS/utils.js";
-import {time as getTime} from "CORE_STATIC/util/main.js";
+import {time as getTime} from "CORE_STATIC/utils/main.js";
 import {throttle} from "CORE_STATIC/function/main.js";
 import Gesture from "MUI/gesture/core/main.js";
 import $config from "CORE_MAGIC/config.js";

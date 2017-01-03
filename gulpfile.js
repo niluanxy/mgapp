@@ -63,6 +63,7 @@ var DIR_MAGIC_ALIAS = {
 
     MUI: DIR_MAGIC+"mui",
 
+    CORE_BASE    : DIR_MAGIC+"core/",
     CORE_FUNCTION: DIR_MAGIC+"core/function",
     CORE_MAGIC : DIR_MAGIC+"core/magic",
     CORE_MODULE: DIR_MAGIC+"core/module",

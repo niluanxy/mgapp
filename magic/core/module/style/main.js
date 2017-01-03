@@ -2,6 +2,6 @@ import RootMagic from "CORE_MAGIC/main.js";
 
 import * as aClass from "./class/main.js";
 import * as other from "./other/main.js";
-import * as transform from "./transform/main.js";
+import * as trans from "./trans/main.js";
 
-RootMagic.fn.extend(aClass, other, transform);
+RootMagic.fn.extend(aClass, other, trans);

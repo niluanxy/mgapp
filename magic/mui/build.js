@@ -1,3 +1,4 @@
+import "MUI/router/main.js";
 import "MUI/gesture/main.js";
 import "MUI/tabs/main.js";
 import "MUI/popup/main.js";

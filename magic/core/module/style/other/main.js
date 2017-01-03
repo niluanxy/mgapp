@@ -1,6 +1,6 @@
 import {allProxy} from "CORE_FUNCTION/proxy.js";
 import {element, extend, trim} from "LIB_MINJS/utils.js";
-import {isTrueString, isString} from "LIB_MINJS/check.js";
+import {isElement, isTrueString, isString} from "LIB_MINJS/check.js";
 import {dataStyle} from "CORE_MAGIC/tools.js";
 import {append, remove} from "CORE_MODULE/dom/editer/main.js";
 import RootMagic from "CORE_MAGIC/main.js";
@@ -74,15 +74,15 @@ export function removeCss(aKey, setAll) {
  * 容器CSS的影响，导致尺寸有变化，为空默认为body元素
  */
 export function offset(relative) {
-    var el = element(this), relative, body = document.body,
-        rect, copy = {}, clone, fix = [], docElem, win = window,
+    var el = element(this), body = document.body,
+        relative, rect, copy = {}, clone, fix = [],
         render = '<div style="height: 0px; visibility: hidden"></div>';
 
+    rect = {top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0};
     relative = RootMagic(relative);
     relative = element(relative) || body;
 
-    if (!el) return {top: 0, left: 0, right: 0,
-                     bottom: 0, width: 0, height: 0};
+    if (!el) return rect;
 
     if (el == document) {
         var width = body.clientWidth,
@@ -94,10 +94,13 @@ export function offset(relative) {
             bottom: height, width: width, height: height
         }
     } else {
-        rect  = {top: 0, left: 0, right: 0, bottom: 0};
-        clone = isString(el) ? el : el.cloneNode(true);
-
-        if (!rect.width && !rect.height && relative) {
+        if (isElement(el)) {
+            rect = el.getBoundingClientRect();
+        } else if (isString(el)) {
+            clone = isString(el) ? el : el.cloneNode(true);
+        }
+        
+        if (rect && !rect.width && !rect.height) {
             // div 元素浮动后，行为类似 inline-block 元素
             if (clone.tagName == "DIV") {
                 css.call(clone, "display", "inline-block");
@@ -117,7 +120,6 @@ export function offset(relative) {
             removeCss.call(render, "height");
             fix.push(clone.getBoundingClientRect());
 
-            docElem = clone.ownerDocument.documentElement;
             remove.call(render); // 删除创建的临时节点
         }
     }
@@ -134,9 +136,6 @@ export function offset(relative) {
         copy.height = fix[1].height;
         copy.bottom = fix[1].bottom;
     }
-
-    copy.top  = copy.top + win.pageYOffset - docElem.clientTop;
-    copy.left = copy.left + win.pageXOffset - docElem.clientLeft;
 
     return copy;
 }

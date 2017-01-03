@@ -4,14 +4,13 @@ import {isTrueString} from "LIB_MINJS/check.js";
 import {allProxy} from "CORE_FUNCTION/proxy.js";
 import Transform from "LIB_MINJS/transform.js";
 
-
 function transformProxy(aKey, aVal) {
     var el = element(this);
 
     if (el && isTrueString(aKey)) {
-        if (!el._translateInit) {
+        if (!el._transformInit) {
             Transform(el);
-            el._translateInit = true;
+            el._transformInit = true;
         }
 
         if (aVal !== undefined) {
@@ -24,6 +23,10 @@ function transformProxy(aKey, aVal) {
     return this;
 }
 
-export function transform(aKey, aVal, setAll){
+export function transform(aKey, aVal, setAll) {
     return allProxy.call(this, transformProxy, aKey, aVal, setAll);
+}
+
+export function transtion(aKey, aVal, setAll) {
+    
 }

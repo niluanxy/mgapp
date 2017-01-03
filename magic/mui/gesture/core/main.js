@@ -1,6 +1,5 @@
 import RootMagic from "CORE_MAGIC/main.js";
-import {time as getTime} from "CORE_STATIC/util/main.js";
-import {supportPassive} from "CORE_STATIC/platform/main.js";
+import {time as getTime} from "CORE_STATIC/utils/main.js";
 import {extend, each, element} from "LIB_MINJS/utils.js";
 import fastCall from "LIB_MINJS/fastcall.js";
 import Emitter from "LIB_MINJS/emitter.js";
@@ -10,7 +9,7 @@ import $config from "CORE_MAGIC/config.js";
 var CFG = $config.gesture = {
     passive: true,
     preventMove: true,
-}, 
+},  
     Prototype = {}, touchFilter, getTouch, touchSum,
     touchFind = "changedTouches touches".split(" "), ABS = Math.abs,
     touchKeys = "pageX pageY clientX clientY screenX screenY".split(" ");
@@ -83,11 +82,12 @@ touchFilter = function(callback, scope) {
 };
 
 touchSum = function(self, e, touches) {
-    var nowTouch = touches[0],
+    var nowTouch = touches[0], ratio,
         startTouch = self.startTouch[0],
         startTime = self.startTime, moveMax, xMax,
         xmorMax, direction, deltaTime, deltaX, deltaY;
 
+    ratio = Math.sqrt(window.devicePixelRatio || 1);
     deltaX = nowTouch.pageX - startTouch.pageX;
     deltaY = nowTouch.pageY - startTouch.pageY;
     deltaTime = getTime() - startTime;
@@ -105,9 +105,9 @@ touchSum = function(self, e, touches) {
 
     e.direction = direction;
 
-    e.velocity  = -moveMax/deltaTime;
-    e.velocityX = -deltaX/deltaTime;
-    e.velocityY = -deltaY/deltaTime;
+    e.velocity  = moveMax/deltaTime/ratio;
+    e.velocityX = deltaX/deltaTime/ratio;
+    e.velocityY = deltaY/deltaTime/ratio;
 
     return self;
 };
@@ -175,7 +175,7 @@ Prototype.init = function() {
         bind = "addEventListener", unbind = "removeEventListener",
         bindStart = "MSPointerDown pointerdown ",
         bindMove  = "MSPointerMove pointermove ",
-        bindEnd   = "MSPointerUp pointerup ", bindArrs,
+        bindEnd   = "MSPointerUp pointerup ", bindArrs, supportPassive = RootMagic.supportPassive,
         touchStart = "touchstart", touchMove = "touchmove", touchEnd = "touchend touchcancel",
         mouseStart = "mousedown", mouseMove = "mousemove", mouseEnd = "mouseup";
 
