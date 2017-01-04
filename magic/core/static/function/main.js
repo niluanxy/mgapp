@@ -110,24 +110,22 @@ export var clearRaf = rafCancel;
 /* =====================================================
  *  tick 相关函数
  * ===================================================== */
-var tickArrs = {}, index = 0, runCall;
+var tickArrs = {}, index = 0, tickCall;
 
-(runCall = function() {
+(tickCall = function() {
     each(tickArrs, function(i, call) {
         call();
     });
 
-    raf(runCall);
+    raf(tickCall);
 })();
 
 export function tick(callback) {
-    var pos = index++;
+    tickArrs[index++] = callback;
 
-    tickArrs[pos] = callback;
-
-    return pos;
+    return index-1;
 }
 
 export function clearTick(handle) {
-    delete tickArrs[handle];
+    return delete tickArrs[handle];
 }
