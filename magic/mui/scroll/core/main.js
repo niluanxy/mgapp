@@ -158,7 +158,8 @@ Prototype.animate = function(x, y, time, animate, callback) {
         });
 
         self.animateHandle = tick(function() {
-            // console.log("move: "+$body.transform("translateY"));
+            console.log(window.getComputedStyle($body[0])["transform"]);
+            console.log("move: "+$body.transform("translateY"));
         });
     }
 
