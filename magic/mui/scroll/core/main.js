@@ -20,6 +20,8 @@ var CFG = $config.scroll = {
     boundryAnimate     : "cubic-bezier(0.25,0.1,0.25,1)",
     boundryAcceleration: 0.03,
 
+    velocityMin: 0.15,
+
     lockX: true,
     lockY: false,
     
@@ -34,9 +36,6 @@ function Scroll(el, option) {
 
     self.x = 0;
     self.y = 0;
-
-    self.boundryX = 0;
-    self.boundryY = 0;
 
     self.maxScrollX = 0;
     self.maxScrollY = 0;
@@ -91,19 +90,34 @@ Prototype.bindEvent = function() {
 
         $emit.emit("scroll", scrollX, scrollY, self);
     }).off("end.core").on("end.core", function(e, touch, touches) {
-        var transX = self.computeScroll(e.velocityX),
-            transY = self.computeScroll(e.velocityY),
-            transM = self.computeScroll(e.velocity), scrollX, scrollY;
+        var transX, transY, transM, minus, duration,
+            vel = e.velocity, velX = e.velocityX, velY = e.velocityY;
 
-        if (!lockX) scrollX = transX.scroll + thresholdX + e.deltaX;
-        if (!lockY) scrollY = transY.scroll + thresholdY + e.deltaY;
+        if (Math.abs(vel) > opt.velocityMin) {
+            transM = self.computeScroll(vel);
 
-        console.log(e);
-        console.log("V: "+e.velocity+"    Y:"+scrollY+"     T:"+transM.duration+"      A:"+opt.scrollAnimate);
+            if (!lockY || !lockX) {
+                if (!lockX) {
+                    minus = vel*velX >= 0 ? 1 : velX/Math.abs(velX);
+                    scrollX = transM.scroll*minus + thresholdX + e.deltaX;
+                } else {
+                    minus = vel*velY >= 0 ? 1 : velY/Math.abs(velY);
+                    scrollY = transM.scroll*minus + thresholdY + e.deltaY;
+                }
+            } else {
+                scrollX = self.computeScroll(e.velocityX).scroll;
+                scrollY = self.computeScroll(e.velocityY).scroll;
+            }
 
-        self.animate(scrollX, scrollY, transM.duration, opt.scrollAnimate, function() {
-            console.log("animate scroll end");
-        });
+            duration = transM.duration;
+
+            self.animate(scrollX, scrollY, duration, opt.scrollAnimate, function() {
+                console.log("animate scroll end");
+                $emit.emit("end", self.x, self.y, self);
+            });
+        } else {
+            $emit.emit("end", self.x, self.y, self);
+        }
     });
 
     return this;
@@ -144,7 +158,7 @@ Prototype.animate = function(x, y, time, animate, callback) {
         });
 
         self.animateHandle = tick(function() {
-            console.log("move: "+$body.transform("translateY"));
+            // console.log("move: "+$body.transform("translateY"));
         });
     }
 

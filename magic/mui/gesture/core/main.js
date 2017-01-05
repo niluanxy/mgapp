@@ -7,7 +7,8 @@ import {copyEvent} from "CORE_MODULE/event/core/main.js";
 import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.gesture = {
-    passive: true,
+    passive : true,
+    debounce: 10,
     preventMove: true,
 },  
     Prototype = {}, touchFilter, getTouch, touchSum,
@@ -82,18 +83,35 @@ touchFilter = function(callback, scope) {
 };
 
 touchSum = function(self, e, touches) {
-    var nowTouch = touches[0], ratio,
-        startTouch = self.startTouch[0],
-        startTime = self.startTime, moveMax, xMax,
+    var startTime = self.startTime,
+        startTouch= self.startTouch[0],
+
+        nowTime   = getTime(),
+        nowTouch  = touches[0],
+        lastTouch = self.lastTouch[0],
+
+        lastMove, lastTime, ratio, moveMax, xMax,
         xmorMax, direction, deltaTime, deltaX, deltaY;
 
-    ratio = Math.sqrt(window.devicePixelRatio || 1);
+    if (e.type !== self.lastType && nowTouch.pageX == lastTouch.pageX && nowTouch.pageY == lastTouch.pageY) {
+        lastMove = self.lastMove || {};
+
+        lastTime = lastMove.lastTime;
+        lastTouch= lastMove.lastTouch[0];
+
+        nowTime  = self.lastTime;
+        nowTouch = self.lastTouch[0];
+    } else {
+        lastTime = self.lastTime;
+    }
+
+    ratio = Math.sqrt((document.documentElement.clientWidth/screen.width) || 1);
     deltaX = nowTouch.pageX - startTouch.pageX;
     deltaY = nowTouch.pageY - startTouch.pageY;
-    deltaTime = getTime() - startTime;
+    deltaTime = nowTime - startTime;
 
-    xmorMax  = ABS(deltaX) >= ABS(deltaY);
-    moveMax  = xmorMax ? deltaX : deltaY;
+    xmorMax = ABS(deltaX) >= ABS(deltaY);
+    moveMax = xmorMax ? deltaX : deltaY;
 
     direction  = xmorMax ? Prototype.MOVE_LEFT : Prototype.MOVE_UP;
     direction *= moveMax >= 0 ? 2 : 1;
@@ -105,9 +123,25 @@ touchSum = function(self, e, touches) {
 
     e.direction = direction;
 
-    e.velocity  = moveMax/deltaTime/ratio;
+    // 暂存最后一次滚动的数据
+    self.lastMove  = {
+        lastType : self.lastType,
+        lastTime : self.lastTime,
+        lastTouch: self.lastTouch,
+    };
+
+    self.lastType  = e.type;
+    self.lastTime  = nowTime;
+    self.lastTouch = touches;
+
+    // 当前速度：(本次距离-上次距离)/(本次时间-上次时间)
+    deltaTime = nowTime - lastTime;
+    deltaX = nowTouch.pageX - lastTouch.pageX;
+    deltaY = nowTouch.pageY - lastTouch.pageY;
+
     e.velocityX = deltaX/deltaTime/ratio;
     e.velocityY = deltaY/deltaTime/ratio;
+    e.velocity  = xmorMax ? e.velocityX : e.velocityY;
 
     return self;
 };
@@ -124,9 +158,13 @@ function Gesture(el, option) {
     self.endTime   = 0;
     self.endTouch  = [{}];
 
+    self.lastType  = "";
+    self.lastTime  = 0;
+    self.lastTouch = [{}];
+
     self._start = touchFilter(function(e, touches) {
-        self.startTime = getTime();
-        self.startTouch = touches;
+        self.startTime = self.lastTime = getTime();
+        self.startTouch= self.lastTouch= touches;
 
         // 初始化 event 对象起始值
         e.deltaX = 0;
@@ -137,7 +175,7 @@ function Gesture(el, option) {
 
         e.velocity  = 0;
         e.velocityX = 0;
-        e.velocityY = 0; 
+        e.velocityY = 0;
 
         self.emit("start", e, touches[0], touches);
     }, self);
