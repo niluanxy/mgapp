@@ -71,8 +71,12 @@ export function slice(array, start, end) {
     return ret;
 }
 
-export function trim(string) {
-    return string.replace(/^\s+/, '').replace(/\s+$/, '');
+export function trim(string, extSpace) {
+    var clear = string.replace(/^\s+/, '').replace(/\s+$/, '');
+
+    if (extSpace) clear = clear.replace(/\s+/g, ' ');
+
+    return clear;
 }
 
 /**
