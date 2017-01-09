@@ -93,7 +93,9 @@ touchSum = function(self, e, touches) {
         lastMove, lastTime, ratio, moveMax, xMax,
         xmorMax, direction, deltaTime, deltaX, deltaY;
 
-    if (e.type !== self.lastType && nowTouch.pageX == lastTouch.pageX && nowTouch.pageY == lastTouch.pageY) {
+    if (self.lastType !== "start" && e.type !== self.lastType 
+        && nowTouch.pageX == lastTouch.pageX && nowTouch.pageY == lastTouch.pageY) {
+        
         lastMove = self.lastMove || {};
 
         lastTime = lastMove.lastTime;
@@ -165,6 +167,8 @@ function Gesture(el, option) {
     self._start = touchFilter(function(e, touches) {
         self.startTime = self.lastTime = getTime();
         self.startTouch= self.lastTouch= touches;
+
+        self.lastType = "start";
 
         // 初始化 event 对象起始值
         e.deltaX = 0;

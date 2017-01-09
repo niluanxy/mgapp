@@ -6,7 +6,7 @@ export var fast = fastBase;
 
 export function throttle(func, wait, delay) {
     var context, args, result,
-        timeout = null, 
+        timeout = null,
         previous = 0,
 
     later = function() {
@@ -78,6 +78,7 @@ var rafCall, rafCancel;
     var vendors = ['webkit', 'moz'];
 
     rafCall = window.requestAnimationFrame;
+    rafCancel = window.cancelAnimationFrame || window.cancelRequestAnimationFrame;
 
     for (var i = 0; i < vendors.length && !rafCall; ++i) {
         var prefix = vendors[i];
@@ -94,8 +95,8 @@ var rafCall, rafCancel;
         rafCall = function (callback) {
             var now = time(), nextTime = Math.max(lastTime + 16.7, now);
 
-            return setTimeout(function () { 
-                callback(lastTime = nextTime); 
+            return setTimeout(function () {
+                callback(lastTime = nextTime);
             }, nextTime - now);
         };
 
@@ -110,22 +111,27 @@ export var clearRaf = rafCancel;
 /* =====================================================
  *  tick 相关函数
  * ===================================================== */
-var tickArrs = {}, index = 0, tickCall;
+var tickArrs = {}, len = 0, pos = 0, tickCall;
 
-(tickCall = function() {
+tickCall = function() {
     each(tickArrs, function(i, call) {
-        call();
+        call(i);
     });
 
-    raf(tickCall);
-})();
+    if (len > 0) raf(tickCall);
+}
 
 export function tick(callback) {
-    tickArrs[index++] = callback;
+    if (!len++) raf(tickCall);
 
-    return index-1;
+    tickArrs[pos++] = callback;
+
+    return pos-1;
 }
 
 export function clearTick(handle) {
-    return delete tickArrs[handle];
+    if (tickArrs[handle]) {
+        --len; // 用于计数，0 则停止循环
+        delete tickArrs[handle];
+    }
 }

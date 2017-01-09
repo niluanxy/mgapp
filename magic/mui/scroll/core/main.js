@@ -1,10 +1,12 @@
 import RootMagic from "CORE_MAGIC/main.js";
 import Emitter from "LIB_MINJS/emitter.js";
 import Gesture from "MUI/gesture/core/main.js";
-import {raf, clearRaf, tick, clearTick} from "CORE_STATIC/function/main.js";
 import {uiInit, uiExtend} from "MUI/tools/main.js";
 import {isFunction, isNumber} from "LIB_MINJS/check.js";
 import $config from "CORE_MAGIC/config.js";
+
+import {transform, transition} from "MUI/scroll/utils/tools.js";
+import Animate from "MUI/scroll/utils/animate.js";
 
 var CFG = $config.scroll = {
     class: "scroll",
@@ -12,19 +14,20 @@ var CFG = $config.scroll = {
     wrapClass: "scroll",
     bodyClass: "scroll_body",
 
-    scrollAnimate     : "cubic-bezier(0.33,0.66,0.66,1)",
+    scrollAnimate     : "quadratic",
     scrollAcceleration: 0.0005,
 
     boundry            : true,
+    boundryRate        : 0.03,
     boundryTime        : 500,
-    boundryAnimate     : "cubic-bezier(0.25,0.1,0.25,1)",
-    boundryAcceleration: 0.03,
+    boundryAnimate     : "ease",
+    boundryAcceleration: 0.382,  // 1 - 0.618
 
     velocityMin: 0.15,
 
     lockX: true,
     lockY: false,
-    
+
     onInit: null,
 }, Prototype = {};
 
@@ -36,12 +39,15 @@ function Scroll(el, option) {
 
     self.x = 0;
     self.y = 0;
+    self.scale = 1;
+
+    self.width  = 0;
+    self.height = 0;
 
     self.maxScrollX = 0;
     self.maxScrollY = 0;
 
-    self.animateHandle = null;
-
+    self.animate = null;
     self.emitter = Emitter();
     self.gesture = Gesture(self.$el);
 
@@ -60,37 +66,49 @@ Prototype.init = function() {
 
     self.$body = $body;
     self.gesture.init();
+    self.animate = new Animate($body);
 
-    self.bindEvent().refresh();
+    self.translate(0, 0).bindEvent().refresh();
     $emit.emit("init");
 
     return self;
 }
 
 Prototype.bindEvent = function() {
-    var self = this, $emit = self.emitter, opt = self.option,
-        transHandle, lockX, lockY, thresholdX, thresholdY;
+    var self = this, $emit = self.emitter,
+        opt = self.option, thresholdX, thresholdY;
 
     self.gesture.off("start.core").on("start.core", function(e, touch, touches) {
-        thresholdX = self.x;
-        thresholdY = self.y;
+        thresholdX = self.getScroll("x");
+        thresholdY = self.getScroll("y");
 
-        lockX = opt.lockX;
-        lockY = opt.lockY;
-
-        self.animateStop();
+        self.animate.stop();
+        self.translate(thresholdX, thresholdY);
         $emit.emit("start", thresholdY, thresholdY, self);
     }).off("move.core").on("move.core", function(e, touch, touches) {
-        var scrollX, scrollY;
+        var scrollX, scrollY, rate = opt.boundryAcceleration,
+            maxX = self.maxScrollX, maxY = self.maxScrollY;
 
-        clearRaf(transHandle);
-        if (!lockX) scrollX = thresholdX + e.deltaX;
-        if (!lockY) scrollY = thresholdY + e.deltaY;
-        transHandle = self.translate(scrollX, scrollY);
+        if (!opt.lockX) scrollX = thresholdX + e.deltaX;
+        if (!opt.lockY) scrollY = thresholdY + e.deltaY;
 
+        // 超过边界，滚动速率放慢
+        if (opt.boundry) {
+            scrollX = scrollX > 0 ? scrollX * rate : scrollX;
+            scrollX = scrollX < maxX ? (scrollX-maxX)*rate+maxX : scrollX;
+
+            scrollY = scrollY > 0 ? scrollY * rate : scrollY;
+            scrollY = scrollY < maxY ? (scrollY-maxY)*rate+maxY : scrollY;
+        } else {
+            scrollX = scrollX > 0 ? 0 : scrollX < maxX ? maxX : scrollX;
+            scrollY = scrollY > 0 ? 0 : scrollY < maxY ? maxY : scrollY;
+        }
+
+        self.translate(scrollX, scrollY);
         $emit.emit("scroll", scrollX, scrollY, self);
     }).off("end.core").on("end.core", function(e, touch, touches) {
-        var transX, transY, transM, minus, duration,
+        var scrollX, scrollY, transM, minus, duration, animate,
+            lockX = opt.lockX, lockY = opt.lockY,
             vel = e.velocity, velX = e.velocityX, velY = e.velocityY;
 
         if (Math.abs(vel) > opt.velocityMin) {
@@ -105,19 +123,22 @@ Prototype.bindEvent = function() {
                     scrollY = transM.scroll*minus + thresholdY + e.deltaY;
                 }
             } else {
-                scrollX = self.computeScroll(e.velocityX).scroll;
-                scrollY = self.computeScroll(e.velocityY).scroll;
+                scrollX = self.computeScroll(velX).scroll;
+                scrollY = self.computeScroll(velY).scroll;
             }
 
-            duration = transM.duration;
-
-            self.animate(scrollX, scrollY, duration, opt.scrollAnimate, function() {
-                console.log("animate scroll end");
-                $emit.emit("end", self.x, self.y, self);
-            });
+            animate = opt.scrollAnimate;
+            duration= transM.duration;
         } else {
-            $emit.emit("end", self.x, self.y, self);
+            scrollX  = self.x;
+            scrollY  = self.y;
+            duration = 0;
+            animate  = "";
         }
+
+        self.scrollTo(scrollX, scrollY, duration, animate, function() {
+            $emit.emit("end", self.x, self.y, self);
+        });
     });
 
     return this;
@@ -129,99 +150,91 @@ Prototype.refresh = function() {
     oBody = self.$body.offset() || {};
     oWrap = self.$el.offset() || {};
 
-    self.maxScrollY = oWrap.height - oBody.height;
+    self.width = oBody.width;
+    self.height= oBody.height;
+
     self.maxScrollX = oWrap.width - oBody.width;
+    self.maxScrollY = oWrap.height - oBody.height;
 
     return self;
 }
 
-Prototype.animateStop = function() {
-    clearTick(this.animateHandle);
+Prototype.scrollBy = function(stepX, stepY, time, animate, callback) {
+    return this.scrollTo(self.x+stepX, self.y+stepY, time, animate, callback);
 }
 
-Prototype.animate = function(x, y, time, animate, callback) {
-    var self = this, $body = self.$body;
+Prototype.scrollTo = function(scrollX, scrollY, time, animate, callback) {
+    var self = this, opt = self.option, $emit = self.emitter, boundry, config,
+        maxX = self.scrollX, maxY = self.maxScrollY, rate = opt.boundryRate;
 
-    self.animateStop();
-
-    if ((x !== undefined || y !== undefined) && time && animate) {
-        self.translate(x, y, time, animate, function() {
-            // 尝试检测是否需要反弹
-            if (self.option.boundry) {
-                self.boundry(callback);
-            } else {
-                if(isFunction(callback)) callback(self.x, self.y, self);
-            }
-
-            self.animateStop();
-            console.log("transition end");
-        });
-
-        self.animateHandle = tick(function() {
-            console.log(window.getComputedStyle($body[0])["transform"]);
-            console.log("move: "+$body.transform("translateY"));
-        });
+    if (scrollX > 0 || scrollX < maxX) {
+        boundry = true;
+        scrollX = maxX + self.width*rate*(scrollX > 0 ? 1 : -1);
     }
 
-    return self;
-}
-
-Prototype.translate = function(x, y, time, animate, callback) {
-    var self = this, $body = self.$body, transition;
-
-    return raf(function() {
-        $body.transition("none").off("transitionend");
-
-        if (x != null) {
-            $body.transform("translateX", x);
-            self.x = x;
-        }
-
-        if (y != null) {
-            $body.transform("translateY", y);
-            self.y = y;
-        }
-
-        if (isNumber(time) && animate) {
-            $body.transition("all "+time+"ms "+animate+" 0ms");
-
-            if (isFunction(callback)) {
-                $body.once("transitionend", function() {
-                    callback(self.x, self.y, self);
-                });
-            }
-        }
-    });
-}
-
-Prototype.boundry = function(callback, time, animate) {
-    var self = this, opt = self.option, scrollX, scrollY, aTime, aAnima;
-
-    aTime  = time || opt.boundryTime;
-    aAnima = animate || opt.boundryAnimate;
-
-    if (aTime && aAnima) {
-        if (self.x > 0 || self.x < self.maxScrollX) {
-            scrollX = self.x > 0 ? 0 : self.maxScrollX;
-        }
-
-        if (self.y > 0 || self.y < self.maxScrollY) {
-            scrollY = self.y > 0 ? 0 : self.maxScrollY;
-        }
-
-        if (scrollX || scrollY) {
-            self.translate(scrollX, scrollY, aTime, aAnima, callback);
-        } else if (isFunction(callback)) {
-            callback(self.x, self.y, self);
-        }
+    if (scrollY > 0 || scrollY < maxY) {
+        boundry = true;
+        scrollY = maxY + self.height*rate*(scrollY > 0 ? 1 : -1);
     }
 
+    time = (time || 0)*(boundry ? 0.5 : 1);
+
+    config = {
+        time: time,
+        style: self.getTrans(scrollX, scrollY),
+        bezier: animate,
+
+        runCall: function() {
+            self.x = self.getScroll("x");
+            self.y = self.getScroll("y");
+
+            $emit.emit("scroll", self.x, self.y, self);
+        },
+
+        endCall: function() {
+            console.log("has run transend")
+            isFunction(callback) && callback();
+        }
+    }
+    console.log(config)
+
+    self.animate.stop().reset(config).run();
+
     return self;
+}
+
+Prototype.translate = function(x, y, scale) {
+    var self = this;
+
+    transform(self.$body, self.getTrans(x, y, scale));
+
+    return this;
+}
+
+Prototype.getTrans = function(x, y, scale) {
+    var self = this, translateZ = " translateZ(0)";
+
+    self.x = x || self.x || 0;
+    self.y = y || self.y || 0;
+    self.scale = scale || this.scale || 1;
+
+    return "translate("+self.x+"px,"+self.y+"px) scale("+this.scale+")"+translateZ;
+}
+
+Prototype.getScroll = function(direction) {
+    var self = this, trans, finds;
+
+    direction = direction === "x" ? 4 : 5;
+
+    trans = transform(self.$body).match(/[-\d\.*\d*]+/g) || [];
+    finds = transform.length > 6 ? 8 : 0;
+
+    return Math.round(trans[finds+direction]) || 0;
 }
 
 Prototype.computeScroll = function(spend) {
     var self = this, opt = self.option,
-        minus = spend/Math.abs(spend) || 1, 
+        minus = spend/Math.abs(spend) || 1,
         maxSpend = opt.scrollMaxSpend, v, t, a, s, e;
 
     v = spend;
@@ -230,7 +243,7 @@ Prototype.computeScroll = function(spend) {
     s = t * v / 2;
     e = Math.abs(v) > maxSpend ? "circular" : "quadratic";
 
-    return { scroll: s, easing: e, duration: t, spend: v }
+    return { scroll: s, easing: e, duration: t}
 }
 
 RootMagic.extend({scroll: function(el, option) {

@@ -30,7 +30,7 @@
     "rollup-plugin-json": "^2.0.2",
     "rollup-plugin-replace": "^1.1.1",
     "rollup-plugin-uglify": "^1.0.1",
-    "rollup-stream": "^1.14.0",
+    "rollup-stream": "1.14.0",
     "throttle-debounce": "^1.0.1",
     "vinyl-source-stream": "^1.1.0",
     "webpack": "^1.13.3",
