@@ -109,8 +109,11 @@ Prototype.bindEvent = function() {
         $emit.emit("scroll", scrollX, scrollY, self);
     }).off("end.core").on("end.core", function(e, touch, touches) {
         var scrollX, scrollY, transM, minus, duration, animate,
-            lockX = opt.lockX, lockY = opt.lockY,
+            lockX = opt.lockX, lockY = opt.lockY, maxX, maxY,
             vel = e.velocity, velX = e.velocityX, velY = e.velocityY;
+
+        maxX = self.maxScrollX;
+        maxY = self.maxScrollY;
 
         if (ABS(vel) > opt.velocityMin) {
             transM = self.computeScroll(vel);
@@ -137,7 +140,12 @@ Prototype.bindEvent = function() {
             animate  = "";
         }
 
-        self.scrollTo(scrollX, scrollY, duration, animate);
+        // 没有越界，且没动画效果，则直接更新状态，触发事件
+        if (!duration && scrollX <= 0 && scrollX >= maxX && scrollY <= 0 && scrollY >= maxY) {
+            self.updatePos("end");
+        } else {
+            self.scrollTo(scrollX, scrollY, duration, animate);
+        }
     });
 
     return this;
