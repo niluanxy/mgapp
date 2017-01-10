@@ -137,9 +137,7 @@ Prototype.bindEvent = function() {
             animate  = "";
         }
 
-        self.scrollTo(scrollX, scrollY, duration, animate, function() {
-            self.updatePos();
-        });
+        self.scrollTo(scrollX, scrollY, duration, animate);
     });
 
     return this;
@@ -173,7 +171,7 @@ Prototype.scrollTo = function(scrollX, scrollY, time, animate) {
 
     // 释放的时候已经越界
     if (self.x > 0 || self.x < maxX || self.y > 0 || self.y < maxY) {
-        self.boundry(callback);
+        self.boundry();
     } else if (time && animate) {
         topX = self.width*rate;
         topY = self.height*rate;
