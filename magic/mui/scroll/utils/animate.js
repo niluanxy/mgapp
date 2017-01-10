@@ -8,17 +8,17 @@ import {transition, transform} from "MUI/scroll/utils/tools.js";
 /**
  * config: style time bezier runCall endCall
  */
-var Animate = function(el, config) {
+var Animate = function(el) {
     var self = this;
 
-    self.reset(config || {})
-        .$el = RootMagic(el);
+    self.$el = RootMagic(el);
 
-    self.config = config || {};
+    self.config = {};
     self.timeHandle = null;
     self.tickHandle = null;
 }, Prototype = Animate.prototype = {};
 
+Animate.RESETS = "style time bezier runCall endCall".split(" ");
 Animate.BEZIER = {
     ease     : "0.25, 0.1, 0.25, 1",
     bounce   : "0.71, 1.35, 0.47, 1.41",
@@ -58,6 +58,13 @@ Prototype.stop = function() {
 Prototype.reset = function(option) {
     var self = this, sets = option || {};
 
+    // 自动先清除旧的信息
+    each(Animate.RESETS, function(i, val) {
+        self.config[val] = "";
+    });
+
+    self.stop();
+
     each(sets, function(key, val) {
         if (val !== undefined) {
             self.config[key] = val;
@@ -86,7 +93,6 @@ Prototype.trans = function() {
         trans = bezier ? trans+" 0ms" : "none";
     }
 
-    console.log(trans)
     transition(self.$el, trans);
     transform(self.$el, cfg.style || "");
 

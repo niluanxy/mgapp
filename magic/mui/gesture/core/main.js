@@ -10,7 +10,7 @@ var CFG = $config.gesture = {
     passive : true,
     debounce: 10,
     preventMove: true,
-},  
+},
     Prototype = {}, touchFilter, getTouch, touchSum,
     touchFind = "changedTouches touches".split(" "), ABS = Math.abs,
     touchKeys = "pageX pageY clientX clientY screenX screenY".split(" ");
@@ -93,9 +93,9 @@ touchSum = function(self, e, touches) {
         lastMove, lastTime, ratio, moveMax, xMax,
         xmorMax, direction, deltaTime, deltaX, deltaY;
 
-    if (self.lastType !== "start" && e.type !== self.lastType 
+    if (self.lastType !== "start" && e.type !== self.lastType
         && nowTouch.pageX == lastTouch.pageX && nowTouch.pageY == lastTouch.pageY) {
-        
+
         lastMove = self.lastMove || {};
 
         lastTime = lastMove.lastTime;
@@ -107,7 +107,7 @@ touchSum = function(self, e, touches) {
         lastTime = self.lastTime;
     }
 
-    ratio = Math.sqrt((document.documentElement.clientWidth/screen.width) || 1);
+    ratio = (document.documentElement.clientWidth/screen.width) || 1;
     deltaX = nowTouch.pageX - startTouch.pageX;
     deltaY = nowTouch.pageY - startTouch.pageY;
     deltaTime = nowTime - startTime;

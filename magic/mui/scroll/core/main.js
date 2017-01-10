@@ -1,11 +1,12 @@
 import RootMagic from "CORE_MAGIC/main.js";
 import Emitter from "LIB_MINJS/emitter.js";
 import Gesture from "MUI/gesture/core/main.js";
-import {uiInit, uiExtend} from "MUI/tools/main.js";
-import {isFunction, isNumber} from "LIB_MINJS/check.js";
+import {uiExtend} from "MUI/tools/main.js";
+import {value} from "LIB_MINJS/utils.js";
+import {isFunction} from "LIB_MINJS/check.js";
 import $config from "CORE_MAGIC/config.js";
 
-import {transform, transition} from "MUI/scroll/utils/tools.js";
+import {transform} from "MUI/scroll/utils/tools.js";
 import Animate from "MUI/scroll/utils/animate.js";
 
 var CFG = $config.scroll = {
@@ -14,7 +15,7 @@ var CFG = $config.scroll = {
     wrapClass: "scroll",
     bodyClass: "scroll_body",
 
-    scrollAnimate     : "quadratic",
+    scrollMaxSpend    : 2,
     scrollAcceleration: 0.0005,
 
     boundry            : true,
@@ -29,7 +30,7 @@ var CFG = $config.scroll = {
     lockY: false,
 
     onInit: null,
-}, Prototype = {};
+}, Prototype = {}, ABS = Math.abs;
 
 function Scroll(el, option) {
     var self = this;
@@ -111,15 +112,15 @@ Prototype.bindEvent = function() {
             lockX = opt.lockX, lockY = opt.lockY,
             vel = e.velocity, velX = e.velocityX, velY = e.velocityY;
 
-        if (Math.abs(vel) > opt.velocityMin) {
+        if (ABS(vel) > opt.velocityMin) {
             transM = self.computeScroll(vel);
 
             if (!lockY || !lockX) {
                 if (!lockX) {
-                    minus = vel*velX >= 0 ? 1 : velX/Math.abs(velX);
+                    minus = vel*velX >= 0 ? 1 : velX/ABS(velX);
                     scrollX = transM.scroll*minus + thresholdX + e.deltaX;
                 } else {
-                    minus = vel*velY >= 0 ? 1 : velY/Math.abs(velY);
+                    minus = vel*velY >= 0 ? 1 : velY/ABS(velY);
                     scrollY = transM.scroll*minus + thresholdY + e.deltaY;
                 }
             } else {
@@ -127,7 +128,7 @@ Prototype.bindEvent = function() {
                 scrollY = self.computeScroll(velY).scroll;
             }
 
-            animate = opt.scrollAnimate;
+            animate = transM.easing;
             duration= transM.duration;
         } else {
             scrollX  = self.x;
@@ -137,7 +138,7 @@ Prototype.bindEvent = function() {
         }
 
         self.scrollTo(scrollX, scrollY, duration, animate, function() {
-            $emit.emit("end", self.x, self.y, self);
+            self.updatePos();
         });
     });
 
@@ -163,44 +164,92 @@ Prototype.scrollBy = function(stepX, stepY, time, animate, callback) {
     return this.scrollTo(self.x+stepX, self.y+stepY, time, animate, callback);
 }
 
-Prototype.scrollTo = function(scrollX, scrollY, time, animate, callback) {
-    var self = this, opt = self.option, $emit = self.emitter, boundry, config,
-        maxX = self.scrollX, maxY = self.maxScrollY, rate = opt.boundryRate;
+Prototype.scrollTo = function(scrollX, scrollY, time, animate) {
+    var self = this, opt = self.option, $emit = self.emitter, config, boundry,
+        maxX = self.maxScrollX, maxY = self.maxScrollY, rate = opt.boundryRate,
+        topX, topY, bottomX, bottomY;
 
-    if (scrollX > 0 || scrollX < maxX) {
-        boundry = true;
-        scrollX = maxX + self.width*rate*(scrollX > 0 ? 1 : -1);
-    }
+    time = Math.round(time || 0);
 
-    if (scrollY > 0 || scrollY < maxY) {
-        boundry = true;
-        scrollY = maxY + self.height*rate*(scrollY > 0 ? 1 : -1);
-    }
+    // 释放的时候已经越界
+    if (self.x > 0 || self.x < maxX || self.y > 0 || self.y < maxY) {
+        self.boundry(callback);
+    } else if (time && animate) {
+        topX = self.width*rate;
+        topY = self.height*rate;
 
-    time = (time || 0)*(boundry ? 0.5 : 1);
+        bottomX = scrollX < maxX ? maxX - topX : maxX;
+        bottomY = scrollY < maxY ? maxY - topY : maxY;
 
-    config = {
-        time: time,
-        style: self.getTrans(scrollX, scrollY),
-        bezier: animate,
+        config = {
+            time: time,
+            style: self.getTrans(scrollX, scrollY),
+            bezier: animate,
 
-        runCall: function() {
-            self.x = self.getScroll("x");
-            self.y = self.getScroll("y");
+            runCall: function() {
+                self.updatePos("scroll");
 
-            $emit.emit("scroll", self.x, self.y, self);
-        },
+                // 滚动中越界判断
+                if (self.x < bottomX || self.y < bottomY || self.x > topX || self.y > topY ) {
+                    self.boundry();
+                }
+            },
 
-        endCall: function() {
-            console.log("has run transend")
-            isFunction(callback) && callback();
+            endCall: function() {
+                // 滚动结束越界判断
+                if (self.x > 0 || self.y > 0 || self.x < maxX || self.y < maxY) {
+                    self.boundry();
+                } else {
+                    self.updatePos("end");
+                }
+            }
         }
-    }
-    console.log(config)
 
-    self.animate.stop().reset(config).run();
+        self.animate.reset(config).run();
+    } else {
+        // 无动画效果直接设置样式
+        self.translate(scrollX, scrollY);
+    }
 
     return self;
+}
+
+Prototype.updatePos = function(eveName) {
+    var self = this, $emit = self.emitter;
+
+    self.x = self.getScroll("x");
+    self.y = self.getScroll("y");
+
+    if (eveName) $emit.emit(eveName, self.x, self.y, self);
+
+    return self;
+}
+
+Prototype.boundry = function() {
+    var self = this, opt = self.option,
+        x = self.x, y = self.y, maxX, maxY;
+
+    maxX = self.maxScrollX;
+    maxY = self.maxScrollY;
+
+    x = x > 0 ? 0 : x < maxX ? maxX : x;
+    y = y > 0 ? 0 : y < maxY ? maxY : y;
+
+    if (x != self.x || y != self.y) {
+        self.animate.reset({
+            time: opt.boundryTime,
+            style: self.getTrans(x, y),
+            bezier: opt.boundryAnimate,
+
+            runCall: function() {
+                self.updatePos("scroll");
+            },
+
+            endCall: function() {
+                self.updatePos("end");
+            }
+        }).run();
+    }
 }
 
 Prototype.translate = function(x, y, scale) {
@@ -214,8 +263,8 @@ Prototype.translate = function(x, y, scale) {
 Prototype.getTrans = function(x, y, scale) {
     var self = this, translateZ = " translateZ(0)";
 
-    self.x = x || self.x || 0;
-    self.y = y || self.y || 0;
+    self.x = value(x, self.x, 0);
+    self.y = value(y, self.y, 0);
     self.scale = scale || this.scale || 1;
 
     return "translate("+self.x+"px,"+self.y+"px) scale("+this.scale+")"+translateZ;
@@ -234,14 +283,13 @@ Prototype.getScroll = function(direction) {
 
 Prototype.computeScroll = function(spend) {
     var self = this, opt = self.option,
-        minus = spend/Math.abs(spend) || 1,
         maxSpend = opt.scrollMaxSpend, v, t, a, s, e;
 
-    v = spend;
-    a = opt.scrollAcceleration * minus;
-    t = Math.abs(v/a || 0);
+    v = spend > maxSpend ? maxSpend*(spend/ABS(spend)) : spend;
+    a = opt.scrollAcceleration;
+    t = ABS(v/a || 0);
     s = t * v / 2;
-    e = Math.abs(v) > maxSpend ? "circular" : "quadratic";
+    e = ABS(spend) > maxSpend ? "circular" : "quadratic";
 
     return { scroll: s, easing: e, duration: t}
 }
