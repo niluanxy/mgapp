@@ -1,6 +1,6 @@
 import RootMagic from "CORE_MAGIC/main.js";
 import {time as getTime} from "CORE_STATIC/utils/main.js";
-import {extend, each, element} from "LIB_MINJS/utils.js";
+import {extend, each, element, trim} from "LIB_MINJS/utils.js";
 import fastCall from "LIB_MINJS/fastcall.js";
 import Emitter from "LIB_MINJS/emitter.js";
 import {copyEvent} from "CORE_MODULE/event/core/main.js";
@@ -83,69 +83,75 @@ touchFilter = function(callback, scope) {
 };
 
 touchSum = function(self, e, touches) {
-    var startTime = self.startTime,
-        startTouch= self.startTouch[0],
+    var pixRatio = window.devicePixelRatio || 1;
 
-        nowTime   = getTime(),
-        nowTouch  = touches[0],
-        lastTouch = self.lastTouch[0],
+    pixRatio = Math.max(pixRatio, document.documentElement.clientWidth/screen.width || 1);
+    pixRatio = Math.sqrt(pixRatio);
 
-        lastMove, lastTime, ratio, moveMax, xMax,
-        xmorMax, direction, deltaTime, deltaX, deltaY;
+    return (touchSum = function(self, e, touches) {
+        var startTime = self.startTime,
+            startTouch= self.startTouch[0],
 
-    if (self.lastType !== "start" && e.type !== self.lastType
-        && nowTouch.pageX == lastTouch.pageX && nowTouch.pageY == lastTouch.pageY) {
+            nowTime   = getTime(),
+            nowTouch  = touches[0],
 
-        lastMove = self.lastMove || {};
+            lastTime  = self.lastTime,
+            lastTouch = self.lastTouch[0],
 
-        lastTime = lastMove.lastTime;
-        lastTouch= lastMove.lastTouch[0];
+            lastMove, ratio, moveMax, xMax,
+            xmorMax, direction, deltaTime, deltaX, deltaY;
 
-        nowTime  = self.lastTime;
-        nowTouch = self.lastTouch[0];
-    } else {
-        lastTime = self.lastTime;
-    }
+        // end 事件下位置不变，需要读取缓存的上一次位置信息
+        if (self.lastType !== "start" && e.type !== self.lastType
+            && nowTouch.pageX == lastTouch.pageX && nowTouch.pageY == lastTouch.pageY) {
 
-    ratio = (document.documentElement.clientWidth/screen.width) || 1;
-    deltaX = nowTouch.pageX - startTouch.pageX;
-    deltaY = nowTouch.pageY - startTouch.pageY;
-    deltaTime = nowTime - startTime;
+            nowTime  = nowTime-lastTime < 20 ? lastTime : nowTime-20;
+            nowTouch = self.lastTouch[0];
 
-    xmorMax = ABS(deltaX) >= ABS(deltaY);
-    moveMax = xmorMax ? deltaX : deltaY;
+            lastMove = self.lastMove || {};
+            lastTime = lastMove.lastTime;
+            lastTouch= lastMove.lastTouch[0];
+        }
 
-    direction  = xmorMax ? Prototype.MOVE_LEFT : Prototype.MOVE_UP;
-    direction *= moveMax >= 0 ? 2 : 1;
+        deltaX = nowTouch.pageX - startTouch.pageX;
+        deltaY = nowTouch.pageY - startTouch.pageY;
+        deltaTime = nowTime - startTime;
 
-    // 计算结果传递到 event 对象上
-    e.deltaX = deltaX;
-    e.deltaY = deltaY;
-    e.deltaTime = deltaTime;
+        xmorMax = ABS(deltaX) >= ABS(deltaY);
+        moveMax = xmorMax ? deltaX : deltaY;
 
-    e.direction = direction;
+        direction  = xmorMax ? Prototype.MOVE_LEFT : Prototype.MOVE_UP;
+        direction *= moveMax >= 0 ? 2 : 1;
 
-    // 暂存最后一次滚动的数据
-    self.lastMove  = {
-        lastType : self.lastType,
-        lastTime : self.lastTime,
-        lastTouch: self.lastTouch,
-    };
+        // 计算结果传递到 event 对象上
+        e.deltaX = deltaX;
+        e.deltaY = deltaY;
+        e.deltaTime = deltaTime;
 
-    self.lastType  = e.type;
-    self.lastTime  = nowTime;
-    self.lastTouch = touches;
+        e.direction = direction;
 
-    // 当前速度：(本次距离-上次距离)/(本次时间-上次时间)
-    deltaTime = nowTime - lastTime;
-    deltaX = nowTouch.pageX - lastTouch.pageX;
-    deltaY = nowTouch.pageY - lastTouch.pageY;
+        // 暂存最后一次滚动的数据
+        self.lastMove  = {
+            lastType : self.lastType,
+            lastTime : self.lastTime,
+            lastTouch: self.lastTouch,
+        };
 
-    e.velocityX = deltaX/deltaTime/ratio;
-    e.velocityY = deltaY/deltaTime/ratio;
-    e.velocity  = xmorMax ? e.velocityX : e.velocityY;
+        self.lastType  = e.type;
+        self.lastTime  = nowTime;
+        self.lastTouch = touches;
 
-    return self;
+        // 当前速度：(本次距离-上次距离)/(本次时间-上次时间)
+        deltaTime = nowTime - lastTime;
+        deltaX = nowTouch.pageX - lastTouch.pageX;
+        deltaY = nowTouch.pageY - lastTouch.pageY;
+
+        e.velocityX = deltaX/pixRatio/deltaTime;
+        e.velocityY = deltaY/pixRatio/deltaTime;
+        e.velocity  = xmorMax ? e.velocityX : e.velocityY;
+
+        return self;
+    })(self, e, touches);
 };
 
 function Gesture(el, option) {
@@ -181,7 +187,7 @@ function Gesture(el, option) {
         e.velocityX = 0;
         e.velocityY = 0;
 
-        self.emit("start", e, touches[0], touches);
+        self.bind("move").emit("start", e, touches[0], touches);
     }, self);
 
     self._move = touchFilter(function(e, touches) {
@@ -198,7 +204,7 @@ function Gesture(el, option) {
         self.endTouch = touches;
 
         touchSum(self, e, touches)
-            .emit("end", e, touches[0], touches);
+            .unbind("move").emit("end", e, touches[0], touches);
     }, self);
 }; Gesture.prototype = Prototype;
 
@@ -211,8 +217,7 @@ extend(Prototype, {
 });
 
 Prototype.init = function() {
-    var bindArrs, eveBind, eveUnbind, eveStart, eveMove, eveEnd,
-        bindCall = "_start _move _end".split(" "), DOC = document,
+    var bindMaps, eveBind, eveUnbind, eveStart, eveMove, eveEnd, DOC = document,
 
         bind = "addEventListener", unbind = "removeEventListener",
         bindStart = "MSPointerDown pointerdown ",
@@ -231,11 +236,11 @@ Prototype.init = function() {
         eveEnd   = bindEnd + mouseEnd;
     }
 
-    bindArrs = [
-        eveStart.split(" "),
-        eveMove.split(" "),
-        eveEnd.split(" "),
-    ];
+    bindMaps = {
+        start: eveStart.split(" "),
+        move : eveMove.split(" "),
+        end  : eveEnd.split(" "),
+    };
 
     eveBind = DOC[bind] ? bind : "attachEvent",
     eveUnbind = DOC[unbind] ? unbind : "detachEvent";
@@ -243,22 +248,40 @@ Prototype.init = function() {
     Prototype.init = function() {
         var self = this, bindDom = self.el;
 
-        each(bindArrs, function(i, types) {
-            var bindOption = supportPassive && i==0 ? {
-                capture: true,
-                passive: !!self.option.passive,
-            } : true, call = bindCall[i];
-
-            call = self[call] || null;
-
-            each(types, function(j, event) {
-                bindDom[unbind](event, call);
-                bindDom[bind](event, call, bindOption);
-            });
-        });
+        self.bind("start").bind("end");
 
         return self.emit("init");
     };
+
+    Prototype.bind = function(type) {
+        var self = this, bindDom = self.el,
+            eveNames = bindMaps[type],
+            listener = self["_"+type], eveOption;
+
+        eveOption = supportPassive && type=="start" ? {
+            capture: true,
+            passive: !!self.option.passive,
+        } : true;
+
+        each(eveNames, function(i, name) {
+            bindDom[eveBind](name, listener);
+            bindDom[eveUnbind](name, listener, eveOption);
+        });
+
+        return self;
+    }
+
+    Prototype.unbind = function(type) {
+        var self = this, bindDom = self.el,
+            eveNames = bindMaps[type],
+            listener = self["_"+type];
+
+        each(eveNames, function(i, name) {
+            bindDom[eveUnbind](name, listener);
+        });
+
+        return self;
+    }
 
     return this.init();
 }
