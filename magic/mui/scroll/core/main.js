@@ -119,11 +119,13 @@ Prototype.bindEvent = function() {
             transM = self.computeScroll(vel);
 
             if (!lockY || !lockX) {
+                transM.scroll = ABS(transM.scroll);
+
                 if (!lockX) {
-                    minus = vel*velX >= 0 ? 1 : velX/ABS(velX);
+                    minus = velX/ABS(velX);
                     scrollX = transM.scroll*minus + thresholdX + e.deltaX;
                 } else {
-                    minus = vel*velY >= 0 ? 1 : velY/ABS(velY);
+                    minus = velY/ABS(velY);
                     scrollY = transM.scroll*minus + thresholdY + e.deltaY;
                 }
             } else {
