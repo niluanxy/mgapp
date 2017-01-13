@@ -86,69 +86,86 @@ touchSum = function(self, e, touches) {
     var pixRatio = window.devicePixelRatio || 1;
 
     pixRatio = Math.max(pixRatio, document.documentElement.clientWidth/screen.width || 1);
-    pixRatio = Math.sqrt(pixRatio);
 
-    return (touchSum = function(self, e, touches) {
-        var startTime = self.startTime,
-            startTouch= self.startTouch[0],
+    function updateSelf(self, e, touches, time, delta) {
+        self.lastTime = time || getTime();
+        self.lastTouch = touches;
 
-            nowTime   = getTime(),
-            nowTouch  = touches[0],
+        self.cacheDelta = delta;
+    }
 
-            lastTime  = self.lastTime,
-            lastTouch = self.lastTouch[0],
+    function getDelta(end, start, endTime, startTime) {
+        var xmorMax, moveMax, deltaTime, deltaX, deltaY, direction;
 
-            lastMove, ratio, moveMax, xMax,
-            xmorMax, direction, deltaTime, deltaX, deltaY;
-
-        // end 事件下位置不变，需要读取缓存的上一次位置信息
-        if (self.lastType !== "start" && e.type !== self.lastType
-            && nowTouch.pageX == lastTouch.pageX && nowTouch.pageY == lastTouch.pageY) {
-
-            nowTime  = nowTime-lastTime < 20 ? lastTime : nowTime-20;
-            nowTouch = self.lastTouch[0];
-
-            lastMove = self.lastMove || {};
-            lastTime = lastMove.lastTime;
-            lastTouch= lastMove.lastTouch[0];
-        }
-
-        deltaX = nowTouch.pageX - startTouch.pageX;
-        deltaY = nowTouch.pageY - startTouch.pageY;
-        deltaTime = nowTime - startTime;
+        deltaX = end.pageX - start.pageX;
+        deltaY = end.pageY - start.pageY;
 
         xmorMax = ABS(deltaX) >= ABS(deltaY);
         moveMax = xmorMax ? deltaX : deltaY;
 
+        deltaTime = endTime - startTime;
+
         direction  = xmorMax ? Prototype.MOVE_LEFT : Prototype.MOVE_UP;
         direction *= moveMax >= 0 ? 2 : 1;
 
-        // 计算结果传递到 event 对象上
-        e.deltaX = deltaX;
-        e.deltaY = deltaY;
-        e.deltaTime = deltaTime;
+        return {
+            deltaX   : deltaX,
+            deltaY   : deltaY,
+            deltaMax : moveMax,
+            deltaTime: deltaTime,
 
-        e.direction = direction;
+            velocity : moveMax/pixRatio/deltaTime,
+            velocityX: deltaX/pixRatio/deltaTime,
+            velocityY: deltaY/pixRatio/deltaTime,
 
-        // 暂存最后一次滚动的数据
-        self.lastMove  = {
-            lastType : self.lastType,
-            lastTime : self.lastTime,
-            lastTouch: self.lastTouch,
-        };
+            direction: direction,
+        }
+    }
 
-        self.lastType  = e.type;
-        self.lastTime  = nowTime;
-        self.lastTouch = touches;
+    function setDelta(object, delta) {
+        object.delta  = delta.delta;
+        object.deltaX = delta.deltaX;
+        object.deltaY = delta.deltaY;
 
-        // 当前速度：(本次距离-上次距离)/(本次时间-上次时间)
-        deltaTime = nowTime - lastTime;
-        deltaX = nowTouch.pageX - lastTouch.pageX;
-        deltaY = nowTouch.pageY - lastTouch.pageY;
+        object.deltaTime = delta.deltaTime;
+    }
 
-        e.velocityX = deltaX/pixRatio/deltaTime;
-        e.velocityY = deltaY/pixRatio/deltaTime;
-        e.velocity  = xmorMax ? e.velocityX : e.velocityY;
+    function setVelocity(object, velocity) {
+        object.velocity  = velocity.velocity;
+        object.velocityX = velocity.velocityX;
+        object.velocityY = velocity.velocityY;
+
+        object.direction = velocity.direction;
+    }
+
+    function isDebounce(now, last) {
+        var change = ABS(now.velocity/last.velocity);
+
+        return change > 5 || change < 0.2;
+    }
+
+    return (touchSum = function(self, e, touches) {
+        var allDelta, nowDelta, lastDelta, nowTime, nowTouch, lastTouch;
+
+        nowTime = getTime();
+
+        nowTouch  = touches[0];
+        lastTouch = self.lastTouch;
+        lastDelta = self.cacheDelta;
+
+        allDelta = getDelta(nowTouch, self.startTouch[0], nowTime, self.startTime);
+        nowDelta = getDelta(nowTouch, self.lastTouch[0],  nowTime, self.lastTime);
+
+        // 更新 总的 delta 信息
+        setDelta(e, allDelta);
+
+        if (isDebounce(nowDelta, allDelta)) {
+            setVelocity(e, lastDelta);
+            updateSelf(self, e, touches, nowTime, lastDelta);
+        } else {
+            setVelocity(e, nowDelta);
+            updateSelf(self, e, touches, nowTime, nowDelta);
+        }
 
         return self;
     })(self, e, touches);
@@ -165,8 +182,6 @@ function Gesture(el, option) {
     self.startTouch= [{}];
     self.endTime   = 0;
     self.endTouch  = [{}];
-
-    self.lastType  = "";
     self.lastTime  = 0;
     self.lastTouch = [{}];
 
