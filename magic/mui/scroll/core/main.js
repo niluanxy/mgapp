@@ -48,6 +48,9 @@ function Scroll(el, option) {
     self.maxScrollX = 0;
     self.maxScrollY = 0;
 
+    self.minScrollX = 0;
+    self.minScrollY = 0;
+
     self.animate = null;
     self.emitter = Emitter();
     self.gesture = Gesture(self.$el);
@@ -88,32 +91,32 @@ Prototype.bindEvent = function() {
         $emit.emit("start", thresholdY, thresholdY, self);
     }).off("move.core").on("move.core", function(e, touch, touches) {
         var scrollX, scrollY, rate = opt.boundryAcceleration,
-            maxX = self.maxScrollX, maxY = self.maxScrollY;
+            maxX = self.maxScrollX, maxY = self.maxScrollY,
+            minX = self.minScrollX, minY = self.minScrollY;
 
         if (!opt.lockX) scrollX = thresholdX + e.deltaX;
         if (!opt.lockY) scrollY = thresholdY + e.deltaY;
 
         // 超过边界，滚动速率放慢
         if (opt.boundry) {
-            scrollX = scrollX > 0 ? scrollX * rate : scrollX;
+            scrollX = scrollX > minX ? (scrollX-minX)*rate+minX : scrollX;
             scrollX = scrollX < maxX ? (scrollX-maxX)*rate+maxX : scrollX;
 
-            scrollY = scrollY > 0 ? scrollY * rate : scrollY;
+            scrollY = scrollY > minY ? (scrollY-minY)*rate+minY : scrollY;
             scrollY = scrollY < maxY ? (scrollY-maxY)*rate+maxY : scrollY;
         } else {
-            scrollX = scrollX > 0 ? 0 : scrollX < maxX ? maxX : scrollX;
-            scrollY = scrollY > 0 ? 0 : scrollY < maxY ? maxY : scrollY;
+            scrollX = scrollX > minX ? minX : scrollX < maxX ? maxX : scrollX;
+            scrollY = scrollY > minY ? minY : scrollY < maxY ? maxY : scrollY;
         }
 
         self.translate(scrollX, scrollY);
         $emit.emit("scroll", scrollX, scrollY, self);
     }).off("end.core").on("end.core", function(e, touch, touches) {
         var scrollX, scrollY, transM, minus, duration, animate,
-            lockX = opt.lockX, lockY = opt.lockY, maxX, maxY,
-            vel = e.velocity, velX = e.velocityX, velY = e.velocityY;
-
-        maxX = self.maxScrollX;
-        maxY = self.maxScrollY;
+            lockX = opt.lockX, lockY = opt.lockY,
+            vel = e.velocity, velX = e.velocityX, velY = e.velocityY,
+            maxX = self.maxScrollX, maxY = self.maxScrollY,
+            minX = self.minScrollX, minY = self.minScrollY;
 
         if (ABS(vel) > opt.velocityMin) {
             transM = self.computeScroll(vel);
@@ -143,7 +146,7 @@ Prototype.bindEvent = function() {
         }
 
         // 没有越界，且没动画效果，则直接更新状态，触发事件
-        if (!duration && scrollX <= 0 && scrollX >= maxX && scrollY <= 0 && scrollY >= maxY) {
+        if (!duration && scrollX <= minX && scrollX >= maxX && scrollY <= minY && scrollY >= maxY) {
             self.updatePos("end");
         } else {
             self.scrollTo(scrollX, scrollY, duration, animate);
@@ -165,6 +168,9 @@ Prototype.refresh = function() {
     self.maxScrollX = oWrap.width - oBody.width;
     self.maxScrollY = oWrap.height - oBody.height;
 
+    self.minScrollX = 0;
+    self.minScrollY = 0;
+
     return self;
 }
 
@@ -174,17 +180,18 @@ Prototype.scrollBy = function(stepX, stepY, time, animate, callback) {
 
 Prototype.scrollTo = function(scrollX, scrollY, time, animate) {
     var self = this, opt = self.option, $emit = self.emitter, config, boundry,
-        maxX = self.maxScrollX, maxY = self.maxScrollY, rate = opt.boundryRate,
-        topX, topY, bottomX, bottomY;
+        rate = opt.boundryRate, topX, topY, bottomX, bottomY,
+        maxX = self.maxScrollX, maxY = self.maxScrollY,
+        minX = self.minScrollX, minY = self.minScrollY;
 
     time = Math.round(time || 0);
 
     // 释放的时候已经越界
-    if (self.x > 0 || self.x < maxX || self.y > 0 || self.y < maxY) {
+    if (self.x > minX || self.x < maxX || self.y > minY || self.y < maxY) {
         self.boundry();
     } else if (time && animate) {
-        topX = self.width*rate;
-        topY = self.height*rate;
+        topX = minX + self.width*rate;
+        topY = minY + self.height*rate;
 
         bottomX = scrollX < maxX ? maxX - topX : maxX;
         bottomY = scrollY < maxY ? maxY - topY : maxY;
@@ -205,7 +212,7 @@ Prototype.scrollTo = function(scrollX, scrollY, time, animate) {
 
             endCall: function() {
                 // 滚动结束越界判断
-                if (self.x > 0 || self.y > 0 || self.x < maxX || self.y < maxY) {
+                if (self.x > minX || self.y > minY || self.x < maxX || self.y < maxY) {
                     self.boundry();
                 } else {
                     self.updatePos("end");
@@ -235,13 +242,14 @@ Prototype.updatePos = function(eveName) {
 
 Prototype.boundry = function() {
     var self = this, opt = self.option,
-        x = self.x, y = self.y, maxX, maxY;
+        x = self.x, y = self.y,
+        maxX = self.maxScrollX,
+        maxY = self.maxScrollY,
+        minX = self.minScrollX,
+        minY = self.minScrollY;
 
-    maxX = self.maxScrollX;
-    maxY = self.maxScrollY;
-
-    x = x > 0 ? 0 : x < maxX ? maxX : x;
-    y = y > 0 ? 0 : y < maxY ? maxY : y;
+    x = x > minX ? minX : x < maxX ? maxX : x;
+    y = y > minY ? minY : y < maxY ? maxY : y;
 
     if (x != self.x || y != self.y) {
         self.animate.reset({
