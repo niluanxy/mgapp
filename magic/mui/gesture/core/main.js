@@ -8,8 +8,8 @@ import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.gesture = {
     passive : true,
-    debounce: 10,
-    preventMove: true,
+    preventMove : true,
+    debounceTime: 20,
 },
     Prototype = {}, touchFilter, getTouch, touchSum,
     touchFind = "changedTouches touches".split(" "), ABS = Math.abs,
@@ -160,6 +160,14 @@ touchSum = function(self, e, touches) {
         setDelta(e, allDelta);
 
         if (isDebounce(nowDelta, allDelta)) {
+            if (nowDelta.deltaTime > CFG.debounceTime) {
+                var timeMore = allDelta.deltaTime/CFG.debounceTime;
+
+                lastDelta.velocity  /= timeMore;
+                lastDelta.velocityX /= timeMore;
+                lastDelta.velocityY /= timeMore;
+            }
+
             setVelocity(e, lastDelta);
             updateSelf(self, e, touches, nowTime, lastDelta);
         } else {

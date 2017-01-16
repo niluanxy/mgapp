@@ -16,8 +16,23 @@ Core.prototype = Prototype; Core.uuid = Name; Plugins[Name] = Core;
 Prototype.start = function(e, touches, root, translate) {
     var self = this, scrollX, scrollY;
 
-    scrollX = root.getScroll("x");
-    scrollY = root.getScroll("y");
+    scrollX = translate.scrollX || root.getScroll("x");
+    scrollY = translate.scrollY || root.getScroll("y");
+
+    // 防止暂停动画时，已经越界太多，导致页面空白问题
+    // if (root.boundryCheck()) {
+    //     if (scrollX < root.maxScrollX) {
+    //         scrollX = scrollX < root.boundryBomX ? root.boundryBomX : scrollX;
+    //     } else {
+    //         scrollX = scrollX > root.boundryTopX ? root.boundryTopX : scrollX;
+    //     }
+    //
+    //     if (scrollY < root.maxScrollY) {
+    //         scrollY = scrollY < root.boundryBomY ? root.boundryBomY : scrollY;
+    //     } else {
+    //         scrollY = scrollY > root.boundryTopY ? root.boundryTopY : scrollY;
+    //     }
+    // }
 
     self.thresholdX = scrollX;
     self.thresholdY = scrollY;
@@ -29,18 +44,18 @@ Prototype.start = function(e, touches, root, translate) {
 }
 
 Prototype.scroll = function(e, touches, root, translate) {
-    var self = this, ropt = root.option,
+    var self = this, rootOpt = root.option,
         rate, minX, minY, maxX, maxY, scrollX, scrollY;
 
-    rate = ropt.boundryAcceleration;
+    rate = rootOpt.boundryAcceleration;
     minX = root.minScrollX; minY = root.minScrollY;
     maxX = root.maxScrollX; maxY = root.maxScrollY;
 
-    if (!ropt.lockX) scrollX = self.thresholdX + e.deltaX;
-    if (!ropt.lockY) scrollY = self.thresholdY + e.deltaY;
+    if (!rootOpt.lockX) scrollX = self.thresholdX + e.deltaX;
+    if (!rootOpt.lockY) scrollY = self.thresholdY + e.deltaY;
 
     // 超过边界，滚动速率放慢
-    if (ropt.boundry) {
+    if (rootOpt.boundry) {
         scrollX = scrollX > minX ? (scrollX-minX)*rate+minX : scrollX;
         scrollX = scrollX < maxX ? (scrollX-maxX)*rate+maxX : scrollX;
 
@@ -58,18 +73,18 @@ Prototype.scroll = function(e, touches, root, translate) {
 }
 
 Prototype.end = function(e, touches, root, translate) {
-    var self = this, ropt = root.option,
+    var self = this, rootOpt = root.option,
         lockX, lockY, minus, duration, animate,
         vel, velX, velY, minX, minY, maxX, maxY, transM;
 
-    lockX = ropt.lockX; lockY = ropt.lockY;
+    lockX = rootOpt.lockX; lockY = rootOpt.lockY;
 
     minX = root.minScrollX; minY = root.minScrollY;
     maxX = root.maxScrollX; maxY = root.maxScrollY;
 
     vel = e.velocity; velX = e.velocityX; velY = e.velocityY;
 
-    if (ABS(vel) > ropt.velocityMin) {
+    if (ABS(vel) > rootOpt.velocityMin) {
         transM = root.computeScroll(vel);
 
         if (!lockY || !lockX) {
@@ -97,7 +112,7 @@ Prototype.end = function(e, touches, root, translate) {
     }
 
     // 没有越界，且没动画效果，则直接更新状态，触发事件
-    if (!duration && scrollX <= minX && scrollX >= maxX && scrollY <= minY && scrollY >= maxY) {
+    if (!duration && !root.boundryCheck()) {
         translate.scrollX = root.x;
         translate.scrollY = root.y;
     } else {

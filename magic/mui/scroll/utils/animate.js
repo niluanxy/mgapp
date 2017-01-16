@@ -30,7 +30,7 @@ Prototype.run = function() {
     var self = this, cfg = self.config,
         endCall = cfg.endCall, runCall = cfg.runCall;
 
-    self.trans().bind(true);
+    self.trans().rebind(true);
 
     self.tickHandle = tick(function() {
         isFunction(runCall) && runCall();
@@ -47,7 +47,7 @@ Prototype.run = function() {
 Prototype.stop = function() {
     var self = this;
 
-    self.bind();
+    self.rebind(null);
     transition(self.$el, "none");
     clearTick(self.tickHandle);
     clearTimeout(self.timeHandle);
@@ -99,7 +99,7 @@ Prototype.trans = function() {
     return self;
 }
 
-Prototype.bind = function(rebind) {
+Prototype.rebind = function(bind) {
     var TRANS_END, test = "transitionend oTransitionEnd webkitTransitionEnd".split(" ");
 
     each(test, function(i, name) {
@@ -110,12 +110,12 @@ Prototype.bind = function(rebind) {
 
     TRANS_END += ".SCROLL_ANIMATE";
 
-    return (Prototype.bind = function(rebind) {
+    return (Prototype.rebind = function(bind) {
         var self = this, endCall = self.config.endCall;
 
         self.$el.off(TRANS_END);
 
-        if (rebind === true) {
+        if (bind === true) {
             self.$el.on(TRANS_END, function() {
                 self.stop();
                 isFunction(endCall) && endCall();
@@ -123,7 +123,7 @@ Prototype.bind = function(rebind) {
         }
 
         return self;
-    }).call(this, rebind);
+    }).call(this, bind);
 }
 
 export default Animate;

@@ -106,6 +106,13 @@ Prototype.initEvent = function() {
     function emitCall(index, e, touches) {
         var cache = {}, runEve = CoreEves[index];
 
+        if (index === 0) {
+            cache.scrollX = self.getScroll("x");
+            cache.scrollY = self.getScroll("y");
+
+            self.animate.stop();
+        }
+
         $emit.emit(CoreEvesPre+runEve, e, touches, self, cache);
 
         if (index === 2) {
@@ -119,28 +126,6 @@ Prototype.initEvent = function() {
 
     $gest.off("start").off("move").off("end")
     .on("start", function(e, touch, touches) {
-        self.animate.stop();
-
-        // 防止暂停动画时，已经越界太多，导致页面空白问题
-        if (self.boundryCheck()) {
-            var scrollX = self.getScroll("x"),
-                scrollY = self.getScroll("y");
-
-            if (scrollX < self.maxScrollX) {
-                scrollX = scrollX < self.boundryBomX ? self.boundryBomX : scrollX;
-            } else {
-                scrollX = scrollX > self.boundryTopX ? self.boundryTopX : scrollX;
-            }
-
-            if (scrollY < self.maxScrollY) {
-                scrollY = scrollY < self.boundryBomY ? self.boundryBomY : scrollY;
-            } else {
-                scrollY = scrollY > self.boundryTopY ? self.boundryTopY : scrollY;
-            }
-
-            self.translate(scrollX, scrollY);
-        }
-
         emitCall(0, e, touches);
     }).on("move", function(e, touch, touches) {
         emitCall(1, e, touches);
@@ -316,7 +301,8 @@ Prototype.updatePos = function(eveName) {
 Prototype.boundryCheck = function(minX, minY, maxX, maxY) {
     var self = this, aminX, aminY, amaxX, amaxY, sx, sy;
 
-    sx = self.getScroll("x"); sy = self.getScroll("y");
+    sx = self.getScroll("x") || self.x;
+    sy = self.getScroll("y") || self.y;
 
     amaxX = maxX || self.maxScrollX; amaxY = maxY || self.maxScrollY;
     aminX = minX || self.minScrollX; aminY = minY || self.minScrollY;
