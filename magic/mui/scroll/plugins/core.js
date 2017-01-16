@@ -1,17 +1,18 @@
-import {default as Scroll, Plugins} from "MUI/scroll/core/main.js";
+import Scroll from "MUI/scroll/core/main.js";
 import {extend} from "LIB_MINJS/utils.js";
 
-var Prototype = {}, Name = "core", ABS = Math.abs;
+var Prototype = {}, ABS = Math.abs;
 
-function Core(scope, option) {
+export default function Core(scope, option) {
     this.scope = scope;
 
     this.thresholdX = 0;
     this.thresholdY = 0;
 
     this.option = extend({}, option);
-};
-Core.prototype = Prototype; Core.uuid = Name; Plugins[Name] = Core;
+}; Scroll.register("core", Core, Prototype);
+
+
 
 Prototype.start = function(e, touches, root, translate) {
     var self = this, scrollX, scrollY;
@@ -37,7 +38,7 @@ Prototype.start = function(e, touches, root, translate) {
     self.thresholdX = scrollX;
     self.thresholdY = scrollY;
 
-    return extend(translate, {
+    extend(translate, {
         scrollX: scrollX,
         scrollY: scrollY,
     });
@@ -66,7 +67,7 @@ Prototype.scroll = function(e, touches, root, translate) {
         scrollY = scrollY > minY ? minY : scrollY < maxY ? maxY : scrollY;
     }
 
-    return extend(translate, {
+    extend(translate, {
         scrollX: scrollX,
         scrollY: scrollY,
     });
@@ -124,8 +125,4 @@ Prototype.end = function(e, touches, root, translate) {
             duration: duration,
         });
     }
-
-    return translate;
 }
-
-export default Core;

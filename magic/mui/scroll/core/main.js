@@ -34,10 +34,9 @@ var CFG = $config.scroll = {
 
     onInit: null,
 },
-Prototype = {}, ABS = Math.abs,
-CoreEves = "start scroll end".split(" "), CoreEvesPre = "__";
+Prototype = {}, ABS = Math.abs, Plugins = {},
+CoreEves = "_start _scroll _end _refresh".split(" "), CoreEvesPre = "_";
 
-export var Plugins = {};
 export default function Scroll(el, option) {
     var self = this;
 
@@ -67,8 +66,15 @@ export default function Scroll(el, option) {
     self.emitter = Emitter();
     self.gesture = Gesture(self.$el);
 
-    self.option = uiExtend(option, CFG, "wrapClass bodyClass");
-}; Scroll.prototype = Prototype; Scroll.plugins = Plugins;
+    self.option = uiExtend(CFG, option, "wrapClass bodyClass");
+}; Scroll.prototype = Prototype;
+
+Scroll.register = function(uuid, plugin, proto) {
+    plugin.uuid = uuid;
+    plugin.prototype = proto;
+
+    Plugins[uuid] = plugin;
+}
 
 Prototype.init = function() {
     var self = this, opt = self.option,
@@ -113,7 +119,7 @@ Prototype.initEvent = function() {
             self.animate.stop();
         }
 
-        $emit.emit(CoreEvesPre+runEve, e, touches, self, cache);
+        $emit.emit(runEve, e, touches, self, cache);
 
         if (index === 2) {
             self.scrollTo(cache.scrollX, cache.scrollY, cache.duration, cache.animate);
@@ -121,7 +127,7 @@ Prototype.initEvent = function() {
             self.translate(cache.scrollX, cache.scrollY);
         }
 
-        $emit.emit(runEve, e, self);
+        $emit.emit(runEve.replace(CoreEvesPre, ''), e, self);
     }
 
     $gest.off("start").off("move").off("end")
@@ -134,6 +140,22 @@ Prototype.initEvent = function() {
     });
 
     return this;
+}
+
+Prototype.attachCall = function(plugin, calls) {
+    var self = plugin, root = self.scope;
+
+    calls = trim(calls).split(" ");
+
+    each(calls, function(i, call) {
+        if (isFunction(plugin[call])) {
+            root[call] = function() {
+                plugin[call].apply(self, arguments);
+            }
+        }
+    });
+
+    return root;
 }
 
 Prototype.attach = function(plugin) {
@@ -150,14 +172,18 @@ Prototype.attach = function(plugin) {
         name = attachPlugin.uuid;
 
         each(CoreEves, function(i, key) {
-            if (isFunction(attachPlugin[key])) {
-                var bindEve = CoreEvesPre+key+"."+name;
+            var call = key.replace(CoreEvesPre, ''),
+                bindEve = key+"."+name;
 
-                $emit.patch(bindEve, function(e, touch, touches, root, translate) {
-                    attachPlugin[key](e, touch, touches, root, translate);
+            if (isFunction(attachPlugin[call])) {
+                $emit.patch(bindEve, function() {
+                    attachPlugin[call].apply(attachPlugin, arguments);
                 });
             }
         });
+
+        // 尝试运行插件的 init 初始化方法
+        isFunction(attachPlugin.init) && attachPlugin.init(self, self.option);
 
         self.plugins[name] = attachPlugin;
     }
@@ -169,9 +195,7 @@ Prototype.detach = function(plugin) {
     var self = this, $emit = self.emitter, del;
 
     if ((del = self.plugins[plugin])) {
-        each(CoreEves, function(i, key) {
-            var bindEve = CoreEvesPre+key;
-
+        each(CoreEves, function(i, bindEve) {
             $emit.unpatch(bindEve+"."+del.uuid);
         });
 
@@ -231,6 +255,9 @@ Prototype.refresh = function(minSX, minSY) {
     self.boundryTopY = minY+width*rate;
     self.boundryBomX = maxX-width*rate;
     self.boundryBomY = maxY-width*rate;
+
+    // 触发插件的 refresh 方法
+    self.emitter.patch(CoreEves[3], self, self.option);
 
     return self;
 }

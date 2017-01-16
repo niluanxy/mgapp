@@ -1,6 +1,6 @@
 import {allProxy} from "CORE_FUNCTION/proxy.js";
 import {element, extend, trim} from "LIB_MINJS/utils.js";
-import {isElement, isTrueString, isString} from "LIB_MINJS/check.js";
+import {isElement, isTrueString, isString, isNumber} from "LIB_MINJS/check.js";
 import {dataStyle} from "CORE_MAGIC/tools.js";
 import {append, remove} from "CORE_MODULE/dom/editer/main.js";
 import RootMagic from "CORE_MAGIC/main.js";
@@ -99,7 +99,7 @@ export function offset(relative) {
         } else if (isString(el)) {
             clone = isString(el) ? el : el.cloneNode(true);
         }
-        
+
         if (rect && !rect.width && !rect.height) {
             // div 元素浮动后，行为类似 inline-block 元素
             if (clone.tagName == "DIV") {
@@ -140,16 +140,25 @@ export function offset(relative) {
     return copy;
 }
 
-export function width(relative) {
-    var size = offset.call(this, relative);
+function sizeProxy(type, relative) {
+    var el = element(this), size;
 
-    return parseFloat(size.width) || 0;
+    if (isNumber(relative)) {
+        css.call(el, type, relative+"px");
+    } else {
+        size = offset.call(el, relative) || {};
+        return parseFloat(size[type]) || 0;
+    }
+
+    return this;
 }
 
-export function height(relative) {
-    var size = offset.call(this, relative);
+export function width(relative, setAll) {
+    return allProxy.call(this, sizeProxy, "width", relative, setAll);
+}
 
-    return parseFloat(size.height) || 0;
+export function height(relative, setAll) {
+    return allProxy.call(this, sizeProxy, "height", relative, setAll);
 }
 
 function showProxy(display) {
@@ -183,7 +192,7 @@ export function hide(setAll) {
     return allProxy.call(this, hideProxy, setAll);
 }
 
-/** 
+/**
  * 返回元素是否处于显示状态
  */
 export function visible() {
