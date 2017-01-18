@@ -35,7 +35,7 @@ var CFG = $config.scroll = {
     onInit: null,
 },
 Prototype = {}, ABS = Math.abs, Plugins = {},
-CoreEves = "_start _scroll _end _refresh".split(" "), CoreEvesPre = "_";
+CoreEves = "_start _move _end _refresh".split(" "), CoreEvesPre = "_";
 
 export default function Scroll(el, option) {
     var self = this;
@@ -127,7 +127,11 @@ Prototype.initEvent = function() {
             self.translate(cache.scrollX, cache.scrollY);
         }
 
-        $emit.emit(runEve.replace(CoreEvesPre, ''), e, self);
+        $emit.emit(runEve.replace(CoreEvesPre, ''), e, self, touches);
+
+        if (index === 1) {
+            $emit.emit("scroll", self, self.x, self.y);
+        }
     }
 
     $gest.off("start").off("move").off("end")
@@ -300,7 +304,7 @@ Prototype.scrollTo = function(scrollX, scrollY, time, animate) {
                 if (self.boundryCheck()) {
                     self.boundry();
                 } else {
-                    self.updatePos("end");
+                    self.updatePos("animated");
                 }
             }
         }
@@ -317,10 +321,10 @@ Prototype.scrollTo = function(scrollX, scrollY, time, animate) {
 Prototype.updatePos = function(eveName) {
     var self = this, $emit = self.emitter;
 
-    self.x = self.getScroll("x");
-    self.y = self.getScroll("y");
+    self.x = self.getScroll("x") || 0;
+    self.y = self.getScroll("y") || 0;
 
-    if (eveName) $emit.emit(eveName, self.x, self.y, self);
+    if (eveName) $emit.emit(eveName, self, self.x, self.y);
 
     return self;
 }
@@ -359,7 +363,7 @@ Prototype.boundry = function() {
             },
 
             endCall: function() {
-                self.updatePos("end");
+                self.updatePos("animated");
             }
         }).run();
     }

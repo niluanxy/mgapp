@@ -80,7 +80,7 @@ function setTransform(el, key, val) {
             }
         }
 
-        setTrans(el, "transform", trim(transform, true));
+        setTrans(el, "transform", trim(transform));
     }
 }
 

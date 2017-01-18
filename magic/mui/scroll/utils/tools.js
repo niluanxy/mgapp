@@ -3,13 +3,15 @@ import {element} from "LIB_MINJS/utils.js";
 
 function trans(el, type, val) {
     return function(el, val) {
-        var el = element(el);
-
-        if (val !== undefined) {
-            el.style[type] = val;
-        } else {
-            return window.getComputedStyle(el, null)[type] || "";
+        if (el = element(el)) {
+            if (val !== undefined) {
+                el.style[type] = val;
+            } else {
+                return window.getComputedStyle(el, null)[type] || "";
+            }
         }
+
+        return "";
     }
 }
 

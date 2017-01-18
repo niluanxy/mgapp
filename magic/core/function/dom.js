@@ -55,9 +55,9 @@ export function make(text, context) {
  *
  * @param       {String}  select - 查找元素的CSS字符串
  * @param       {Object}  el     - 从何处开始查找元素
- * 
+ *
  * @returns     {Array}  返回查找结果数组
- * 
+ *
  * @author      mufeng  <smufeng@gmail.com>
  * @version     0.3     <2015-06-05>
  */
@@ -75,8 +75,10 @@ export function query(select, el) {
             result = document;
         } else if (select.indexOf("#") == 0 && !select.indexOf(" ")) {
             result = content.getElementById(select.slice(1));
-        } else {
+        } else if (select) {
             result = content.querySelectorAll(select);
+        } else {
+            result = [];
         }
     } else if (select instanceof Element) {
         result = select;    // dom元素直接返回

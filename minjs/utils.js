@@ -2,7 +2,7 @@ import {isFunction, isArray, isElement, isObject, isTrueString} from "./check.js
 
 /**
  * 对数组或者对象，执行指定的回调参数
- * 
+ *
  * @param  {Object}   object   [被操作的数组或者对象]
  * @param  {Function} callback [执行操作的函数]
  */
@@ -71,12 +71,14 @@ export function slice(array, start, end) {
     return ret;
 }
 
-export function trim(string, extSpace) {
-    var clear = string.replace(/^\s+/, '').replace(/\s+$/, '');
+export function trim(string) {
+    if (isTrueString(string)) {
+        string = string.replace(/^\s+/, '')
+                       .replace(/\s+$/, '')
+                       .replace(/\s+/g, ' ');
+    }
 
-    if (extSpace) clear = clear.replace(/\s+/g, ' ');
-
-    return clear;
+    return string;
 }
 
 /**

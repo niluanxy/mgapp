@@ -33,7 +33,7 @@ Prototype.init = function() {
     this.refresh();
 }
 
-Prototype.refresh = function(fixFlag) {
+Prototype.refresh = function() {
     var self = this, opt = self.option,
         $snap, offset, scope = self.scope,
         $el = scope.$el, $body = scope.$body,
@@ -46,7 +46,7 @@ Prototype.refresh = function(fixFlag) {
     self.width  = offset.width;
     self.height = offset.height;
 
-    if (value(fixFlag, opt.snapResizeX, opt.snapResizeY, opt.snapResize)) {
+    if (value(opt.snapResizeX, opt.snapResizeY, opt.snapResize)) {
         var fixSize, wrapOffset = $el.offset();
 
         if (!opt.lockX && (fixSize = value(opt.snapResizeX, opt.snapResize)) ) {
@@ -63,10 +63,6 @@ Prototype.refresh = function(fixFlag) {
     }
 }
 
-
-Prototype.start = function() {
-    this.refresh(false);
-}
 
 Prototype.end = function(e, touches, root, translate) {
     var self = this, opt = self.option,

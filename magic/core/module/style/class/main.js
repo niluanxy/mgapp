@@ -5,6 +5,7 @@ import {element, trim, each} from "LIB_MINJS/utils.js";
 export function hasClass(cls) {
     var el = element(this), result, arrays, test, clsName;
 
+    cls = trim(cls);
     if (isTrueString(cls) && el && (clsName = el.className)) {
         test = cls.replace(/\s+/, ' ').split(" ");
         result = true;
@@ -26,6 +27,7 @@ export function hasClass(cls) {
 export function regClass(reg) {
     var el = element(this), clsName;
 
+    reg = trim(reg);
     if (isTrueString(reg) && el && (clsName = el.className)) {
         return clsName.match(new RegExp(reg));
     } else {
@@ -36,6 +38,7 @@ export function regClass(reg) {
 function addProxy(cls) {
     var el = element(this), adds, clsName;
 
+    cls = trim(cls);
     if (isTrueString(cls) && el && el.className !== undefined) {
         adds = cls.replace(/\s+/, ' ').split(" ");
         clsName = el.className || "";
@@ -61,6 +64,7 @@ export function addClass(cls, setAll) {
 function removeProxy(cls) {
     var el = element(this), dels, clsName;
 
+    cls = trim(cls);
     if (isTrueString(cls) && el && el.className !== undefined) {
         dels = cls.replace(/\s+/, ' ').split(" ");
         clsName = el.className || "";

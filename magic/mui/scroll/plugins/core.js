@@ -44,7 +44,7 @@ Prototype.start = function(e, touches, root, translate) {
     });
 }
 
-Prototype.scroll = function(e, touches, root, translate) {
+Prototype.move = function(e, touches, root, translate) {
     var self = this, rootOpt = root.option,
         rate, minX, minY, maxX, maxY, scrollX, scrollY;
 
@@ -76,12 +76,9 @@ Prototype.scroll = function(e, touches, root, translate) {
 Prototype.end = function(e, touches, root, translate) {
     var self = this, rootOpt = root.option,
         lockX, lockY, minus, duration, animate,
-        vel, velX, velY, minX, minY, maxX, maxY, transM;
+        vel, velX, velY, transM, scrollX, scrollY;
 
     lockX = rootOpt.lockX; lockY = rootOpt.lockY;
-
-    minX = root.minScrollX; minY = root.minScrollY;
-    maxX = root.maxScrollX; maxY = root.maxScrollY;
 
     vel = e.velocity; velX = e.velocityX; velY = e.velocityY;
 
