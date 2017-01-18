@@ -130,6 +130,12 @@ Prototype.setAutoPlay = function(enable) {
     return self;
 }
 
+Prototype.needMove = function(velocity, delta) {
+    var self = this, opt = self.option;
+
+
+}
+
 Prototype.go = function() {
 
 }
