@@ -98,9 +98,7 @@ Prototype.initEvent = function() {
         isFunction(opt.onBefore) && opt.onBefore();
     }).on("end.slider", function(e, scroll, touches) {
         if ((opt.directionX + opt.directionY) == 2) {
-            if (Math.abs(e.velocity) > opt.moveVel) {
-                self.next(Math.abs(e.velocityX) > Math.abs(e.velocityY) ? "x" : "y");
-            }
+
         } else {
 
         }
