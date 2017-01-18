@@ -35,7 +35,7 @@ var CFG = $config.scroll = {
     onInit: null,
 },
 Prototype = {}, ABS = Math.abs, Plugins = {},
-CoreEves = "_start _move _end _refresh".split(" "), CoreEvesPre = "_";
+CoreEves = "_start _move _end _refresh".split(" ");
 
 export default function Scroll(el, option) {
     var self = this;
@@ -127,7 +127,7 @@ Prototype.initEvent = function() {
             self.translate(cache.scrollX, cache.scrollY);
         }
 
-        $emit.emit(runEve.replace(CoreEvesPre, ''), e, self, touches);
+        $emit.emit(runEve.replace("_", ''), e, self, touches);
 
         if (index === 1) {
             $emit.emit("scroll", self, self.x, self.y);
@@ -176,7 +176,7 @@ Prototype.attach = function(plugin) {
         name = attachPlugin.uuid;
 
         each(CoreEves, function(i, key) {
-            var call = key.replace(CoreEvesPre, ''),
+            var call = key.replace("_", ''),
                 bindEve = key+"."+name;
 
             if (isFunction(attachPlugin[call])) {
@@ -266,8 +266,8 @@ Prototype.refresh = function(minSX, minSY) {
     return self;
 }
 
-Prototype.scrollBy = function(stepX, stepY, time, animate, callback) {
-    return this.scrollTo(self.x+stepX, self.y+stepY, time, animate, callback);
+Prototype.scrollBy = function(stepX, stepY, time, animate) {
+    return this.scrollTo(this.x+stepX, this.y+stepY, time, animate);
 }
 
 Prototype.scrollTo = function(scrollX, scrollY, time, animate) {
