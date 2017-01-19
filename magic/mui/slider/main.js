@@ -84,7 +84,28 @@ Prototype.init = function() {
     self.refresh().updatePage(0);
     $wrap.addClass(opt.initClass);
 
-    return self.initEvent();
+    return self.initEvent().initPoint();
+}
+
+Prototype.initPoint = function() {
+    var self = this, opt = self.option, $point;
+
+    if (opt.pointWrap && opt.pointClass) {
+        $point = self.$el.children("."+opt.pointWrap);
+        if ($point.length < 1) {
+            $point = RootMagic("<div class='"+opt.pointWrap+"'></div>");
+        }
+
+        $point.tpl("{{#points}}<span class='"+opt.pointClass+"'></span>{{/points}}",
+                {points: {length: self.maxPage+1}}).appendTo(self.$el);
+
+        self.$point = $point.children();
+        self.$point.eq(0).addClass(opt.actived);
+    } else {
+        self.$point = null;
+    }
+
+    return self;
 }
 
 Prototype.initEvent = function() {
@@ -114,9 +135,9 @@ Prototype.initEvent = function() {
 
         maxBase  = base*self.maxPage;
         truePage = opt.direction == "X" ? scroll.x : scroll.y;
-        truePage = self.maxPage - (maxBase+truePage)/base;
+        truePage = parseInt(self.maxPage - (maxBase+truePage)/base);
 
-        self.updatePage(parseInt(truePage));
+        self.updatePage(truePage).updatePoint(truePage);
         isFunction(opt.onAnimate) && opt.onAnimate(self, self.page);
     })
 
@@ -142,6 +163,7 @@ Prototype.setAutoPlay = function(enable) {
     var self = this, opt = self.option;
 
     if (enable && opt.playAuto > 0) {
+        clearInterval(self.handle);
         self.handle = setInterval(function() {
             self.next();
         }, opt.playAuto);
@@ -169,6 +191,18 @@ Prototype.updatePage = function(next) {
     // 修复 滑动到底部，无法退回第一项 的问题
     if (opage == self.maxPage && self.page == 0) {
         $scroll["maxScroll"+dir] = (self.maxPage+1)*base*-1;
+    }
+
+    return self;
+}
+
+Prototype.updatePoint = function(next) {
+    var self = this, opt = self.option,
+        $point = self.$point, actCls = opt.actived;
+
+    if ($point && ($point.length-1) == self.maxPage) {
+        $point.eq("."+actCls).removeClass(actCls);
+        $point.eq(next).addClass(actCls);
     }
 
     return self;
