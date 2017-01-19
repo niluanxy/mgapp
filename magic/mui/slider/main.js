@@ -17,14 +17,16 @@ var CFG = $config.slider = {
     itemClass : "slider-item",
     pointClass: "point-item",
 
-    moveVel   : 1,
+    moveVel   : 0.25,
     moveRate  : 0.3,
 
-    autoPlay  : 5000,
+    animate   : "quadratic",
+    duration  : 500,
+
+    playAuto  : 5000,
     playLoop  : true,
 
-    directionX: true,
-    directionY: false,
+    direction : "x",
 }, Prototype = {};
 
 /**
@@ -41,20 +43,21 @@ var CFG = $config.slider = {
  *      onScroll : [function] 滑动结束的回调
  *      onAnimate: [function] 滑动动画结束的回调
  *
- *      directionX: [boolean] 是否 x 方向滑动，默认
- *      directionY: [boolean] 是否 y 放下滑动
+ *      direction: [string] x 滑动方向还是 y 滑动方向
  * }
  */
 function Slider(el, options) {
     this.$el    = RootMagic(el);
+    this.$wrap  = null;
+    this.$point = null;
+
     this.scroll = null;
 
-    this.index  = 0;
+    this.page = 0;
     this.handle = null;
-    this.maxPage = 0;
 
-    this.width  = 0;
-    this.height = 0;
+    this.maxPage = 0;
+    this.baseSize= 0;
 
     this.option = uiExtend(CFG, options);
 }; Slider.prototype = Prototype;
@@ -67,46 +70,54 @@ Prototype.init = function() {
     $wrap = $el.children().addClass(opt.itemsWrap);
     $wrap.children().addClass(opt.itemClass, true);
 
+    opt.direction = opt.direction.toUpperCase();
+    opt.direction = opt.direction == "X" ? "X" : "Y";
+
+    self.$wrap = $wrap;
     self.scroll = new Scroll($el, {
         wrapClass: "", bodyClass: "",
 
-        lockX: !opt.directionX,
-        lockY: !opt.directionY,
+        lockX: opt.direction !== "X",
+        lockY: opt.direction === "X",
     }).init();
 
-    offset = $el.offset();
-    self.width  = offset.width;
-    self.height = offset.height;
-
+    self.refresh().updatePage(0);
     $wrap.addClass(opt.initClass);
 
     return self.initEvent();
 }
 
 Prototype.initEvent = function() {
-    var self = this, opt = self.option,
-        $emit = self.scroll.emitter;
+    var self = this, opt = self.option, $emit = self.scroll.emitter;
 
-    if (opt.directionX && opt.directionY) {
-        opt.autoPlay = false;
-    }
-
-    $emit.off("start.slider").off("end.slider")
-    .on("start.slider", function(e, scroll, touches) {
-        console.log("slider start")
+    $emit.unpatch("_start.slider").unpatch("_end.slider").off("animated.slider")
+    .patch("_start.slider", function(e, touches, scroll, translate) {
         self.setAutoPlay(false);
-        isFunction(opt.onBefore) && opt.onBefore();
-    }).on("end.slider", function(e, scroll, touches) {
-        if ((opt.directionX + opt.directionY) == 2) {
+        isFunction(opt.onBefore) && opt.onBefore(self, self.page);
+    }).patch("_end.slider", function(e, touches, scroll, translate) {
+        var dir = opt.direction, base = self.baseSize, vel, delta;
 
-        } else {
+        delta = e["delta"+dir]; vel = e["velocity"+dir];
 
+        if (Math.abs(vel) > opt.moveVel || Math.abs(delta)/base > opt.moveRate) {
+            self.updatePage(self.page - Math.abs(vel)/vel);
         }
 
-        isFunction(opt.onScroll) && opt.onScroll();
-    }).on("animated", function() {
-        console.log("animated end")
-        isFunction(opt.onAnimate) && opt.onAnimate();
+        translate["scroll"+dir] = self.page*base*-1;
+        translate.animate  = opt.animate;
+        translate.duration = opt.duration;
+        self.setAutoPlay(true);
+
+        isFunction(opt.onScroll) && opt.onScroll(self, self.page);
+    }).on("animated.slider", function(scroll) {
+        var $wrap = self.$wrap, base = self.baseSize, maxBase, truePage;
+
+        maxBase  = base*self.maxPage;
+        truePage = opt.direction == "X" ? scroll.x : scroll.y;
+        truePage = self.maxPage - (maxBase+truePage)/base;
+
+        self.updatePage(parseInt(truePage));
+        isFunction(opt.onAnimate) && opt.onAnimate(self, self.page);
     })
 
     self.setAutoPlay(true);
@@ -114,13 +125,26 @@ Prototype.initEvent = function() {
     return self;
 }
 
+Prototype.refresh = function() {
+    var self = this, opt = self.option, items,
+        $el = self.$el, $wrap = self.$wrap, offset;
+
+    offset = $el.offset();
+    items = $wrap.children().length;
+
+    self.maxPage = items-1;
+    self.baseSize = opt.direction == "X" ? offset.width : offset.height;
+
+    return self;
+}
+
 Prototype.setAutoPlay = function(enable) {
     var self = this, opt = self.option;
 
-    if (enable && opt.autoPlay > 0) {
+    if (enable && opt.playAuto > 0) {
         self.handle = setInterval(function() {
             self.next();
-        }, opt.autoPlay);
+        }, opt.playAuto);
     } else if (!enable){
         clearInterval(self.handle);
     }
@@ -128,22 +152,51 @@ Prototype.setAutoPlay = function(enable) {
     return self;
 }
 
-Prototype.needMove = function(velocity, delta) {
-    var self = this, opt = self.option;
+Prototype.updatePage = function(next) {
+    var self = this, opt = self.option, base = self.baseSize,
+        $scroll = self.scroll, dir = opt.direction, opage = self.page;
 
+    if (opt.playLoop) {
+        next = next > self.maxPage ? 0 : next < 0 ? self.maxPage : next;
+    } else {
+        next = next > self.maxPage ? self.maxPage : next < 0 ? 0 : next;
+    }
 
+    self.page = next;
+    $scroll["minScroll"+dir] = next*base*-1;
+    $scroll["maxScroll"+dir] = (next+1)*base*-1;
+
+    // 修复 滑动到底部，无法退回第一项 的问题
+    if (opage == self.maxPage && self.page == 0) {
+        $scroll["maxScroll"+dir] = (self.maxPage+1)*base*-1;
+    }
+
+    return self;
 }
 
-Prototype.go = function() {
+Prototype.go = function(next) {
+    var scrollX, scrollY, self = this, opt = self.option,
+        $scroll = self.scroll, base = self.baseSize, dir = opt.direction;
 
+    isFunction(opt.onBefore) && opt.onBefore(self, self.page);
+    self.updatePage(next);
+
+    if (dir == "X") {
+        scrollX = self.page*base*-1;
+    } else {
+        scrollY = self.page*base*-1;
+    }
+
+    isFunction(opt.onScroll) && opt.onScroll(self, self.page);
+    $scroll.scrollTo(scrollX, scrollY, opt.duration, opt.animate);
 }
 
 Prototype.next = function() {
-
+    return this.go(this.page+1);
 }
 
-Prototype.back = function() {
-
+Prototype.prev = function() {
+    return this.go(this.page-1);
 }
 
 Prototype.destory = function() {

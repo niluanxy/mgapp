@@ -14,9 +14,12 @@
             width: 100%;
             position: relative;
             white-space: nowrap;
+            transform-origin: 0px 0px 0px;
 
-            &.init .slider-item {
-                display: inline-block;
+            &.init {
+                .slider-item {
+                    display: inline-block;
+                }
             }
         }
 
