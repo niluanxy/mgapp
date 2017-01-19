@@ -235,6 +235,7 @@ Prototype.prev = function() {
 
 Prototype.destory = function() {
     this.$el.remove();
+    this.setAutoPlay(false);
 }
 
 RootMagic.fn.extend({slider: function(option) {
