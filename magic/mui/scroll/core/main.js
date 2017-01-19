@@ -26,6 +26,7 @@ var CFG = $config.scroll = {
     boundryAcceleration: 0.382,  // 1 - 0.618
 
     velocityMin: 0.15,
+    preventMove: true,
 
     lockX: true,
     lockY: false,
@@ -61,12 +62,14 @@ export default function Scroll(el, option) {
     self.boundryBomX = 0;
     self.boundryBomY = 0;
 
+    self.option = uiExtend(CFG, option, "wrapClass bodyClass");
+
     self.plugins = {};
     self.animate = null;
     self.emitter = Emitter();
-    self.gesture = Gesture(self.$el);
-
-    self.option = uiExtend(CFG, option, "wrapClass bodyClass");
+    self.gesture = Gesture(self.$el, {
+        preventMove: self.option.preventMove
+    });
 }; Scroll.prototype = Prototype;
 
 Scroll.register = function(uuid, plugin, proto) {

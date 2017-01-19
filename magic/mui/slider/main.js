@@ -17,14 +17,15 @@ var CFG = $config.slider = {
     itemClass : "slider-item",
     pointClass: "point-item",
 
-    moveVel   : 0.25,
-    moveRate  : 0.3,
+    moveVel    : 0.25,
+    moveRate   : 0.3,
+    preventMove: true,
 
-    animate   : "quadratic",
-    duration  : 500,
+    animate  : "quadratic",
+    duration : 500,
 
-    playAuto  : 5000,
-    playLoop  : true,
+    playAuto : 5000,
+    playLoop : true,
 
     direction : "x",
 }, Prototype = {};
@@ -79,6 +80,7 @@ Prototype.init = function() {
 
         lockX: opt.direction !== "X",
         lockY: opt.direction === "X",
+        preventMove: opt.preventMove,
     }).init();
 
     self.refresh().updatePage(0);

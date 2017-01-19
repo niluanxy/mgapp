@@ -8,7 +8,7 @@ import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.gesture = {
     passive : true,
-    preventMove : true,
+    preventMove : false,
     debounceTime: 20,
 },
     Prototype = {}, touchFilter, getTouch, touchSum,
@@ -277,18 +277,17 @@ Prototype.init = function() {
     };
 
     Prototype.bind = function(type) {
-        var self = this, bindDom = self.el,
-            eveNames = bindMaps[type],
-            listener = self["_"+type], eveOption;
+        var self = this, bindDom = self.el, opt = self.option,
+            eveNames = bindMaps[type], listener = self["_"+type], eveOption;
 
-        eveOption = supportPassive && type=="start" ? {
+        eveOption = supportPassive ? {
             capture: true,
-            passive: !!self.option.passive,
+            passive: type=="move" && !opt.preventMove && opt.passive,
         } : true;
 
         each(eveNames, function(i, name) {
-            bindDom[eveBind](name, listener);
-            bindDom[eveUnbind](name, listener, eveOption);
+            bindDom[eveUnbind](name, listener);
+            bindDom[eveBind](name, listener, eveOption);
         });
 
         return self;
