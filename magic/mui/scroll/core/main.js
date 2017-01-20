@@ -9,6 +9,9 @@ import $config from "CORE_MAGIC/config.js";
 import {transform, getTrans} from "MUI/scroll/utils/tools.js";
 import Animate from "MUI/scroll/utils/animate.js";
 
+/**
+ * @TODO 添加绑定事件到 document 参数
+ */
 var CFG = $config.scroll = {
     class: "scroll",
 

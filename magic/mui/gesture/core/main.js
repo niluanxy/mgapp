@@ -285,8 +285,8 @@ Prototype.init = function() {
             passive: type=="move" && !opt.preventMove && opt.passive,
         } : true;
 
+        self.unbind(type);
         each(eveNames, function(i, name) {
-            bindDom[eveUnbind](name, listener, true);
             bindDom[eveBind](name, listener, eveOption);
         });
 
