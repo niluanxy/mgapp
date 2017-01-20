@@ -30,3 +30,11 @@ export function transition(el, val) {
 
     return (transition = trans(el, "transition", val))(el, val);
 }
+
+export function getTrans(x, y, scale) {
+    var translateZ = " translateZ(0)";
+
+    x = x || 0; y = y || 0; scale = scale || 1;
+
+    return "translate("+x+"px,"+y+"px) scale("+scale+")"+translateZ;
+}

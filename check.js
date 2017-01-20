@@ -78,5 +78,13 @@ $(function() {
         console.log("body one tap dispatch")
     })
 
-    $(".scroll").scroll();
+    window.ctrl = $("#scroll").scroll({
+        plugins: "snap",
+        snapResize: 8,
+        // lockY: true, lockX: false,
+    });
+
+    window.slider = $("#slider").slider({
+        
+    });
 })

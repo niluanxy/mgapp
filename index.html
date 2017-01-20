@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Document</title>
-    
+
     <script type="text/javascript">
         (function(win, doc) {
             // ========================================================
@@ -75,6 +75,10 @@
     </script>
 
     <style>
+        body {
+            overflow-x: hidden;
+        }
+
         .scroll {
             background-color: #fafafa;
         }
@@ -89,13 +93,14 @@
             display: block;
         }
     </style>
-    
+
     <link rel="stylesheet" href="dist/mixin.css">
     <script type="text/javascript" src="dist/magic.ui.js"></script>
 </head>
 <body>
     <script src="./check.js"></script>
-    <div class="scroll" style="height: 1000px;">
+
+    <div id="scroll" style="height: 1000px;">
         <div>
             <p>0001</p>
             <p>0002</p>
@@ -177,6 +182,22 @@
             <p>0078</p>
             <p>0079</p>
             <p>0080</p>
+        </div>
+    </div>
+
+    <div id="slider">
+        <div class="">
+            <div class="">
+                <img src="http://pal4.baiyou100.com/pal4index_files/pic/pic_d_24.jpg">
+            </div>
+
+            <div class="slider-item">
+                <img src="http://pal4.baiyou100.com/pal4index_files/pic/pic_d_22.jpg">
+            </div>
+
+            <div class="slider-item">
+                <img src="http://pal4.baiyou100.com/pal4index_files/pic/pic_d_23.jpg">
+            </div>
         </div>
     </div>
 

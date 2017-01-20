@@ -77,6 +77,7 @@ Prototype.init = function() {
     self.$wrap = $wrap;
     self.scroll = new Scroll($el, {
         wrapClass: "", bodyClass: "",
+        pointX: false, pointY: false,
 
         lockX: opt.direction !== "X",
         lockY: opt.direction === "X",

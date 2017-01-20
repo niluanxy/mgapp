@@ -19,6 +19,19 @@
     transform-origin: 0px 0px 0px;
 }
 
+%scroll_point {
+    display: block;
+    position: absolute;
+
+    &:before {
+        content: " ";
+        display: inline-block;
+        position: absolute;
+        background: $scroll-point-bg;
+        border-radius: rem($scroll-point-radius);
+    }
+}
+
 @mixin scroll($class: scroll, $prefix: $config-prefix) {
     .#{$prefix+$class} {
         @extend %scroll;
@@ -36,6 +49,34 @@
             &_body_all {
                 width: auto;
                 height: auto;
+            }
+
+            &_point_x, &_point_y {
+                @extend %scroll_point;
+            }
+
+            &_point_x {
+                left: 0;
+                bottom: rem($scroll-point-offset);
+                height: rem($scroll-point-size);
+
+                &:before {
+                    height: 100%;
+                    left: rem($scroll-point-offset);
+                    right: rem($scroll-point-offset);
+                }
+            }
+
+            &_point_y {
+                top: 0;
+                right: rem($scroll-point-offset);
+                width: rem($scroll-point-size);
+
+                &:before {
+                    width: 100%;
+                    top: rem($scroll-point-offset);
+                    bottom: rem($scroll-point-offset);
+                }
             }
         }
 

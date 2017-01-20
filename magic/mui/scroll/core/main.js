@@ -6,7 +6,7 @@ import {each, value, trim} from "LIB_MINJS/utils.js";
 import {isString, isFunction} from "LIB_MINJS/check.js";
 import $config from "CORE_MAGIC/config.js";
 
-import {transform} from "MUI/scroll/utils/tools.js";
+import {transform, getTrans} from "MUI/scroll/utils/tools.js";
 import Animate from "MUI/scroll/utils/animate.js";
 
 var CFG = $config.scroll = {
@@ -30,13 +30,15 @@ var CFG = $config.scroll = {
 
     lockX: true,
     lockY: false,
+    pointX: false,
+    pointY: true,
 
     plugins: "",
 
     onInit: null,
 },
-Prototype = {}, ABS = Math.abs, Plugins = {},
-CoreEves = "_start _move _end _refresh".split(" ");
+Prototype = {}, ABS = Math.abs, Plugins = {}, evesPre = "_",
+CoreEves = "_start _move _end _refresh _scroll".split(" ");
 
 export default function Scroll(el, option) {
     var self = this;
@@ -73,14 +75,14 @@ export default function Scroll(el, option) {
 }; Scroll.prototype = Prototype;
 
 Scroll.register = function(uuid, plugin, proto) {
-    plugin.uuid = uuid;
     plugin.prototype = proto;
+    plugin.prototype.uuid = uuid;
 
     Plugins[uuid] = plugin;
 }
 
 Prototype.init = function() {
-    var self = this, opt = self.option,
+    var self = this, opt = self.option, defPlugin,
         $el = self.$el, $body, $emit = self.emitter;
 
     $body = $el.find(opt.bodyClass);
@@ -93,7 +95,9 @@ Prototype.init = function() {
     self.gesture.init();
     self.animate = new Animate($body);
 
-    opt.plugins = (trim("core "+opt.plugins)).split(" ");
+    defPlugin = "core "+(opt.pointX+opt.pointY >= 1 ? "point " : "");
+    opt.plugins = (trim(defPlugin+opt.plugins)).split(" ");
+
     self.translate(0, 0).initEvent().refresh();
     $emit.emit("init");
 
@@ -130,7 +134,7 @@ Prototype.initEvent = function() {
             self.translate(cache.scrollX, cache.scrollY);
         }
 
-        $emit.emit(runEve.replace("_", ''), e, self, touches);
+        $emit.emit(runEve.replace(evesPre, ''), e, self, touches);
 
         if (index === 1) {
             $emit.emit("scroll", self, self.x, self.y);
@@ -149,22 +153,6 @@ Prototype.initEvent = function() {
     return this;
 }
 
-Prototype.attachCall = function(plugin, calls) {
-    var self = plugin, root = self.scope;
-
-    calls = trim(calls).split(" ");
-
-    each(calls, function(i, call) {
-        if (isFunction(plugin[call])) {
-            root[call] = function() {
-                plugin[call].apply(self, arguments);
-            }
-        }
-    });
-
-    return root;
-}
-
 Prototype.attach = function(plugin) {
     var self = this, name, attachPlugin, $emit = self.emitter;
 
@@ -179,8 +167,7 @@ Prototype.attach = function(plugin) {
         name = attachPlugin.uuid;
 
         each(CoreEves, function(i, key) {
-            var call = key.replace("_", ''),
-                bindEve = key+"."+name;
+            var call = key.replace(evesPre, ''), bindEve = key+"."+name;
 
             if (isFunction(attachPlugin[call])) {
                 $emit.patch(bindEve, function() {
@@ -264,7 +251,7 @@ Prototype.refresh = function(minSX, minSY) {
     self.boundryBomY = maxY-width*rate;
 
     // 触发插件的 refresh 方法
-    self.emitter.patch(CoreEves[3], self, self.option);
+    self.emitter.emit(CoreEves[3], self, self.option);
 
     return self;
 }
@@ -328,6 +315,7 @@ Prototype.updatePos = function(eveName) {
     self.y = self.getScroll("y") || 0;
 
     if (eveName) $emit.emit(eveName, self, self.x, self.y);
+    if (eveName == "scroll") $emit.emit(CoreEves[4], self, self.x, self.y);
 
     return self;
 }
@@ -375,19 +363,23 @@ Prototype.boundry = function() {
 Prototype.translate = function(x, y, scale) {
     var self = this;
 
-    transform(self.$body, self.getTrans(x, y, scale));
-
-    return this;
-}
-
-Prototype.getTrans = function(x, y, scale) {
-    var self = this, translateZ = " translateZ(0)";
-
     self.x = value(x, self.x, 0);
     self.y = value(y, self.y, 0);
     self.scale = scale || this.scale || 1;
 
-    return "translate("+self.x+"px,"+self.y+"px) scale("+this.scale+")"+translateZ;
+    transform(self.$body, self.getTrans(self.x, self.y, self.scale));
+
+    return self;
+}
+
+Prototype.getTrans = function(x, y, scale) {
+    var self = this, sx, sy, sc;
+
+    sx = value(x, self.x, 0);
+    sy = value(y, self.y, 0);
+    sc = scale || this.scale || 1;
+
+    return getTrans(sx, sy, sc);
 }
 
 Prototype.getScroll = function(direction) {

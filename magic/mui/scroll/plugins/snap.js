@@ -1,5 +1,6 @@
 import Scroll from "MUI/scroll/core/main.js";
-import {extend, value} from "LIB_MINJS/utils.js";
+import {uiExtend} from "MUI/tools/main.js";
+import {value} from "LIB_MINJS/utils.js";
 import $config from "CORE_MAGIC/config.js";
 
 var CFG = $config.scroll.snap = {
@@ -21,7 +22,7 @@ var CFG = $config.scroll.snap = {
  */
 export default function Snap(scope, option) {
     this.scope = scope;
-    this.option = extend({}, CFG, option);
+    this.option = uiExtend(CFG, option);
 
     this.width  = 0;
     this.height = 0;
@@ -29,7 +30,7 @@ export default function Snap(scope, option) {
 
 
 
-Prototype.init = function() {
+Prototype.init = function(root) {
     this.refresh();
 }
 
