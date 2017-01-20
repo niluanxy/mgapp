@@ -286,7 +286,7 @@ Prototype.init = function() {
         } : true;
 
         each(eveNames, function(i, name) {
-            bindDom[eveUnbind](name, listener);
+            bindDom[eveUnbind](name, listener, true);
             bindDom[eveBind](name, listener, eveOption);
         });
 
@@ -295,11 +295,10 @@ Prototype.init = function() {
 
     Prototype.unbind = function(type) {
         var self = this, bindDom = self.el,
-            eveNames = bindMaps[type],
-            listener = self["_"+type];
+            eveNames = bindMaps[type], listener = self["_"+type];
 
         each(eveNames, function(i, name) {
-            bindDom[eveUnbind](name, listener);
+            bindDom[eveUnbind](name, listener, true);
         });
 
         return self;
