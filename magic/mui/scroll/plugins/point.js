@@ -67,8 +67,6 @@ Prototype.refresh = function() {
         self.$pointY.height(ratioY*woff.height);
     }
 
-    window.point = self
-
     return self;
 }
 

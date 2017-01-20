@@ -282,6 +282,7 @@ Prototype.scrollTo = function(scrollX, scrollY, time, animate) {
 
             runCall: function() {
                 self.updatePos("scroll");
+                $emit.emit(CoreEves[4], self, self.x, self.y);
 
                 // 滚动中越界判断
                 if (self.boundryCheck(topX, topY, bomX, bomY)) {
@@ -315,7 +316,6 @@ Prototype.updatePos = function(eveName) {
     self.y = self.getScroll("y") || 0;
 
     if (eveName) $emit.emit(eveName, self, self.x, self.y);
-    if (eveName == "scroll") $emit.emit(CoreEves[4], self, self.x, self.y);
 
     return self;
 }
@@ -333,12 +333,9 @@ Prototype.boundryCheck = function(minX, minY, maxX, maxY) {
 }
 
 Prototype.boundry = function() {
-    var self = this, opt = self.option,
-        x = self.x, y = self.y,
-        maxX = self.maxScrollX,
-        maxY = self.maxScrollY,
-        minX = self.minScrollX,
-        minY = self.minScrollY;
+    var self = this, opt = self.option, x = self.x, y = self.y,
+        maxX = self.maxScrollX, maxY = self.maxScrollY,
+        minX = self.minScrollX, minY = self.minScrollY;
 
     x = x > minX ? minX : x < maxX ? maxX : x;
     y = y > minY ? minY : y < maxY ? maxY : y;
@@ -351,6 +348,7 @@ Prototype.boundry = function() {
 
             runCall: function() {
                 self.updatePos("scroll");
+                self.emitter.emit(CoreEves[4], self, self.x, self.y);
             },
 
             endCall: function() {
