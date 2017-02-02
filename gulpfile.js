@@ -47,27 +47,37 @@ var px2remConfig = {
     minPx: 3
 };
 
-var DIR_WWW   = __dirname + "/",
-    DIR_MIXIN = __dirname + "/mixin/",
-    DIST_MIXIN = DIR_MIXIN + "dist",
+var DIR_APP   = __dirname + "/app/",
+    DIR_DEV   = __dirname + "/dev/",
 
-    DIR_MINJS =  __dirname + "/minjs/",
-    DIR_DIST  =  __dirname + "/dist/",
+    DIR_MIXIN = DIR_DEV + "mixin/",
+    DIR_MINJS = DIR_DEV + "minjs/",
+    DIR_MAGIC = DIR_DEV + "magic/",
 
-    DIR_MAGIC = __dirname + "/magic/";
+    DIR_APP_LIBS = DIR_APP + "libs/";
+
+var CONCAT_PRE        = "_concat_",
+
+    CONCAT_MIXIN_CORE = CONCAT_PRE+"mixin-core.scss",
+    CONCAT_MIXIN_VARS = CONCAT_PRE+"mixin-vars.scss",
+    CONCAT_MIXIN_UIKIT= CONCAT_PRE+"minix-uikit.scss",
+    CONCAT_MIXIN_BUILD= "mixin.scss",
+
+    CONCAT_MAGIC_BASE = CONCAT_PRE+"magic.js",
+    CONCAT_MAGIC_UIKIT= CONCAT_PRE+"magic.ui.js";
 
 var DIR_MAGIC_ALIAS = {
     resolve: ['.jsx', '.js'],
 
     LIB_MINJS: DIR_MINJS,
 
-    MUI: DIR_MAGIC+"mui",
+    MG_BASE    : DIR_MAGIC+"core/",
+    MG_MAGIC   : DIR_MAGIC+"core/magic",
+    MG_MODULE  : DIR_MAGIC+"core/module",
+    MG_STATIC  : DIR_MAGIC+"core/static",
+    MG_FUNCTION: DIR_MAGIC+"core/function",
 
-    CORE_BASE    : DIR_MAGIC+"core/",
-    CORE_FUNCTION: DIR_MAGIC+"core/function",
-    CORE_MAGIC : DIR_MAGIC+"core/magic",
-    CORE_MODULE: DIR_MAGIC+"core/module",
-    CORE_STATIC: DIR_MAGIC+"core/static",
+    MG_UIKIT   : DIR_MAGIC+"mui",
 };
 
 var reload = throttle(20, function() {
@@ -87,14 +97,13 @@ var BUILD_RELEASE = false;
 /**===============================================
  * mixin 文件合并脚本函数
  =================================================*/
-function task_build_mixin() {
-    var DIST_MIXIN = DIR_DIST,
-        defer_core = Q.defer(),
+function task_concat_mixin() {
+    var defer_core = Q.defer(),
         defer_uikit = Q.defer(),
         defer_vars = Q.defer(),
         defer_all = Q.defer();
 
-    clear_mixin().then(function() {
+    clean_mixin().then(function() {
         // 核心文件合并
         gulp.src([DIR_MIXIN+"core/config.scss",
             DIR_MIXIN+"core/function.scss",
@@ -102,55 +111,86 @@ function task_build_mixin() {
             DIR_MIXIN+"core/color.scss",
             DIR_MIXIN+"core/text.scss",
             DIR_MIXIN+"core/base.scss"])
-        .pipe(concat("mixin_core.scss"))
-        .pipe(gulp.dest(DIST_MIXIN))
+        .pipe(concat(CONCAT_MIXIN_CORE))
+        .pipe(gulp.dest(DIR_DEV))
         .on("finish", function() { defer_core.resolve(); })
-
-        // UI文件合并
-        gulp.src([DIR_MIXIN+"uikit/tools.scss",
-            DIR_MIXIN+"uikit/component/**/*.scss"])
-        .pipe(concat("mixin_uikit.scss"))
-        .pipe(gulp.dest(DIST_MIXIN))
-        .on("finish", function() { defer_uikit.resolve(); })
 
         // 变量文件合并
         gulp.src([DIR_MIXIN+"uikit/varible/element/button.scss",
             DIR_MIXIN+"uikit/varible/**/*.scss"])
-        .pipe(concat("mixin_vars.scss"))
-        .pipe(gulp.dest(DIST_MIXIN))
+        .pipe(concat(CONCAT_MIXIN_VARS))
+        .pipe(gulp.dest(DIR_DEV))
         .on("finish", function() { defer_vars.resolve(); })
+
+        // UI文件合并
+        gulp.src([DIR_MIXIN+"uikit/tools.scss",
+            DIR_MIXIN+"uikit/component/**/*.scss"])
+        .pipe(concat(CONCAT_MIXIN_UIKIT))
+        .pipe(gulp.dest(DIR_DEV))
+        .on("finish", function() { defer_uikit.resolve(); })
 
         return Q.all([
             defer_core.promise,
-            defer_uikit.promise,
-            defer_vars.promise
+            defer_vars.promise,
+            defer_uikit.promise
         ]).then(function() {
             log("--- mixin concat finish");
         });
     }).then(function() {
-        gulp.src([DIST_MIXIN+"mixin_core.scss",
-            DIST_MIXIN+"mixin_vars.scss",
-            DIST_MIXIN+"mixin_uikit.scss",
+        gulp.src([DIR_DEV+CONCAT_MIXIN_CORE,
+            DIR_DEV+CONCAT_MIXIN_VARS,
+            DIR_DEV+CONCAT_MIXIN_UIKIT,
             DIR_MIXIN+"build.scss"])
-        .pipe(concat("mixin.scss"))
-        .pipe(sass())
-        .pipe(autoprefixer())
-        .pipe(px2rem(px2remConfig))
-        .pipe(gulpif(BUILD_RELEASE, minifycss()))
-        .pipe(gulp.dest(DIST_MIXIN))
+        .pipe(concat(CONCAT_MIXIN_BUILD))
+        .pipe(gulp.dest(DIR_DEV))
         .on("finish", function() {
-            log("mixin build to css finish");
+            log("--- mixin build to css finish");
             defer_all.resolve();
         })
     })
 
     return defer_all.promise;
 }
+
+function task_build_mixin() {
+    var build = Q.defer();
+
+    task_concat_mixin().then(function() {
+        gulp.src([DIR_DEV+CONCAT_MIXIN_BUILD])
+        .pipe(sass.sync().on('error', sass.logError))
+        .pipe(autoprefixer())
+        .pipe(px2rem(px2remConfig))
+        .pipe(gulpif(BUILD_RELEASE, minifycss()))
+        .pipe(gulp.dest(DIR_APP_LIBS))
+        .on("finish", function() {
+            clean_mixin_build();
+            log("mixin build css finish");
+            build.resolve();
+        });
+    });
+
+    return build.promise;
+}
 gulp.task("dev-build-mixin", task_build_mixin);
 
-function clear_mixin() {
-    return del(DIST_MIXIN);
+function clean_mixin_build() {
+    return Q.all([
+        del(DIR_DEV+CONCAT_MIXIN_CORE),
+        del(DIR_DEV+CONCAT_MIXIN_VARS),
+        del(DIR_DEV+CONCAT_MIXIN_UIKIT)
+    ]);
 }
+
+function clean_mixin() {
+    var css = DIR_DEV+CONCAT_MIXIN_BUILD;
+
+    return Q.all([
+        clean_mixin_build(),
+        del(DIR_DEV+CONCAT_MIXIN_BUILD),
+        del(css.replace(/scss$/, "css"))
+    ]);
+}
+gulp.task("clean-mixin", clean_mixin);
 
 /**===============================================
  * minjs 文件合并脚本函数
@@ -168,7 +208,7 @@ function task_build_minjs() {
         (BUILD_RELEASE && rollupUglify()),
     ];
 
-    del(DIR_DIST+"emitter.js").then(function() {
+    del(DIR_APP_LIBS+"emitter.js").then(function() {
         rollup({
             entry: DIR_MINJS+"emitter.js",
             format: 'umd',
@@ -177,14 +217,14 @@ function task_build_minjs() {
             plugins: plugins,
         })
         .pipe(source('emitter.js'))
-        .pipe(gulp.dest(DIR_DIST))
+        .pipe(gulp.dest(DIR_APP_LIBS))
         .on("finish", function() {
             log("--- minjs emitter.js build finish");
             defer_emit.resolve();
         });
     });
 
-    del(DIR_DIST+"router.js").then(function() {
+    del(DIR_APP_LIBS+"router.js").then(function() {
         rollup({
             entry: DIR_MINJS+"router.js",
             format: 'umd',
@@ -192,7 +232,7 @@ function task_build_minjs() {
             plugins: plugins,
         })
         .pipe(source('router.js'))
-        .pipe(gulp.dest(DIR_DIST))
+        .pipe(gulp.dest(DIR_APP_LIBS))
         .on("finish", function() {
             log("--- minjs router.js build finish");
             defer_route.resolve();
@@ -240,47 +280,50 @@ function task_build_magic() {
         })),
     ];
 
-    clear_magic().then(function() {
+    gulp.src(DIR_CORE+"build.js")
+    .pipe(rename(CONCAT_MAGIC_BASE))
+    .pipe(gulp.dest(DIR_DEV))
+    .on("finish", function() {
         rollup({
-            entry: DIR_CORE+"build.js",
+            entry: DIR_DEV+CONCAT_MAGIC_BASE,
             format: 'umd',
             moduleName: "Magic",
             plugins: plugins,
         })
         .pipe(source('magic.js'))
         .pipe(replace(oldBuild, newBuild))
-        .pipe(gulp.dest(DIR_DIST))
+        .pipe(gulp.dest(DIR_APP_LIBS))
         .on("finish", function() {
             log("--- magic core build finish");
             defer_core.resolve();
         });
+    });
 
-        gulp.src([DIR_CORE+"build.js",
-            DIR_MUI+"build.js"])
-        .pipe(concat("_magic_concat.js"))
-        .pipe(gulp.dest(DIR_DIST))
+    gulp.src([DIR_CORE+"build.js",
+        DIR_MUI+"build.js"])
+    .pipe(concat(CONCAT_MAGIC_UIKIT))
+    .pipe(gulp.dest(DIR_DEV))
+    .on("finish", function() {
+        rollup({
+            entry: DIR_DEV+CONCAT_MAGIC_UIKIT,
+            format: 'umd',
+            moduleName: "Magic",
+            plugins: plugins,
+        })
+        .pipe(source('magic.ui.js'))
+        .pipe(replace(oldBuild, newBuild))
+        .pipe(gulp.dest(DIR_APP_LIBS))
         .on("finish", function() {
-            rollup({
-                entry: DIR_DIST+"/_magic_concat.js",
-                format: 'umd',
-                moduleName: "Magic",
-                plugins: plugins,
-            })
-            .pipe(source('magic.ui.js'))
-            .pipe(replace(oldBuild, newBuild))
-            .pipe(gulp.dest(DIR_DIST))
-            .on("finish", function() {
-                log("--- magic mui build finish");
-                del(DIR_DIST+"/_magic_concat.js");
-                defer_mui.resolve();
-            });
+            log("--- magic uikit build finish");
+            defer_mui.resolve();
         });
+    });
 
-        return Q.all([
-            defer_core.promise,
-            defer_mui.promise,
-        ]);
-    }).then(function() {
+    Q.all([
+        defer_core.promise,
+        defer_mui.promise,
+    ]).then(function() {
+        clean_magic();
         log("magic task all finish");
         defer_all.resolve();
     });
@@ -289,10 +332,10 @@ function task_build_magic() {
 }
 gulp.task("dev-build-magic", task_build_magic);
 
-function clear_magic() {
+function clean_magic() {
     return Q.all([
-        del(DIR_DIST+"magic.js"),
-        del(DIR_DIST+"magic.ui.js")
+        del(DIR_DEV+CONCAT_MAGIC_BASE),
+        del(DIR_DEV+CONCAT_MAGIC_UIKIT)
     ]);
 }
 
@@ -310,7 +353,7 @@ gulp.task("build", function(r) {
 gulp.task("serve", function() {
     browserSync.init({
         server: {
-            baseDir: DIR_WWW
+            baseDir: DIR_APP
         }
     });
 
@@ -318,9 +361,10 @@ gulp.task("serve", function() {
     gulp.watch([DIR_MINJS+"**/*.js"], ["dev-build-minjs"]);
     gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-magic"]);
 
-    gulp.watch([DIR_DIST+"/*"]).on("change", reload);
+    gulp.watch([DIR_APP_LIBS+"/*"]).on("change", reload);
 });
 
 gulp.task("clean", function() {
-    clear_mixin();
+    clean_mixin();
+    clean_magic();
 })

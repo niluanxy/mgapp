@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+
+    <script type="text/javascript">
+        (function(win, doc) {
+            // ========================================================
+            // 页面缩放修改
+            // ========================================================
+            var ratio = window.devicePixelRatio,
+                width = screen.width, dwidth, isPhone,
+                scale = 1, html, meta, head = document.head,
+                agent = window.navigator.userAgent.toLowerCase();
+
+            // 检测是运行在移动端还是桌面端环境
+            isPhone = /iP(hone|od|ad)/ig.test(agent)
+                        || /Android/ig.test(agent) || false;
+
+            // 如果检测到是移动端才执行设置，PC端忽略设置
+            if (isPhone) {
+                if (ratio !== undefined) {
+                    scale  = 1/ratio;
+                    dwidth = ratio * width;
+                } else {
+                    scale  = 1;
+                    dwidth = "device-width";
+                }
+            } else {
+                scale  = 1;
+                dwidth = "device-width";
+            }
+
+            meta = document.createElement("meta");
+            meta.setAttribute("name", "viewport");
+            content  = 'initial-scale=' + scale;
+            content += ', maximum-scale='+scale;
+
+            if (width > 440 && ratio >= 2) {
+                // screen 默认就为真实分辨率的时候，不要修正 width
+            } else {
+                content += ', user-scalable=no, width='+dwidth;
+            }
+
+            meta.setAttribute("content", content);
+            head.appendChild(meta); // 插入到页面中
+
+            // ========================================================
+            // 初始化根字体设置，font 和 width 参数，默认为 5S
+            // ========================================================
+            var font = 20, width = 375, docEl = doc.documentElement,
+                resizeEvt = 'orientationchange' in win ? 'orientationchange' : 'resize',
+                ratio = win.devicePixelRatio,
+                recalc = function () {
+                    var clientWidth = docEl.clientWidth, base, change;
+
+                    change = Math.abs(clientWidth-screen.width);
+                    if (!clientWidth) return;
+
+                    base = isPhone ? win.devicePixelRatio || (clientWidth / width) : 1;
+
+                    // 如果浏览器视窗大小没变化，则应用默认字体大小
+                    if (change < 20) {
+                        docEl.style.fontSize = font + 'px';
+                    } else {
+                        docEl.style.fontSize = font * base + 'px';
+                    }
+                };
+
+            if (!doc.addEventListener) return;
+            win.addEventListener(resizeEvt, recalc, false);
+            doc.addEventListener('DOMContentLoaded', recalc, false);
+        })(window, document);
+    </script>
+
+    <style>
+        body {
+            overflow-x: hidden;
+        }
+
+        .scroll {
+            background-color: #fafafa;
+        }
+
+        .scroll p {
+            padding: 0 1rem;
+            height: 2.2rem;
+            line-height: 2.2rem;
+            border-bottom: 2px solid #ccc;
+            border-top: 2px solid #fff;
+            font-size: 0.8rem;
+            display: block;
+        }
+    </style>
+
+    <link rel="stylesheet" href="libs/mixin.css">
+    <script type="text/javascript" src="libs/magic.ui.js"></script>
+</head>
+<body>
+    <script src="./check.js"></script>
+
+    <div id="scroll" style="height: 1000px;">
+        <div>
+            <p>0001</p>
+            <p>0002</p>
+            <p>0003</p>
+            <p>0004</p>
+            <p>0005</p>
+            <p>0006</p>
+            <p>0007</p>
+            <p>0008</p>
+            <p>0009</p>
+            <p>0010</p>
+            <p>0011</p>
+            <p>0012</p>
+            <p>0013</p>
+            <p>0014</p>
+            <p>0015</p>
+            <p>0016</p>
+            <p>0017</p>
+            <p>0018</p>
+            <p>0019</p>
+            <p>0020</p>
+            <p>0021</p>
+            <p>0022</p>
+            <p>0023</p>
+            <p>0024</p>
+            <p>0025</p>
+            <p>0026</p>
+            <p>0027</p>
+            <p>0028</p>
+            <p>0029</p>
+            <p>0030</p>
+            <p>0031</p>
+            <p>0032</p>
+            <p>0033</p>
+            <p>0034</p>
+            <p>0035</p>
+            <p>0036</p>
+            <p>0037</p>
+            <p>0038</p>
+            <p>0039</p>
+            <p>0040</p>
+            <p>0041</p>
+            <p>0042</p>
+            <p>0043</p>
+            <p>0044</p>
+            <p>0045</p>
+            <p>0046</p>
+            <p>0047</p>
+            <p>0048</p>
+            <p>0049</p>
+            <p>0050</p>
+            <p>0051</p>
+            <p>0052</p>
+            <p>0053</p>
+            <p>0054</p>
+            <p>0055</p>
+            <p>0056</p>
+            <p>0057</p>
+            <p>0058</p>
+            <p>0059</p>
+            <p>0060</p>
+            <p>0061</p>
+            <p>0062</p>
+            <p>0063</p>
+            <p>0064</p>
+            <p>0065</p>
+            <p>0066</p>
+            <p>0067</p>
+            <p>0068</p>
+            <p>0069</p>
+            <p>0070</p>
+            <p>0071</p>
+            <p>0072</p>
+            <p>0073</p>
+            <p>0074</p>
+            <p>0075</p>
+            <p>0076</p>
+            <p>0077</p>
+            <p>0078</p>
+            <p>0079</p>
+            <p>0080</p>
+        </div>
+    </div>
+
+    <div id="slider">
+        <div class="">
+            <div class="">
+                <img src="http://pal4.baiyou100.com/pal4index_files/pic/pic_d_24.jpg">
+            </div>
+
+            <div class="slider-item">
+                <img src="http://pal4.baiyou100.com/pal4index_files/pic/pic_d_22.jpg">
+            </div>
+
+            <div class="slider-item">
+                <img src="http://pal4.baiyou100.com/pal4index_files/pic/pic_d_23.jpg">
+            </div>
+        </div>
+    </div>
+
+    <a id="one" class="button-primary">user</a>
+    <a id="two" class="button-primary">user/main</a>
+    <a id="three" class="button-primary">list</a>
+    <a id="four" class="button-primary">list/good/1001</a>
+    <a id="five" class="button-primary">list/good/2001</a>
+    <a id="six" class="button-primary">list/good/2001 refresh</a>
+
+    <a id="back" class="button-second button-block">back</a>
+    <a id="backone" class="button-second button-block">back user</a>
+
+    <p>123123</p>
+    <div id="result"></div>
+</body>
+</html>
