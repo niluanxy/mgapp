@@ -6,3 +6,4 @@ import "MG_UIKIT/tip/main.js";
 import "MG_UIKIT/place/main.js";
 import "MG_UIKIT/scroll/main.js";
 import "MG_UIKIT/slider/main.js";
+import "MG_UIKIT/picker/main.js";

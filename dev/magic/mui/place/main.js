@@ -26,8 +26,8 @@ var CFG = $config.place = {
  *
  * option : {
  *     outer:     false [default]   [是否元素外插入，默认内部]
- *     float:     false [default]   [定位元素的 z-index 值]
- *     zindex:    100   [default]   [显示不下时是否自动浮动]
+ *     float:     false [default]   [显示不下时是否自动浮动]
+ *     zindex:    100   [default]   [定位元素的 z-index 值]
  * }
  *
  * top : ["top offset",  "center offset", "bottom offset"]
