@@ -51,7 +51,7 @@ function relRoot(el, out) {
         if (getComputedStyle(node).position != "static") {
             relative = node; break;
         }
-    } while(node = el.parentNode);
+    } while(node = node.parentNode);
 
     return relative || document.body;
 }
@@ -59,7 +59,11 @@ function relRoot(el, out) {
 export default function Place(el, relative, top, left, option) {
     var BODY = document.body;
 
-    if (!isElement(relative)) {
+    if (relative instanceof RootMagic) {
+        relative = element(relative);
+    }
+
+    if (relative && !isElement(relative)) {
         option = left; left = top;
         top = relative; relative = BODY;
     } else {
@@ -75,13 +79,12 @@ export default function Place(el, relative, top, left, option) {
         topfix, leftfix, zindex, outer, float,
         relOffset = RootMagic(relative).offset(), eleOffset;
 
-    outer = !!option.outer;
-    float = !!option.float;
-    zindex = option.zindex;
+    float = !!option.float; zindex = option.zindex;
+    outer = option.outer; outer = outer === "body" ? BODY : outer;
 
     if (outer === true) {
         parent = relRoot(relative);
-    } else if (outer instanceof Element) {
+    } else if (isElement(outer)) {
         parent = outer;
     } else {
         parent = relative;
@@ -99,8 +102,9 @@ export default function Place(el, relative, top, left, option) {
 
     // 如果实际定位的元素不是元素自身，需要修正坐标值
     if (parent != relative) {
-        var tmp = Place.outerRect(parent);
-        offset = Place.outerRect(relative);
+        var tmp = RootMagic(parent).offset();
+
+        offset = RootMagic(relative).offset();
 
         offset.top  -= tmp.top;
         offset.left -= tmp.left;

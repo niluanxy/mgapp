@@ -86,7 +86,7 @@ export function copyEvent(event, scope) {
     }
 
     fix.originalEvent = event;
-    if (event.originalTarget) fix.target = event.originalTarget;
+    fix.target = event.originalTarget || event.target;
 
     return fix;
 }

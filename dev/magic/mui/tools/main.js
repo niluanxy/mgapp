@@ -11,20 +11,29 @@ export function uiInit($el, opt, bindEve, bindCall) {
 
     if (style && !$el.regClass(aClass+"-") && !aWrap.match(rTest)) {
         aWrap += aClass;
-        aWrap  = aWrap.replace(new RegExp(rTest, 'g'), aClass+"-"+style); 
+        aWrap  = aWrap.replace(new RegExp(rTest, 'g'), aClass+"-"+style);
     }
 
     $el.addClass(aWrap)
         .children().addClass(opt[keyItem], true);
 
     if (isTrue(bindEve) && isFunction(bindCall)) {
-        eve = opt[keyItem].match(aClass+"-item")[0];
+        eve = opt[keyItem].match(uiItemClass(aClass))[0];
         eve = eve ? "."+eve : null;
 
         $el.on(bindEve, eve, bindCall);
     }
 
     return $el;
+}
+
+export function uiItemClass(opt, prefix) {
+    var cls = opt && opt.class || opt || "";
+
+    cls = cls ? cls+"-item" : "";
+    cls = prefix ? "."+cls : cls;
+
+    return cls;
 }
 
 export function uiExtend() {

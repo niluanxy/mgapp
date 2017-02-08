@@ -1,0 +1,29 @@
+@mixin picker($class: picker, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        display: inline-block;
+        position: relative;
+
+        &-body {
+            width: 100%;
+            display: block;
+        }
+
+        &-item, &-show {
+            width: 100%;
+            display: inline-block;
+        }
+
+        &-show + &-scroll {
+            position: absolute;
+        }
+
+        &-scroll {
+            display: block;
+            height: 100%;
+            background-color: #FFFFFF;
+            overflow: hidden;
+        }
+
+        @content;   // 样式自定义扩展代码位置
+    }
+}

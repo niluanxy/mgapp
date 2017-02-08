@@ -1,5 +1,5 @@
 import RootMagic from "MG_MAGIC/main.js";
-import {uiExtend, uiInit} from "MG_UIKIT/tools/main.js";
+import {uiExtend, uiInit, uiItemClass} from "MG_UIKIT/tools/main.js";
 import {isTrueString, isArray, isFunction} from "LIB_MINJS/check.js";
 import {each, extend} from "LIB_MINJS/utils.js";
 import $config from "MG_MAGIC/config.js";
@@ -12,16 +12,24 @@ var CFG = $config.picker = {
 
     hideClass: "hide",
 
-    bodyClass: "picker-body",
-    showClass: "picker-show",
+    bodyClass  : "picker-body",
+    showClass  : "picker-show",
+    scrollClass: "picker-scroll",
 
     itemClass: "picker-item",
     wrapClass: "picker",
 
-    template : "<div value={{value}}>{{show}}</div>"
+    template : "<div value={{value}}>{{show}}</div>",
+
+    modalOption: {float: true},
+    modalVertical  : "bottom",
+    modalHorizontal: "left",
 }, Prototype = {};
 
 /**
+ *
+ * modalRelative:   [弹框时的定位元素，可以为选择器]
+ *
  * options: {
  *      data: [
  *          { value: "111", show: "item-111", call: null },
@@ -49,6 +57,7 @@ export default function Picker(el, option, data) {
     self.$el   = RootMagic(el);
     self.$body = null;
     self.$show = null;
+    self.$modal= null;
 
     self.data  = data || null;
     self.value = "";
@@ -138,40 +147,59 @@ Prototype.init = function() {
     if (!self.$body.length) self.render();
 
     if (opt.scroll) {
-        self.$body.wrap("<div></div>");
-
         var scrollOption = {
-            pointX: false, pointY: false,
-            bodyClass: "", preventMove: true,
-        };
+                pointX: false, pointY: false,
+                bodyClass: "", wrapClass: "",
+                preventMove: true,
+            }, $wrap = self.$body.parent("."+opt.scrollClass);
+
+        if ($wrap && !$wrap.length) {
+            self.$body.wrap("<div class='"+opt.scrollClass+"'></div>");
+            $wrap = self.$body.parent();
+        }
 
         if (opt.snap) {
             scrollOption.plugins = "snap";
-            scrollOption.snap = opt.itemClass;
+            scrollOption.snap = "."+opt.itemClass;
+            scrollOption.snapResize = opt.snapResize || false;
         }
 
-        self.scroll = new Scroll(self.$body, scrollOption).init();
+        self.$modal = $wrap
+        self.scroll = new Scroll($wrap, scrollOption).init();
     }
 
-    self.$body.on("tap.picker", "."+opt.class+"-item", function(e) {
-        console.log(e.target);
+    self.$body.on("tap.picker", uiItemClass(opt, true), function(e) {
         self.select(RootMagic(e.target).index());
-        self.hide();
     }); self.select(0);
+
+    if (opt.modal && self.$modal) {
+        self.$show.on("tap.picker", function(e) {
+            self.toggle();
+        });
+    }
 
     return self;
 }
 
-Prototype.show = function() {
-    var self = this, opt = self.option;
+Prototype.show = function(vertical, horizontal, option, relative) {
+    var self = this, opt = self.option,
+        modalX, modalY, modalOption, $relative;
 
-    if (opt.modal && self.$body) {
-        self.$body.removeClass(opt.hideClass);
+    if (opt.modal && self.$modal) {
+        self.$modal.removeClass(opt.hideClass);
 
-        Place(self.$body, self.$el, "bottom", "right", {
-            float: true
-        });
+        modalX = vertical || opt.modalVertical;
+        modalY = horizontal || opt.modalHorizontal;
+        modalOption = option || opt.modalOption;
 
+        if (relative) {
+            $relative = relative;
+        } else {
+            $relative = RootMagic(opt.modalRelative);
+            $relative = $relative && $relative.length ? $relative : self.$el;
+        }
+
+        Place(self.$modal, $relative, modalX, modalY, modalOption);
         self.isHide = false;
     }
 
@@ -181,8 +209,8 @@ Prototype.show = function() {
 Prototype.hide = function() {
     var self = this, opt = self.option;
 
-    if (opt.modal && self.$body) {
-        self.$body.addClass(opt.hideClass);
+    if (opt.modal && self.$modal) {
+        self.$modal.addClass(opt.hideClass);
         self.isHide = true;
     }
 
@@ -200,7 +228,7 @@ Prototype.toggle = function(hideSet) {
 
 Prototype.select = function(index, isValue) {
     var self = this, opt = self.option,
-        select = self.data[index] || {};
+        select = self.data[index] || {}, $target;
 
     try {
         self.value = JSON.parse(select.value);
@@ -212,13 +240,19 @@ Prototype.select = function(index, isValue) {
 
     if (isFunction(opt.onSelect)) opt.onSelect(self.value, select);
 
-    if (opt.modal && self.$show) {
-        if (isFunction(opt.onRender)) {
-            self.$show.html(opt.onRender(self.value, select));
-        } else {
-            self.$show.html($target.html());
+    if (select.value !== undefined && opt.modal && self.$show) {
+        $target = self.$body.children().eq(index);
+
+        if ($target && $target.length) {
+            if (isFunction(opt.onRender)) {
+                self.$show.html(opt.onRender(self.value, select));
+            } else {
+                self.$show.html($target.html());
+            }
         }
     }
+
+    self.hide();    // 尝试隐藏自身弹框
 
     return self.value;
 }

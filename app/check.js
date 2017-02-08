@@ -85,6 +85,11 @@ $(function() {
     });
 
     window.picker = $("#picker").picker({
+        snap: true,
+        snapResize: 3,
+        scroll: true,
+        modal: true,
+
         onSelect: function(value) {
             console.log(value);
         }

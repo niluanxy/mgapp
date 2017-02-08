@@ -20,10 +20,16 @@ export function index() {
     return -1;  // 默认返回 -1
 }
 
-export function parent() {
-    var el = element(this);
+export function parent(search) {
+    var el = element(this), par;
 
-    return RootMagic(el && el.parentNode);
+    par = el ? el.parentNode : null;
+
+    if (!search || matchTest(par, search)) {
+        return RootMagic(par);
+    } else {
+        return RootMagic(null);
+    }
 }
 
 export function parents(search) {
@@ -81,7 +87,7 @@ export function eq(el) {
                 cache.push(ele);
             }
         });
-        
+
         return RootMagic(cache);
     }
 
@@ -100,7 +106,7 @@ export function below(find) {
             check = check.parent();
         } while(check.length > 0);
     }
-        
+
 
     return false;
 }

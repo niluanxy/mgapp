@@ -13,7 +13,7 @@ Magic = function(select, context) {
     }
 
     this.length = 0;
-    
+
     if (typeof select === "string") {
         // 判断是否为创建DOM的字符串
         if (_DOM.check(select)) {
@@ -29,7 +29,7 @@ Magic = function(select, context) {
             // 否则直接尝试查找对象
             context = context ? context[0] || context : null;
             var qur = _DOM.query(select, context);
-            
+
             _EXTEND(true, this, qur);
             this.length = qur.length;
         }
@@ -88,7 +88,7 @@ Prototype = {
 
             this[fix] = find[i];
         }
-        
+
         this.length = start+end;
 
         return this;
@@ -102,7 +102,7 @@ Prototype = {
         } else {
             args.unshift(this);
         }
-        
+
         _EXTEND.apply(null, args);
 
         return this;
@@ -135,7 +135,7 @@ _EACH([Creater, Magic], function(index, object) {
 });
 
 // 对象继承链修复
-Creater.fn = Magic.prototype = Prototype;
+Creater.fn = Creater.prototype = Magic.prototype = Prototype;
 Creater.config = _CONFIG;
 
 export default Creater;
