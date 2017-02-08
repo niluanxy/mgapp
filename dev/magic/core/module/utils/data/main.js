@@ -1,4 +1,4 @@
-import {allProxy} from "MG_FUNCTION/proxy.js";
+import {allProxy} from "MG_UTILS/proxy.js";
 import {element} from "LIB_MINJS/utils.js";
 import {dataCore, removeDataCore} from "MG_MAGIC/tools.js";
 

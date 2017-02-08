@@ -80,11 +80,13 @@ $(function() {
 
     window.ctrl = $("#scroll").scroll({
         plugins: "snap",
-        snapResize: 8,
+        snapResize: 5,
         // lockY: true, lockX: false,
     });
 
-    window.slider = $("#slider").slider({
-        
+    window.picker = $("#picker").picker({
+        onSelect: function(value) {
+            console.log(value);
+        }
     });
 })

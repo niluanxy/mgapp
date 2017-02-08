@@ -1,6 +1,6 @@
 import RootMagic from "MG_MAGIC/main.js";
 import {element, each, trim} from "LIB_MINJS/utils.js";
-import {allProxy} from "MG_FUNCTION/proxy.js";
+import {allProxy} from "MG_UTILS/proxy.js";
 
 function firstUpperCase(string) {
     return string[0].toUpperCase() + string.slice(1);

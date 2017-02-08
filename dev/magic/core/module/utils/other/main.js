@@ -1,5 +1,5 @@
 import {isTrueString, isObject} from "LIB_MINJS/check.js";
-import {allProxy} from "MG_FUNCTION/proxy.js";
+import {allProxy} from "MG_UTILS/proxy.js";
 import {append} from "MG_MODULE/dom/editer/main.js";
 import {element} from "LIB_MINJS/utils.js";
 import templayed from "LIB_MINJS/templayed.js";

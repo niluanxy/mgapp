@@ -23,16 +23,16 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     webpack             = require("webpack-stream"),
     sass                = require("gulp-sass");
 
-colors.setTheme({  
-    silly: 'rainbow',  
-    input: 'grey',  
-    verbose: 'cyan',  
-    prompt: 'red',  
-    info: 'green',  
-    data: 'blue',  
-    help: 'cyan',  
-    warn: 'yellow',  
-    debug: 'magenta',  
+colors.setTheme({
+    silly: 'rainbow',
+    input: 'grey',
+    verbose: 'cyan',
+    prompt: 'red',
+    info: 'green',
+    data: 'blue',
+    help: 'cyan',
+    warn: 'yellow',
+    debug: 'magenta',
     error: 'red',
     time: 'gray'
 });
@@ -71,11 +71,11 @@ var DIR_MAGIC_ALIAS = {
 
     LIB_MINJS: DIR_MINJS,
 
-    MG_BASE    : DIR_MAGIC+"core/",
+    MG_BASE    : DIR_MAGIC+"core",
+    MG_UTILS   : DIR_MAGIC+"utils",
     MG_MAGIC   : DIR_MAGIC+"core/magic",
     MG_MODULE  : DIR_MAGIC+"core/module",
     MG_STATIC  : DIR_MAGIC+"core/static",
-    MG_FUNCTION: DIR_MAGIC+"core/function",
 
     MG_UIKIT   : DIR_MAGIC+"mui",
 };
@@ -274,8 +274,8 @@ function task_build_magic() {
             ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
         }),
         (BUILD_RELEASE && rollupUglify({
-            mangle: { 
-                except: ['Magic'] 
+            mangle: {
+                except: ['Magic']
             }
         })),
     ];

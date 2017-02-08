@@ -1,5 +1,5 @@
 import RootMagic from "MG_MAGIC/main.js";
 
-import * as core from "./core/main.js";
+import {on, once, off, emit} from "MG_MODULE/event/core/main.js";
 
-RootMagic.fn.extend(core);
+RootMagic.fn.extend({ on: on, once: once, off: off, emit: emit });

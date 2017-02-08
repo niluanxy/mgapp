@@ -1,6 +1,6 @@
 import RootMagic from "MG_MAGIC/main.js";
 import {uiExtend, uiInit} from "MG_UIKIT/tools/main.js";
-import {isArray, isObject} from "LIB_MINJS/check.js";
+import {isTrueString, isArray, isFunction} from "LIB_MINJS/check.js";
 import {each, extend} from "LIB_MINJS/utils.js";
 import $config from "MG_MAGIC/config.js";
 
@@ -77,7 +77,7 @@ Prototype.render = function() {
 }
 
 Prototype.initData = function() {
-    var self = this, $body = self.$body;
+    var self = this, opt = self.option, $body = self.$body;
 
     if (!isArray(self.data) && $body.length) {
         var cacheData = [];
@@ -112,16 +112,17 @@ Prototype.initDom = function() {
     var self = this, opt = self.option,
         $el = self.$el, $show, $body;
 
-    if (opt.modal && ($show = $el.children(opt.showClass)) && !$show.length) {
+    if (opt.modal && ($show = $el.children("."+opt.showClass)) && !$show.length) {
         $show = RootMagic("<div class='"+opt.showClass+"'></div>");
         $el.prepend($show);
     }
 
-    if (($body = $el.children(opt.bodyClass)) && !$body.length) {
+    if (($body = $el.children("."+opt.bodyClass)) && !$body.length) {
         $body = RootMagic("<div class='"+opt.bodyClass+"'></div>");
         $el.append($body);
     }
 
+    $el.addClass(opt.wrapClass);
     $body.children().addClass(opt.itemClass, true);
 
     self.$body = $body; self.$show = $show;
@@ -152,10 +153,11 @@ Prototype.init = function() {
         self.scroll = new Scroll(self.$body, scrollOption).init();
     }
 
-    uiInit(self.$body, opt, "tap", function(e) {
+    self.$body.on("tap.picker", "."+opt.class+"-item", function(e) {
+        console.log(e.target);
         self.select(RootMagic(e.target).index());
         self.hide();
-    });
+    }); self.select(0);
 
     return self;
 }
@@ -200,13 +202,19 @@ Prototype.select = function(index, isValue) {
     var self = this, opt = self.option,
         select = self.data[index] || {};
 
-    if (isFunction(select.call)) select.call(select.value, select);
+    try {
+        self.value = JSON.parse(select.value);
+    } catch(error) {
+        self.value = select.value;
+    }
 
-    if (isFunction(opt.onSelect)) opt.onSelect(select.value, select);
+    if (isFunction(select.call)) select.call(self.value, select);
+
+    if (isFunction(opt.onSelect)) opt.onSelect(self.value, select);
 
     if (opt.modal && self.$show) {
         if (isFunction(opt.onRender)) {
-            self.$show.html(opt.onRender(select.value, select));
+            self.$show.html(opt.onRender(self.value, select));
         } else {
             self.$show.html($target.html());
         }

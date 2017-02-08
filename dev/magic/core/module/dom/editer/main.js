@@ -1,5 +1,5 @@
-import {make as domMake} from "MG_FUNCTION/dom.js";
-import {eachProxy, allProxy} from "MG_FUNCTION/proxy.js";
+import {make as domMake} from "MG_UTILS/dom.js";
+import {eachProxy, allProxy} from "MG_UTILS/proxy.js";
 import {slice, element} from "LIB_MINJS/utils.js";
 import RootMagic from "MG_MAGIC/main.js";
 

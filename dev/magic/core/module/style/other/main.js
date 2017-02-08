@@ -1,4 +1,4 @@
-import {allProxy} from "MG_FUNCTION/proxy.js";
+import {allProxy} from "MG_UTILS/proxy.js";
 import {element, extend, trim} from "LIB_MINJS/utils.js";
 import {isElement, isTrueString, isString, isNumber} from "LIB_MINJS/check.js";
 import {dataStyle} from "MG_MAGIC/tools.js";

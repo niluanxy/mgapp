@@ -1,6 +1,6 @@
 import Emitter from "LIB_MINJS/emitter.js";
 import {isFunction, isTrueString, isObject} from "LIB_MINJS/check.js";
-import {allProxy} from "MG_FUNCTION/proxy.js";
+import {allProxy} from "MG_UTILS/proxy.js";
 import {element, extend, slice, each} from "LIB_MINJS/utils.js";
 import {parent, below, eq} from "MG_MODULE/dom/search/main.js";
 import {dataEvent} from "MG_MAGIC/tools.js";
@@ -86,7 +86,7 @@ export function copyEvent(event, scope) {
     }
 
     fix.originalEvent = event;
-    if (fix.originalTarget) fix.target = fix.originalTarget;
+    if (event.originalTarget) fix.target = event.originalTarget;
 
     return fix;
 }
