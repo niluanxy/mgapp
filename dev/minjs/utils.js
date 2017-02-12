@@ -160,3 +160,13 @@ export function extend(/* deep, target, obj..., last */) {
 
     return target;     // 返回合并后的对象
 };
+
+
+/* 方法封装映射函数 */
+function applyCall(eveName, scope) {
+    return function() {
+        var args = extend(true, [], arguments);
+
+        Emitter[eveName].apply(scope, args);
+    }
+}
