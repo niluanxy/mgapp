@@ -53,6 +53,7 @@ MagicVue.mount = (function() {
     return function(bind, callback) {
         if (hasRun) return;
 
+        hasRun = true;
         Ready(function() {
             if (isFunction(bind)) {
                 callback = bind; bind = "";
@@ -71,7 +72,7 @@ MagicVue.mount = (function() {
                 }
             }
 
-            RootVue.$mount($bind); hasRun = true;
+            RootVue.$mount($bind);
             if (isFunction(callback)) callback();
         });
     };
