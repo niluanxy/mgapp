@@ -53,6 +53,7 @@ var DIR_APP   = __dirname + "/app/",
     DIR_MIXIN = DIR_DEV + "mixin/",
     DIR_MINJS = DIR_DEV + "minjs/",
     DIR_MAGIC = DIR_DEV + "magic/",
+    DIR_MAGIC_VUE = DIR_DEV + "magic-vue/",
 
     DIR_APP_LIBS = DIR_APP + "libs/";
 
@@ -64,20 +65,28 @@ var CONCAT_PRE        = "_concat_",
     CONCAT_MIXIN_BUILD= "mixin.scss",
 
     CONCAT_MAGIC_BASE = CONCAT_PRE+"magic.js",
-    CONCAT_MAGIC_UIKIT= CONCAT_PRE+"magic.ui.js";
+    CONCAT_MAGIC_UIKIT= CONCAT_PRE+"magic.ui.js",
+
+    CONCAT_MGVUE_BASE = CONCAT_PRE+"mgvue.js",
+    CONCAT_MGVUE_UIKIT= CONCAT_PRE+"mgvue.ui.js";
 
 var DIR_MAGIC_ALIAS = {
     resolve: ['.jsx', '.js'],
 
     LIB_MINJS: DIR_MINJS,
 
-    MG_BASE    : DIR_MAGIC+"core",
+    MG_CORE    : DIR_MAGIC+"core",
     MG_UTILS   : DIR_MAGIC+"utils",
     MG_MAGIC   : DIR_MAGIC+"core/magic",
     MG_MODULE  : DIR_MAGIC+"core/module",
     MG_STATIC  : DIR_MAGIC+"core/static",
-
     MG_UIKIT   : DIR_MAGIC+"mui",
+
+    MV_CORE    : DIR_MAGIC_VUE+"core",
+    MV_BASE    : DIR_MAGIC_VUE+"core/base",
+    MV_MODULE  : DIR_MAGIC_VUE+"core/module",
+    MV_PLUGIN  : DIR_MAGIC_VUE+"core/plugin",
+    MV_UIKIT   : DIR_MAGIC_VUE+"mui",
 };
 
 var reload = throttle(20, function() {
@@ -339,6 +348,98 @@ function clean_magic() {
     ]);
 }
 
+/**===============================================
+ * magic vue 文件合并脚本函数
+ =================================================*/
+function task_build_mgvue() {
+    var defer_all = Q.defer(), defer_core = Q.defer(),
+        defer_mui = Q.defer(), plugins,
+
+    DIR_CORE = DIR_MAGIC_VUE+"core/",
+    DIR_MUI  = DIR_MAGIC_VUE+"mui/",
+
+    oldBuild = BUILD_RELEASE ? /(\w)(\.MagicVue=)(\w\(\))/
+                             : /(\(global.MagicVue = factory\(\)\)\;)/,
+    newBuild = BUILD_RELEASE ? '$1$2$3;if("undefined"==typeof define&&!$1.$)$1.$$=$1.MagicVue;'
+                             : '$1\n\tif(typeof define === "undefined" && !global.$$) '+
+                               'global.$$ = global.MagicVue;';
+
+    plugins = [
+        rollupAlias(DIR_MAGIC_ALIAS),
+        rollupReplace({
+            exclude: 'node_modules/**',
+            ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
+        }),
+        (BUILD_RELEASE && rollupUglify({
+            mangle: {
+                except: ['MagicVue']
+            }
+        })),
+    ];
+
+    gulp.src(DIR_CORE+"build.js")
+    .pipe(rename(CONCAT_MGVUE_BASE))
+    .pipe(gulp.dest(DIR_DEV))
+    .on("finish", function() {
+        rollup({
+            entry: DIR_DEV+CONCAT_MGVUE_BASE,
+            format: 'umd',
+            moduleName: "MagicVue",
+            plugins: plugins,
+        })
+        .pipe(source('mgvue.js'))
+        .pipe(replace(oldBuild, newBuild))
+        .pipe(gulp.dest(DIR_APP_LIBS))
+        .on("finish", function() {
+            log("--- mgvue core build finish");
+            defer_core.resolve();
+        });
+    });
+
+    gulp.src([DIR_CORE+"build.js",
+        DIR_MUI+"build.js"])
+    .pipe(concat(CONCAT_MGVUE_UIKIT))
+    .pipe(gulp.dest(DIR_DEV))
+    .on("finish", function() {
+        rollup({
+            entry: DIR_DEV+CONCAT_MGVUE_UIKIT,
+            format: 'umd',
+            moduleName: "MagicVue",
+            plugins: plugins,
+        })
+        .pipe(source('mgvue.ui.js'))
+        .pipe(replace(oldBuild, newBuild))
+        .pipe(gulp.dest(DIR_APP_LIBS))
+        .on("finish", function() {
+            log("--- mgvue uikit build finish");
+            defer_mui.resolve();
+        });
+    });
+
+    Q.all([
+        defer_core.promise,
+        defer_mui.promise,
+    ]).then(function() {
+        clean_magic();
+        log("mgvue task all finish");
+        defer_all.resolve();
+    });
+
+    return defer_all.promise;
+}
+gulp.task("dev-build-mgvue", task_build_mgvue);
+
+function clean_mgvue() {
+    return Q.all([
+        del(DIR_DEV+CONCAT_MGVUE_BASE),
+        del(DIR_DEV+CONCAT_MGVUE_UIKIT)
+    ]);
+}
+
+
+/**===============================================
+ * 项目整体相关函数
+ =================================================*/
 gulp.task("build", function(r) {
     BUILD_RELEASE = r ? true : false;
 
@@ -347,7 +448,9 @@ gulp.task("build", function(r) {
         return task_build_minjs();
     }).then(function() {
         return task_build_magic();
-    });
+    }).then(function() {
+        return task_build_mgvue();
+    })
 })
 
 gulp.task("serve", function() {
@@ -360,11 +463,15 @@ gulp.task("serve", function() {
     gulp.watch([DIR_MIXIN+"**/*"],    ["dev-build-mixin"]);
     gulp.watch([DIR_MINJS+"**/*.js"], ["dev-build-minjs"]);
     gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-magic"]);
+    gulp.watch([DIR_MAGIC_VUE+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-mgvue"]);
 
     gulp.watch([DIR_APP_LIBS+"/*"]).on("change", reload);
 });
 
 gulp.task("clean", function() {
-    clean_mixin();
-    clean_magic();
+    return Q.all([
+        clean_mixin(),
+        clean_magic(),
+        clean_mgvue()
+    ]);
 })

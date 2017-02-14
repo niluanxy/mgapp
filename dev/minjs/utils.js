@@ -163,7 +163,7 @@ export function extend(/* deep, target, obj..., last */) {
 
 
 /* 方法封装映射函数 */
-function applyCall(eveName, scope) {
+export function applyCall(eveName, scope) {
     return function() {
         var args = extend(true, [], arguments);
 

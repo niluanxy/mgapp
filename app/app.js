@@ -1,0 +1,3 @@
+$$.mount("#mgapp", function() {
+
+});

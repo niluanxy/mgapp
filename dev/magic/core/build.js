@@ -6,7 +6,7 @@ import "MG_MODULE/event/main.js";
 import "MG_MODULE/utils/main.js";
 import "MG_STATIC/main.js";
 
-import "MG_BASE/support/main.js";
+import "MG_CORE/support/main.js";
 
 RootMagic.version = "0.5.0";
 

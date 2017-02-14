@@ -42,7 +42,7 @@ var Router = function(maps, option) {
     ctrl.on("routeSuccess", opt.onSuccess, this);
     ctrl.on("routeAlways", opt.onAlways, this);
 
-    ctrl.on("routeNotFound", opt.notCall, this); 
+    ctrl.on("routeNotFound", opt.notCall, this);
     ctrl.on("routeNotFound", function() {
         if (opt.notPage) this.go(opt.notPage);
     }, this);
@@ -200,7 +200,7 @@ Prototype.on = function(url, addOption, context) {
             adds = cache;
         } while (adds.length);
     }
-    
+
     return this;
 }
 
@@ -211,6 +211,15 @@ Prototype.off = function(url) {
     return this;
 }
 
+/**
+ * 事件回调参数： url, routeType, routeGo, routeLast
+ *
+ * url:             当前触发路由的 url 地址
+ * routeType:       当前路由触发方式 ["back" || "go"]
+ * routeGo:         当前要触发的路由信息对象
+ * routeLast:       当前要离开的路由信息对象
+ *
+ */
 Prototype.emit = function(url, routeType, routeGo, routeLast, stateType) {
     var args = [url, routeType, routeGo, routeLast],
         OPT = this.option, CTRL = this.ctrl, STACK = this.stack,
@@ -220,7 +229,7 @@ Prototype.emit = function(url, routeType, routeGo, routeLast, stateType) {
     args.unshift(routeLast.url + " on.Leave");
     routeLast.url && CTRL.emit.apply(CTRL, args);
 
-    CTRL.once(this.transMatch(routeGo.match)+" on.Emit", function() { 
+    CTRL.once(this.transMatch(routeGo.match)+" on.Emit", function() {
         emitResult = true;
     });
 
