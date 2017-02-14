@@ -71,8 +71,7 @@ MagicVue.mount = (function() {
                 }
             }
 
-            RootVue.$mount($bind);
-
+            RootVue.$mount($bind); hasRun = true;
             if (isFunction(callback)) callback();
         });
     };
