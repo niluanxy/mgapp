@@ -1,8 +1,10 @@
 import MagicVue from "MV_BASE/main.js";
 import {extend} from "LIB_MINJS/utils.js";
-import {isFunction, isArray, isTrueString} from "LIB_MINJS/check.js";
+import {isFunction, isElement, isArray, isTrueString} from "LIB_MINJS/check.js";
 
-function nameTrans(name, tag) {
+var Vue = MagicVue.Vue, viewMixins, mgViewWrapName = "mgViewRenderWrap";
+
+export function nameTrans(name, tag) {
     var ret = "ma-"+name;
 
     ret = ret.replace(/[\-|\\|\/]/g, "-");
@@ -10,70 +12,106 @@ function nameTrans(name, tag) {
     return tag ? "<"+ret+"></"+ret+">" : ret;
 }
 
+function createWraper(dom) {
+    var $wrap = dom;
+
+    if (!isElement($wrap)) {
+        $wrap = document.createElement("div");
+        $wrap.innerHTML = "<div></div><div></div>";
+
+        MagicVue.$root.appendChild($wrap);
+    }
+
+    return $wrap.childNodes[1];
+}
+
+export function renderView(name, params, $wrap) {
+    if (!name.match(/^ma/)) name = nameTrans(name);
+
+    var com = MagicVue.component(name),
+        $render, $wraper = createWraper($wrap);
+
+    if ($wraper != $wrap && $wraper.parentNode) {
+        $wraper.parentNode.setAttribute("view", name);
+    }
+    $render = new com({ el: $wraper, name: name});
+
+    $render.$$params = params || {};
+
+    return $render;
+}
 
 /**========================================================
  * view 对象核心扩展属性
  * ======================================================== */
-var viewMixins = {
+ function viewFactory(view) {
+     var oldData = view.data, mixins;
+
+     if (!isFunction(oldData)) {
+         view.data = function() {
+             return extend(true, {
+                 $params: {}
+             }, oldData);
+         }
+     }
+
+     if (isArray(view.mixins)) {
+         view.mixins.push(viewMixins);
+     } else {
+         view.mixins = [viewMixins];
+     }
+
+     return view;
+ }
+
+ function viewParentFix(vueView) {
+     var find = vueView.$el.parentNode, $parent;
+
+     vueView.$el.$$scope = vueView;
+
+     do {
+         if (find && find.$$scope) {
+             $parent = find.$$scope; break;
+         }
+
+         find = find.parentNode;
+     } while(find && find != MagicVue.$root);
+
+     if (!$parent) $parent = MagicVue.RootVue;
+     vueView.$parent = $parent;
+ }
+
+viewMixins = {
     created: function() {
-        var self = this;
+        var self = this, $parent = self.$parent;
 
-        this.$broadcast = function(/* eve, args... */) {
-            var args = arguments;
+        console.log("=============================")
+        console.log("run created")
 
-            if (isTrueString(args[0])) {
-                self.$emit.apply(self, args);
+        // 设置页面的参数对象
+        self.$params = self.$$params || {};
 
-                MagicVue.broadcast.apply(MagicVue, args);
-            }
+        if ($parent && $parent.$options.name == mgViewWrapName) {
+            console.log("render by route");
+        } else {
+            console.log("render by views");
         }
-
-        this.$dispatch = function(/* eve, args... */) {
-            var args = arguments;
-
-            if (isTrueString(args[0])) {
-                self.$emit.apply(self, args);
-
-                MagicVue.dispatch.apply(MagicVue, args);
-            }
-        }
-
-
-        this.$emit("mgViewCreated");
     },
 
     mounted: function() {
-        this.$emit("mgViewReady");
+        var self = this, $parent = self.$parent;
 
-        if (this.mgDefaultShow) {
-            this.$emit("mgViewShow");
-        }
+        viewParentFix(self);
+        console.log("=============================")
+        console.log("run mounted")
     },
 
     beforeDestroy: function() {
-        this.$emit("mgViewDestroy");
+        console.log("=============================")
+        console.log("run beforeDestroy")
     }
 };
 
-function viewFactory(view) {
-    var oldData = view.data, mixins;
-
-    if (!isFunction(oldData)) {
-        view.data = function() {
-            return extend(true, {
-                params: {}
-            }, oldData);
-        }
-    }
-
-    if (isArray(view.mixins)) {
-        view.mixins.push(viewMixins);
-    } else {
-        view.mixins = [viewMixins];
-    }
-
-    return view;
-}
 
 /**========================================================
  * 异步组件加载方法，根据 Vue 和 Webpack 的要求
@@ -81,30 +119,36 @@ function viewFactory(view) {
  *
  * https://cn.vuejs.org/v2/guide/components.html#异步组件
  * ======================================================== */
-function initView(resolve) {
+export function initView(resolve) {
     return function(view) {
-        // 实例初始化页面组件对象
-        resolve(viewFactory(view));
+        var name = resolve.name, component;
+
+        MagicVue.component(name, viewFactory(view));
+        component = MagicVue.component(name);
+        new component({el: resolve.el, name: name});
     }
 }
 
 /**========================================================
  * 页面注册函数，注册到全局对象中
  * ======================================================== */
-function loadView(viewName, viewOption) {
-    var bindName = nameTrans(viewName), bindView;
+export function loadView(viewName, bindView) {
+    var bindName = nameTrans(viewName);
 
     // 若为对象，说明为同步加载页面，则调用 工厂函数 进行包装
-    if (typeof viewOption == "object") {
-        bindView = viewFactory(viewOption);
+    if (typeof bindView == "object") {
+        bindView = viewFactory(bindView);
     }
 
     MagicVue.component(bindName, bindView);
 
     return function(url, routeType, routeGo, routeLast) {
-        var goParams = extend(true, {}, routeGo.params);
+        // var goParams = extend(true, {}, routeGo.params);
 
-
-
+        renderView(viewName);
     }
 }
+
+MagicVue.renderView = renderView;
+MagicVue.initView = initView;
+MagicVue.loadView = loadView;

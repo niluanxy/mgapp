@@ -165,8 +165,12 @@ export function extend(/* deep, target, obj..., last */) {
 /* 方法封装映射函数 */
 export function applyCall(eveName, scope) {
     return function() {
-        var args = extend(true, [], arguments);
+        if (scope && isFunction(scope[eveName])) {
+            var args = extend(true, [], arguments);
 
-        Emitter[eveName].apply(scope, args);
+            return scope[eveName].apply(scope, args);
+        }
+
+        return;
     }
 }

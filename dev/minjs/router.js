@@ -7,7 +7,7 @@ import {extend, value} from "LIB_MINJS/utils.js";
 var CFG = {
     home     : "/home",             // 默认首页
     repath   : true,                // 是否自动跳转到首页
-    single   : false,               // 单例模式，相同路由页面 replace 加载，默认开启
+    single   : true,                // 单例模式，相同路由页面 replace 加载，默认开启
     native   : true,                // 尝试响应原生事件，若不关心浏览器事件，请禁用
 
     notCall  : null,                // 页面未找到时候的回调方法
@@ -26,26 +26,28 @@ var CFG = {
 };
 
 var Router = function(maps, option) {
-    var opt = extend({}, CFG, option), ctrl = Emitter();
+    var self = this, opt = extend({}, CFG, option), ctrl = Emitter();
 
-    this.ctrl = ctrl;
-    this.option = opt;
+    self.ctrl = ctrl;
+    self.option = opt;
 
-    this.route = this.ctrl.tables;          // 路由表信息
-    this.stack = [];                        // 路由栈信息
-    this.backBlock = 1;                     // 记录需要back修复系统路由栈的次数
+    self.route = self.ctrl.tables;          // 路由表信息
+    self.stack = [];                        // 路由栈信息
+    self.backBlock = 1;                     // 记录需要back修复系统路由栈的次数
 
-    this.last  = null;                      // 当前路由信息
-    this.prev  = null;                      // 上次路由信息
+    self.last  = null;                      // 当前路由信息
+    self.prev  = null;                      // 上次路由信息
 
-    ctrl.on("routeInit", opt.onInit, this);
-    ctrl.on("routeSuccess", opt.onSuccess, this);
-    ctrl.on("routeAlways", opt.onAlways, this);
+    ctrl.on("routeInit", opt.onInit, self);
+    ctrl.on("routeSuccess", opt.onSuccess, self);
+    ctrl.on("routeAlways", opt.onAlways, self);
 
-    ctrl.on("routeNotFound", opt.notCall, this);
+    ctrl.on("routeNotFound", opt.notCall, self);
     ctrl.on("routeNotFound", function() {
-        if (opt.notPage) this.go(opt.notPage);
-    }, this);
+        if (opt.notPage) self.go(opt.notPage);
+    }, self);
+
+    self.on(maps);                          // 尝试注册路由表信息
 }, Prototype = {};
 
 Router.prototype = Prototype;
@@ -53,7 +55,6 @@ Router.prototype = Prototype;
 Prototype.init = function() {
     var opt = this.option, fire;
 
-    this.on(this.maps);
     opt.native && this.bindBrower();
     this.ctrl.emit("routeInit");
 

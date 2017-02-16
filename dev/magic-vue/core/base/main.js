@@ -5,7 +5,6 @@ import {extend, applyCall} from "LIB_MINJS/utils.js";
 
 var MagicVue = {}, RootEmitter = Emitter(), RootVue = new Vue();
 
-
 // ========================================================
 // 核心事件相关方法
 // ========================================================
@@ -26,28 +25,26 @@ function vueApply(type, rootScope) {
         if (rootBind && isTrueString(ids)) {
             result = rootScope[type](ids, bind);
 
-            if (bind) rootBind[ids] = result;
+            if (bind) rootBind[ids] = bind;
         }
 
         return result;
     }
 }
 
-MagicVue.filter    = vueApply("filter", RootVue);
-MagicVue.component = vueApply("component", RootVue);
-MagicVue.directive = vueApply("directive", RootVue);
-
+MagicVue.filter    = vueApply("filter", Vue);
+MagicVue.directive = vueApply("directive", Vue);
+MagicVue.component = vueApply("component", Vue);
 MagicVue.Vue = Vue;
 MagicVue.RootVue = RootVue;
 
 MagicVue.use = applyCall("use", Vue);
 MagicVue.mixin = applyCall("mixin", Vue);
 
-
 // ========================================================
 // 全局对象绑定方法
 // ========================================================
-MagicVue.mount = (function() {
+MagicVue.$mount = (function() {
     var hasRun = false, $bind;
 
     return function(bind, callback) {
@@ -61,7 +58,7 @@ MagicVue.mount = (function() {
 
             try {
                 $bind = document.querySelectorAll(bind);
-            } finally {
+            } catch(error) {} finally {
                 if (!$bind || $bind.length == 0) {
                     $bind = document.createElement("div");
                     $bind.setAttribute("id", "app");
@@ -72,7 +69,7 @@ MagicVue.mount = (function() {
                 }
             }
 
-            RootVue.$mount($bind);
+            MagicVue.$root = $bind;
             if (isFunction(callback)) callback();
         });
     };
