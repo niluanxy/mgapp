@@ -112,14 +112,14 @@ export function extend(/* deep, target, obj..., last */) {
         pass = false, deep = false;
 
     // 如果最后一个变量是 true ，表示忽略无效字段
-    if (argv[len-1] === true) {
-        pass = argv[len-1];
+    if (typeof argv[len-1] === "boolean") {
+        pass = !!argv[len-1];
         len--;
     }
 
     // 如果第一个变量是 true，设置深度复制
-    if (argv[0] === true) {
-        deep = argv[0];
+    if (typeof argv[0] === "boolean") {
+        deep = !!argv[0];
         target = argv[1];
         i++;
     }
@@ -163,12 +163,10 @@ export function extend(/* deep, target, obj..., last */) {
 
 
 /* 方法封装映射函数 */
-export function applyCall(eveName, scope) {
+export function applyCall(eveName, scope, deepCopy) {
     return function() {
         if (scope && isFunction(scope[eveName])) {
-            var args = extend(true, [], arguments);
-
-            return scope[eveName].apply(scope, args);
+            return scope[eveName].apply(scope, arguments);
         }
 
         return;

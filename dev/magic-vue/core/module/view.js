@@ -1,6 +1,6 @@
 import MagicVue from "MV_BASE/main.js";
 import {extend} from "LIB_MINJS/utils.js";
-import {isFunction, isElement, isArray, isTrueString} from "LIB_MINJS/check.js";
+import {isFunction, isObject, isElement, isArray} from "LIB_MINJS/check.js";
 
 var Vue = MagicVue.Vue, viewMixins, mgViewWrapName = "mgViewRenderWrap";
 
@@ -34,9 +34,11 @@ export function renderView(name, params, $wrap) {
     if ($wraper != $wrap && $wraper.parentNode) {
         $wraper.parentNode.setAttribute("view", name);
     }
+
     $render = new com({ el: $wraper, name: name});
 
     $render.$$params = params || {};
+    $render.$$render = $wraper.parentNode;
 
     return $render;
 }
@@ -90,12 +92,6 @@ viewMixins = {
 
         // 设置页面的参数对象
         self.$params = self.$$params || {};
-
-        if ($parent && $parent.$options.name == mgViewWrapName) {
-            console.log("render by route");
-        } else {
-            console.log("render by views");
-        }
     },
 
     mounted: function() {
@@ -119,13 +115,19 @@ viewMixins = {
  *
  * https://cn.vuejs.org/v2/guide/components.html#异步组件
  * ======================================================== */
-export function initView(resolve) {
+export function initView(resolve, name) {
     return function(view) {
-        var name = resolve.name, component;
+        var fixView = viewFactory(view), fixName;
 
-        MagicVue.component(name, viewFactory(view));
-        component = MagicVue.component(name);
-        new component({el: resolve.el, name: name});
+        fixName = isObject(resolve) ? resolve.name : name;
+        fixName && MagicVue.component(fixName, fixView);
+
+        if (resolve && resolve.el) {
+            var component = MagicVue.component(fixName);
+            new component({el: resolve.el, name: fixName});
+        } else {
+            resolve(fixView);
+        }
     }
 }
 
@@ -133,19 +135,25 @@ export function initView(resolve) {
  * 页面注册函数，注册到全局对象中
  * ======================================================== */
 export function loadView(viewName, bindView) {
-    var bindName = nameTrans(viewName);
+    var bindName = nameTrans(viewName), fixBind;
 
     // 若为对象，说明为同步加载页面，则调用 工厂函数 进行包装
     if (typeof bindView == "object") {
-        bindView = viewFactory(bindView);
+        fixBind = viewFactory(bindView);
+    } else {
+        fixBind = function(resolve) {
+            bindView(resolve, bindName);
+        };
     }
 
-    MagicVue.component(bindName, bindView);
+    MagicVue.component(bindName, fixBind);
 
     return function(url, routeType, routeGo, routeLast) {
-        // var goParams = extend(true, {}, routeGo.params);
+        var goParams = extend(true, {}, routeGo.params), $viewGo;
 
-        renderView(viewName);
+        if (($viewGo = renderView(viewName, goParams)) && $viewGo.$$parent) {
+            MagicVue.emit("mgViewCreated", routeType, $viewGo, $viewLast, routeGo, routeLast);
+        }
     }
 }
 
