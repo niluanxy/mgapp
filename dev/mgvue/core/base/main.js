@@ -5,6 +5,8 @@ import {extend, applyCall} from "LIB_MINJS/utils.js";
 
 var MagicVue = {}, RootEmitter = Emitter(), RootVue = new Vue();
 
+MagicVue.config = {};
+
 // ========================================================
 // 核心事件相关方法
 // ========================================================

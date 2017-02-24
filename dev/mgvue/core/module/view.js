@@ -2,7 +2,7 @@ import MagicVue from "MV_BASE/main.js";
 import {extend} from "LIB_MINJS/utils.js";
 import {isFunction, isObject, isElement, isArray} from "LIB_MINJS/check.js";
 
-var Vue = MagicVue.Vue, viewMixins, mgViewWrapName = "mgViewRenderWrap";
+var viewMixins;
 
 export function nameTrans(name, tag) {
     var ret = "ma-"+name;
