@@ -151,7 +151,7 @@ export function loadView(viewName, bindView) {
     return function(url, routeType, routeGo, routeLast) {
         var goParams = extend(true, {}, routeGo.params), $viewGo;
 
-        if (($viewGo = renderView(viewName, goParams)) && $viewGo.$$parent) {
+        if (($viewGo = renderView(viewName, goParams)) && $viewGo.$$render) {
             MagicVue.emit("mgViewCreated", routeType, $viewGo, $viewLast, routeGo, routeLast);
         }
     }

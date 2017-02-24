@@ -53,7 +53,7 @@ var DIR_APP   = __dirname + "/app/",
     DIR_MIXIN = DIR_DEV + "mixin/",
     DIR_MINJS = DIR_DEV + "minjs/",
     DIR_MAGIC = DIR_DEV + "magic/",
-    DIR_MAGIC_VUE = DIR_DEV + "magic-vue/",
+    DIR_MAGIC_VUE = DIR_DEV + "mgvue/",
 
     DIR_APP_LIBS = DIR_APP + "libs/";
 
