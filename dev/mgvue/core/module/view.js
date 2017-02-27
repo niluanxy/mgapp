@@ -26,6 +26,7 @@ function createWraper(dom) {
         MagicVue.$root.appendChild($wrap);
     }
 
+    MagicVue.emit("mgWrapCreated", $wrap);
     return $wrap.childNodes[1];
 }
 
@@ -92,10 +93,8 @@ viewMixins = {
     created: function() {
         var self = this, $parent = self.$parent;
 
-        console.log("=============================")
-        console.log("run created")
-
         // 设置页面的参数对象
+        self.$$params = self.$$params || {};
         self.$params = self.$$params || {};
         self.$emit("mgViewCreated");
     },
@@ -104,9 +103,6 @@ viewMixins = {
         var self = this;
 
         viewParentFix(self);
-        console.log("=============================")
-        console.log("run mounted")
-
         self.$emit("mgViewReady", self.$$params);
 
         // 默认不是隐藏的页面，则立即触发 显示回调事件
@@ -120,9 +116,7 @@ viewMixins = {
     beforeDestroy: function() {
         var self = this, delEl = self.$$render || self.$el;
 
-        console.log("=============================")
-        console.log("run beforeDestroy")
-
+        slef.$emit("mgViewHide", self.$$params);
         self.$emit("mgViewDestory");
         raf(function() { removeProxy.call(delEl) });
     }
@@ -193,7 +187,7 @@ export function loadView(viewName, bindView) {
         $viewLast = $CACHE_SHOW ? $CACHE_SHOW.scope : null;
         $CACHE_SHOW = $cache;
 
-        MagicVue.emit("mgViewChange", routeType, $viewGo, $viewLast);
+        MagicVue.emit("mgViewChange", $viewGo, $viewLast, routeType, routeGo, routeLast);
     }
 }
 

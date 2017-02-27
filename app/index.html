@@ -118,9 +118,23 @@
 
     </div>
 
-    <a href="#user" class="button-primary">user view</a>
-    <a href="#home" class="button-primary">home view</a>
+    <a id="user" class="button-primary">user view</a>
+    <a id="home" class="button-primary">home view</a>
+    <a id="back" class="button-primary">back view</a>
 
     <script src="app.js" charset="utf-8"></script>
+    <script>
+        $("#user").on("tap", function() {
+            $$.location.go("user", null, null, true);
+        })
+
+        $("#home").on("tap", function() {
+            $$.location.go("home", null, null, true);
+        })
+
+        $("#back").on("tap", function() {
+            $$.location.back();
+        })
+    </script>
 </body>
 </html>

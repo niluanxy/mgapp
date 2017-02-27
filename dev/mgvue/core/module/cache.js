@@ -1,8 +1,8 @@
 import MagicVue from "MV_BASE/main.js";
-import {extend} from "LIB_MINJS/utils.js";
-import {isFunction, isObject, isElement, isArray} from "LIB_MINJS/check.js";
 
 var VIEW_CACHE = [], CFG = MagicVue.config; CFG.maxViewCache = 5;
+
+MagicVue.$$CACHE = VIEW_CACHE;
 
 export function pushView(adds, noDelID) {
     if (adds && adds.id && adds.scope) {
@@ -46,7 +46,7 @@ export function findView(id) {
     for(var i=0; i<len; i++) {
         var find = VIEW_CACHE[i];
 
-        if (find && find.uuid === id) {
+        if (find && find.id === id) {
             return find;
         }
     }
