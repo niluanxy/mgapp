@@ -2,38 +2,42 @@ import MagicVue from "MV_BASE/main.js";
 import {extend} from "LIB_MINJS/utils.js";
 import {isFunction, isObject, isElement, isArray} from "LIB_MINJS/check.js";
 
-var VIEW_CACHE = [], CFG = MagicVue.config; CFG.maxViewCache = 3;
+var VIEW_CACHE = [], CFG = MagicVue.config; CFG.maxViewCache = 5;
 
-export function pushView(id, dom, vueScope) {
-    VIEW_CACHE.push({
-        el: dom,
-        uuid: id,
-        scope: vueScope
-    });
+export function pushView(adds, noDelID) {
+    if (adds && adds.id && adds.scope) {
+        VIEW_CACHE.push({
+            id: adds.id,
+            el: adds.el,
+            scope: adds.scope,
+        });
 
-    if (VIEW_CACHE.length > CFG.maxViewCache) {
-        VIEW_CACHE.shift();
+        var len = VIEW_CACHE.length;
+
+        if (len > CFG.maxViewCache) {
+            return popView(noDelID, true);
+        }
     }
 }
 
-export function popView(id) {
-    var pop = null, pos = null;
+export function popView(delID, noDelType) {
+    var len = VIEW_CACHE.length;
 
-    if (id != null) {
-        var find = findView(id) || {};
+    for(var i=0; i<len; i++) {
+        var del = VIEW_CACHE[i], candel;
 
-        pos = find.index || null;
-        pop = find.view || null;
-    } else {
-        pop = VIEW_CACHE.pop();
-        pos = pop ? VIEW_CACHE.length-1 : null;
+        if (del && ( (noDelType && del.id !== delID)
+            || del.id === delID) ) {
+            candel = true;
+        }
+
+        if (!!candel) {
+            VIEW_CACHE.splice(i, 1);
+            return del;
+        }
     }
 
-    for(var i=pos; i<=VIEW_CACHE.length; i++) {
-        if (VIEW_CACHE.pop()) i--;
-    }
-
-    return pop;
+    return null;
 }
 
 export function findView(id) {
@@ -42,16 +46,10 @@ export function findView(id) {
     for(var i=0; i<len; i++) {
         var find = VIEW_CACHE[i];
 
-        if (find && find.uuid == id) {
-            return {index: i, view: find};
+        if (find && find.uuid === id) {
+            return find;
         }
     }
 
     return null;
-}
-
-export function lastView() {
-    var len = VIEW_CACHE.length;
-
-    return VIEW_CACHE[len-1] || null;
 }

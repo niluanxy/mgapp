@@ -97,7 +97,7 @@ export function wrap(html, setAll) {
     return allProxy.call(this, wrapProxy, html, setAll);
 }
 
-function removeProxy() {
+export function removeProxy() {
     var el = element(this), parent;
 
     if (el && (parent = el.parentNode)) {

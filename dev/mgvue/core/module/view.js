@@ -1,8 +1,12 @@
 import MagicVue from "MV_BASE/main.js";
 import {extend} from "LIB_MINJS/utils.js";
+import {removeProxy} from "MG_MODULE/dom/editer/main.js";
+import {raf} from "MG_STATIC/function/main.js";
 import {isFunction, isObject, isElement, isArray} from "LIB_MINJS/check.js";
 
-var viewMixins;
+import * as Cache from "MV_MODULE/cache.js";
+
+var viewMixins, $CACHE_SHOW = null;
 
 export function nameTrans(name, tag) {
     var ret = "ma-"+name;
@@ -28,17 +32,18 @@ function createWraper(dom) {
 export function renderView(name, params, $wrap) {
     if (!name.match(/^ma/)) name = nameTrans(name);
 
-    var com = MagicVue.component(name),
+    var com = MagicVue.component(name), $parent,
         $render, $wraper = createWraper($wrap);
 
     if ($wraper != $wrap && $wraper.parentNode) {
-        $wraper.parentNode.setAttribute("view", name);
+        $parent = $wraper.parentNode;
+        $parent.setAttribute("view", name);
     }
 
     $render = new com({ el: $wraper, name: name});
 
     $render.$$params = params || {};
-    $render.$$render = $wraper.parentNode;
+    $render.$$render = $parent;
 
     return $render;
 }
@@ -92,19 +97,34 @@ viewMixins = {
 
         // 设置页面的参数对象
         self.$params = self.$$params || {};
+        self.$emit("mgViewCreated");
     },
 
     mounted: function() {
-        var self = this, $parent = self.$parent;
+        var self = this;
 
         viewParentFix(self);
         console.log("=============================")
         console.log("run mounted")
+
+        self.$emit("mgViewReady", self.$$params);
+
+        // 默认不是隐藏的页面，则立即触发 显示回调事件
+        if (!self.$$defaultHide) {
+            self.$emit("mgViewShow", self.$$params);
+        } else {
+            self.$emit("mgViewHide", self.$$params);
+        }
     },
 
     beforeDestroy: function() {
+        var self = this, delEl = self.$$render || self.$el;
+
         console.log("=============================")
         console.log("run beforeDestroy")
+
+        self.$emit("mgViewDestory");
+        raf(function() { removeProxy.call(delEl) });
     }
 };
 
@@ -149,11 +169,31 @@ export function loadView(viewName, bindView) {
     MagicVue.component(bindName, fixBind);
 
     return function(url, routeType, routeGo, routeLast) {
-        var goParams = extend(true, {}, routeGo.params), $viewGo;
+        var goParams = extend(true, {}, routeGo.params),
+            $viewGo, $viewLast, $cache, $del;
 
-        if (($viewGo = renderView(viewName, goParams)) && $viewGo.$$render) {
-            MagicVue.emit("mgViewCreated", routeType, $viewGo, $viewLast, routeGo, routeLast);
+        // 尝试从缓存中获取页面对象
+        if ($viewGo = Cache.findView(bindName)) {
+            $cache = $viewGo;
+            $viewGo = $viewGo.scope;
+
+            $viewGo.$$params = goParams;
+            $viewGo.$emit("mgViewShow", goParams);
+        } else {
+            $viewGo = renderView(bindName, goParams);
+            $cache = {id: bindName, el: $viewGo.$$render, scope: $viewGo};
+            $del = Cache.pushView($cache, $CACHE_SHOW ? $CACHE_SHOW.id : null);
+
+            // 如果有溢出页面返回，执行页面销毁动作
+            if ($del && $del.id && $del.scope && $del.el) {
+                $del.scope.$emit("hook:beforeDestroy");
+            }
         }
+
+        $viewLast = $CACHE_SHOW ? $CACHE_SHOW.scope : null;
+        $CACHE_SHOW = $cache;
+
+        MagicVue.emit("mgViewChange", routeType, $viewGo, $viewLast);
     }
 }
 
