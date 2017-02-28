@@ -2,15 +2,9 @@ import MagicVue from "MV_BASE/main.js";
 
 var VIEW_CACHE = [], CFG = MagicVue.config; CFG.maxViewCache = 5;
 
-MagicVue.$$CACHE = VIEW_CACHE;
-
 export function pushView(adds, noDelID) {
     if (adds && adds.id && adds.scope) {
-        VIEW_CACHE.push({
-            id: adds.id,
-            el: adds.el,
-            scope: adds.scope,
-        });
+        VIEW_CACHE.push(adds);
 
         var len = VIEW_CACHE.length;
 

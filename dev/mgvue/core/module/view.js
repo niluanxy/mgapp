@@ -2,7 +2,7 @@ import MagicVue from "MV_BASE/main.js";
 import {extend} from "LIB_MINJS/utils.js";
 import {removeProxy} from "MG_MODULE/dom/editer/main.js";
 import {raf} from "MG_STATIC/function/main.js";
-import {isFunction, isObject, isElement, isArray} from "LIB_MINJS/check.js";
+import {isFunction, isObject, isTrueString, isElement, isArray} from "LIB_MINJS/check.js";
 
 import * as Cache from "MV_MODULE/cache.js";
 
@@ -27,7 +27,7 @@ function createWraper(dom) {
     }
 
     MagicVue.emit("mgWrapCreated", $wrap);
-    return $wrap.childNodes[1];
+    return $wrap.childNodes[0];
 }
 
 export function renderView(name, params, $wrap) {
@@ -43,8 +43,13 @@ export function renderView(name, params, $wrap) {
 
     $render = new com({ el: $wraper, name: name});
 
-    $render.$$params = params || {};
+    // 保存到返回对象上，用于同步调用获取参数
+    $render.$$name   = name;
     $render.$$render = $parent;
+
+    // 保存到渲染元素上，用于异步组件获取参数
+    $wraper.$$params = params || {};
+    $wraper.$$render = $parent;
 
     return $render;
 }
@@ -52,58 +57,92 @@ export function renderView(name, params, $wrap) {
 /**========================================================
  * view 对象核心扩展属性
  * ======================================================== */
- function viewFactory(view) {
-     var oldData = view.data, mixins;
+function viewFactory(view) {
+    var oldData = view.data, mixins;
 
-     if (!isFunction(oldData)) {
-         view.data = function() {
-             return extend(true, {
-                 $params: {}
-             }, oldData);
-         }
-     }
+    if (!isFunction(oldData)) {
+        view.data = function() {
+            return extend(true, {
+                $params: {}
+            }, oldData);
+        }
+    }
 
-     if (isArray(view.mixins)) {
-         view.mixins.push(viewMixins);
-     } else {
-         view.mixins = [viewMixins];
-     }
+    if (isArray(view.mixins)) {
+        view.mixins.push(viewMixins);
+    } else {
+        view.mixins = [viewMixins];
+    }
 
-     return view;
- }
+    return view;
+}
 
- function viewParentFix(vueView) {
-     var find = vueView.$el.parentNode, $parent;
+function viewParentFix(vueView) {
+    var find = vueView.$el.parentNode, $parent;
 
-     vueView.$el.$$scope = vueView;
+    vueView.$el.$$scope = vueView;
 
-     do {
-         if (find && find.$$scope) {
-             $parent = find.$$scope; break;
-         }
+    do {
+        if (find && find.$$scope) {
+            $parent = find.$$scope; break;
+        }
 
-         find = find.parentNode;
-     } while(find && find != MagicVue.$root);
+        find = find.parentNode;
+    } while(find && find != MagicVue.$root);
 
-     if (!$parent) $parent = MagicVue.RootVue;
-     vueView.$parent = $parent;
- }
+    if (!$parent) $parent = MagicVue.RootVue;
+    vueView.$parent = $parent;
+}
+
+function makeModeCall(name, eve) {
+    if (name.match("/^ma-/")) name = nameTrans(name);
+
+    return "``_mg_view_"+name+"_call"+"."+eve;
+}
+
+export function viewModeEmit(scope, eve) {
+    if (scope && scope.$options) {
+        var name = scope.$options.name, call;
+
+        if (scope.$$render && name) {
+            call = makeModeCall(name, eve);
+            MagicVue.emit(call, scope);
+        }
+    }
+}
+
+export function viewModeBind(name, eve, callback, onType) {
+    if (isTrueString(name) && isTrueString(eve)) {
+        var callEve = makeModeCall(name, eve),
+            bind = onType ? "on" : "once";
+
+        MagicVue[bind](callEve, callback);
+    }
+}
 
 viewMixins = {
     created: function() {
-        var self = this, $parent = self.$parent;
+        var self = this, $opt = self.$options, $el = $opt.el;
 
-        // 设置页面的参数对象
-        self.$$params = self.$$params || {};
+        // 尝试恢复 view 模式组件的渲染参数
+        self.$$params = $el ? $el.$$params : {};
+        self.$$render = $el ? $el.$$render : null;
+
         self.$params = self.$$params || {};
         self.$emit("mgViewCreated");
+
+        // 尝试调用 view 模式页面回调事件
+        viewModeEmit(self, "created");
     },
 
     mounted: function() {
-        var self = this;
+        var self = this, $opt = self.$options;
 
         viewParentFix(self);
         self.$emit("mgViewReady", self.$$params);
+
+        // 尝试调用 view 模式页面回调事件
+        viewModeEmit(self, "ready");
 
         // 默认不是隐藏的页面，则立即触发 显示回调事件
         if (!self.$$defaultHide) {
@@ -177,6 +216,13 @@ export function loadView(viewName, bindView) {
             $viewGo = renderView(bindName, goParams);
             $cache = {id: bindName, el: $viewGo.$$render, scope: $viewGo};
             $del = Cache.pushView($cache, $CACHE_SHOW ? $CACHE_SHOW.id : null);
+
+            // 如果为异步组件，则需要在组件创建后更新 scope 对象
+            if (!($viewGo instanceof MagicVue.Vue)) {
+                viewModeBind(bindName, "created", function(scope) {
+                    $cache.scope = scope;
+                });
+            }
 
             // 如果有溢出页面返回，执行页面销毁动作
             if ($del && $del.id && $del.scope && $del.el) {

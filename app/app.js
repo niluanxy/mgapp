@@ -42,6 +42,6 @@ $$.$mount("#mgapp", function() {
             }),
         },
     }).init({
-        home: "user",
+        home: "home",
     }, true);
 });

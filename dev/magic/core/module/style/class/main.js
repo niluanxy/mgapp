@@ -35,7 +35,7 @@ export function regClass(reg) {
     }
 }
 
-function addProxy(cls) {
+export function addProxy(cls) {
     var el = element(this), adds, clsName;
 
     cls = trim(cls);
