@@ -1,7 +1,7 @@
 import RootMagic from "MG_MAGIC/main.js";
-import {uiInit, uiExtend} from "MG_UIKIT/tools/main.js";
+import {uiInit, uiExtend} from "MG_UIKIT/core/tools.js";
 import {isFunction} from "LIB_MINJS/check.js";
-import $config from "MG_MAGIC/config.js";
+import $config from "MG_UIKIT/core/config.js";
 
 var CFG = $config.tabs = {
     class: "tabs",
@@ -13,10 +13,10 @@ var CFG = $config.tabs = {
 /**
  * options: {
  *     style: [string] 默认的样式
- *     
+ *
  *     wrapClass: [string] 父容器额外添加的 class
  *     itemClass: [string] 子容器额外添加的 class
- *     
+ *
  *     onSelect : [function] 选择某个项目时调用
  * }
  */

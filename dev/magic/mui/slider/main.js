@@ -1,8 +1,8 @@
 import RootMagic from "MG_MAGIC/main.js";
-import {uiExtend} from "MG_UIKIT/tools/main.js";
+import {uiExtend} from "MG_UIKIT/core/tools.js";
 import {isFunction} from "LIB_MINJS/check.js";
 import {extend} from "LIB_MINJS/utils.js";
-import $config from "MG_MAGIC/config.js";
+import $config from "MG_UIKIT/core/config.js";
 
 import Scroll from "MG_UIKIT/scroll/core/main.js";
 

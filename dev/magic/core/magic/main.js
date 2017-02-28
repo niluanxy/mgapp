@@ -1,9 +1,9 @@
-import * as _DOM  from "MG_UTILS/dom.js";
+import * as _DOM  from "MG_MAGIC/dom.js";
 import * as _CHECK from "LIB_MINJS/check.js";
 import _READY from "LIB_MINJS/ready.js";
 import { each as _EACH, slice as _SLICE, extend as _EXTEND} from "LIB_MINJS/utils.js";
 
-import _CONFIG from "./config.js";
+import $config from "MG_MAGIC/config.js";
 
 var Magic, Prototype, Creater;
 
@@ -136,6 +136,6 @@ _EACH([Creater, Magic], function(index, object) {
 
 // 对象继承链修复
 Creater.fn = Creater.prototype = Magic.prototype = Prototype;
-Creater.config = _CONFIG;
+Creater.config = $config;
 
 export default Creater;

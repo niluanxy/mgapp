@@ -1,6 +1,6 @@
 import {isTrueString as isTrue, isFunction} from "LIB_MINJS/check.js";
 import {extend, each} from "LIB_MINJS/utils.js";
-import $config from "MG_MAGIC/config.js";
+import $config from "MG_UIKIT/core/config.js";
 
 var $cui = $config.ui, keyWrap = "wrapClass",
     keyItem = "itemClass", keyClass = "class";

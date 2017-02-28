@@ -7,14 +7,16 @@ $$.$mount("#mgapp", function() {
             on: load("home", function(resolve, name) {
                 setTimeout(function() {
                     init(resolve, name)({
-                        template: "<div>"+
+                        template: "<mg-page>"+
+                            '<mg-header><h3 class="title">{{title}}</h3></mg-header>'+
                             '<input type="text" v-model="print"></br>'+
                             '<p>{{print}}</p>'+
                             '<a class="button-primary" @click="root">root</a>'+
                             '<a class="button-primary" @click="log">log</a>'+
-                        "</div>",
+                        "</mg-page>",
 
                         data: {
+                            title: "首页测试",
                             print: "default",
                         },
 

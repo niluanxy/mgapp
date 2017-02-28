@@ -1,5 +1,5 @@
 import {strFind, element} from "LIB_MINJS/utils.js";
-import {allProxy, keyProxy} from "MG_UTILS/proxy.js";
+import {allProxy, keyProxy} from "MG_MAGIC/proxy.js";
 import {isTrueString, isString} from "LIB_MINJS/check.js";
 import RootMagic from "MG_MAGIC/main.js";
 

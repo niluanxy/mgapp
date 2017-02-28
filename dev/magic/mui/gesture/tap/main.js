@@ -3,10 +3,10 @@ import {each} from "LIB_MINJS/utils.js";
 import {time as getTime} from "MG_STATIC/utils/main.js";
 import {throttle} from "MG_STATIC/function/main.js";
 import Gesture from "MG_UIKIT/gesture/core/main.js";
-import $config from "MG_MAGIC/config.js";
+import $config from "MG_UIKIT/core/config.js";
 
 var CFG = $config.tap = {
-    active: $config.ui.active,
+    active: $config.active,
     activeItem : '.touch .tabs-item [class|="button"]',
     activeShow : 150,
     activeDelay: 200,

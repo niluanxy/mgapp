@@ -1,6 +1,6 @@
 import Emitter from "LIB_MINJS/emitter.js";
 import {isFunction, isTrueString, isObject} from "LIB_MINJS/check.js";
-import {allProxy} from "MG_UTILS/proxy.js";
+import {allProxy} from "MG_MAGIC/proxy.js";
 import {element, extend, slice, each} from "LIB_MINJS/utils.js";
 import {parent, below, eq} from "MG_MODULE/dom/search/main.js";
 import {dataEvent} from "MG_MAGIC/tools.js";

@@ -1,9 +1,9 @@
 import RootMagic from "MG_MAGIC/main.js";
-import {uiExtend} from "MG_UIKIT/tools/main.js";
+import {uiExtend} from "MG_UIKIT/core/tools.js";
 import {extend, value} from "LIB_MINJS/utils.js";
 import {isFunction, isString} from "LIB_MINJS/check.js";
 import Popup from "MG_UIKIT/popup/main.js";
-import $config from "MG_MAGIC/config.js";
+import $config from "MG_UIKIT/core/config.js";
 
 var CFG = $config.tip = {
     class: "tip",

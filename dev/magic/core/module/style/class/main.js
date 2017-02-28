@@ -1,5 +1,5 @@
 import {isTrueString} from "LIB_MINJS/check.js";
-import {allProxy} from "MG_UTILS/proxy.js";
+import {allProxy} from "MG_MAGIC/proxy.js";
 import {element, trim, each} from "LIB_MINJS/utils.js";
 
 export function hasClass(cls) {

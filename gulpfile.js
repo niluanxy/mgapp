@@ -308,9 +308,8 @@ function task_build_magic() {
         });
     });
 
-    gulp.src([DIR_CORE+"build.js",
-        DIR_MUI+"build.js"])
-    .pipe(concat(CONCAT_MAGIC_UIKIT))
+    gulp.src([DIR_MUI+"build.js"])
+    .pipe(rename(CONCAT_MAGIC_UIKIT))
     .pipe(gulp.dest(DIR_DEV))
     .on("finish", function() {
         rollup({
@@ -396,9 +395,8 @@ function task_build_mgvue() {
         });
     });
 
-    gulp.src([DIR_CORE+"build.js",
-        DIR_MUI+"build.js"])
-    .pipe(concat(CONCAT_MGVUE_UIKIT))
+    gulp.src([DIR_MUI+"build.js"])
+    .pipe(rename(CONCAT_MGVUE_UIKIT))
     .pipe(gulp.dest(DIR_DEV))
     .on("finish", function() {
         rollup({
