@@ -10,7 +10,7 @@ import "MG_UIKIT/scroll/main.js";
 import "MG_UIKIT/slider/main.js";
 import "MG_UIKIT/picker/main.js";
 
-import $config from "MG_UIKIT/core/config.js";
+import $config from "MG_UIKIT/base/config.js";
 RootMagic.config.ui = $config;
 
 export default RootMagic;

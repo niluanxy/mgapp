@@ -11,6 +11,7 @@ $$.$mount("#mgapp", function() {
                             '<mg-header><h3 class="title">{{title}}</h3></mg-header>'+
                             '<input type="text" v-model="print"></br>'+
                             '<p>{{print}}</p>'+
+                            '<mg-button :disabled="dis" link="#user">你好</mg-button>'+
                             '<a class="button-primary" @click="root">root</a>'+
                             '<a class="button-primary" @click="log">log</a>'+
                         "</mg-page>",
@@ -18,11 +19,13 @@ $$.$mount("#mgapp", function() {
                         data: {
                             title: "首页测试",
                             print: "default",
+                            dis: false,
                         },
 
                         methods: {
                             root: function() {
-                                console.log(this);
+                                this.dis = !this.dis;
+                                console.log(this.dis);
                             },
 
                             log: function() {
@@ -30,7 +33,7 @@ $$.$mount("#mgapp", function() {
                             }
                         }
                     });
-            	}, 3000);
+            	}, 100);
             }),
         },
 

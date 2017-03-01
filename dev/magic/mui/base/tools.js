@@ -1,15 +1,52 @@
-import {isTrueString as isTrue, isFunction} from "LIB_MINJS/check.js";
-import {extend, each} from "LIB_MINJS/utils.js";
-import $config from "MG_UIKIT/core/config.js";
+import {isTrueString as isTrue, isFunction, isArray} from "LIB_MINJS/check.js";
+import {extend, each, trim} from "LIB_MINJS/utils.js";
+import $config from "MG_UIKIT/base/config.js";
 
 var $cui = $config.ui, keyWrap = "wrapClass",
     keyItem = "itemClass", keyClass = "class";
+
+export function uiClass(aClass, type) {
+    if (aClass && isTrue(type)) {
+        return aClass+"-"+type;
+    }
+
+    return "";
+}
+
+export function uiAddClass($el, aClass, type) {
+    if ($el && $el.length && aClass && type) {
+        type = isArray(type) ? type : [type];
+        var len = type.length, adds = "";
+
+        for(var i=0; i<len; i++) {
+            if (isTrue(type[i])) {
+                adds += uiClass(aClass, type[i])+" ";
+            }
+        }
+
+        $el.addClass(trim(adds));
+    }
+}
+
+function hasStyle($el, aClass, list) {
+    var check = list || $cui.styleList, reg = '';
+
+    check = isArray(check) ? check : [check];
+
+    for(var i=0; i<check.length; i++) {
+        reg += aClass+"-"+check[i] + "|";
+    }
+
+    reg.replace(/\|$/, '');
+
+    return $el.regClass(reg);
+}
 
 export function uiInit($el, opt, bindEve, bindCall) {
     var aWrap = opt[keyWrap], style = opt.style, eve,
         aClass = opt[keyClass], rTest = aClass+"(?!-)";
 
-    if (style && !$el.regClass(aClass+"-") && !aWrap.match(rTest)) {
+    if (style && !hasStyle($el, aClass) && !aWrap.match(rTest)) {
         aWrap += aClass;
         aWrap  = aWrap.replace(new RegExp(rTest, 'g'), aClass+"-"+style);
     }

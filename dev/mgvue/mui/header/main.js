@@ -1,14 +1,25 @@
 import MagicVue from "MV_BASE/main.js";
 import $ from "MG_CORE/build.js";
+import {uiAddClass} from "MG_UIKIT/base/tools.js";
 
-MagicVue.component("mg-header", {
+import $config from "MV_UIKIT/base/config.js";
+
+var CFG = $config.header = {
+    type: $config.type,
+    class: "bar",
+};
+
+MagicVue.component("mgHeader", {
+    name: "mgHeader",
     template: "<div><slot></slot></div>",
 
-    props: ["style"],
-    mounted: function() {
-        console.log("has run header")
-        var $el = $(this.$el);
+    props: {
+        type: { type: String, default: '' },
+    },
 
-        $el.addClass("bar-primary");
+    mounted: function() {
+        var $el = $(this.$el), type = this.type || CFG.type;
+
+        uiAddClass($el, CFG.class, type);
     }
 });

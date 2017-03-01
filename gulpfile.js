@@ -460,10 +460,12 @@ gulp.task("serve", function() {
 
     gulp.watch([DIR_MIXIN+"**/*"],    ["dev-build-mixin"]);
     gulp.watch([DIR_MINJS+"**/*.js"], ["dev-build-minjs"]);
+    
     gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-magic"]);
-    gulp.watch([DIR_MAGIC_VUE+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-mgvue"]);
+    gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js",
+                DIR_MAGIC_VUE+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-mgvue"]);
 
-    gulp.watch([DIR_APP_LIBS+"/*"]).on("change", reload);
+    gulp.watch([DIR_APP_LIBS+"/*", DIR_APP+"/*"]).on("change", reload);
 });
 
 gulp.task("clean", function() {

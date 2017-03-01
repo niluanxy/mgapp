@@ -3,4 +3,6 @@ export default {
     prefix: "",
     active : "active",
     actived: "actived",
+
+    styleList: ["primary", "second", "danger"],
 }

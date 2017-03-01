@@ -137,11 +137,12 @@ $button-styles: (
             }
         }
 
+        &-#{$class-disabled},
         &.#{$class-disabled},
         &[#{$class-disabled}] {
             @include disabled($button-disabled-opacity);
         }
 
         @content;   // 样式自定义扩展代码位置
-    }}       
+    }}
 }

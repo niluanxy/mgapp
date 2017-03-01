@@ -4,3 +4,5 @@ import "MG_UIKIT/gesture/tap/main.js";
 
 RootMagic(function() { Gesture.init(); });
 RootMagic.extend({gesture: Gesture});
+
+export default Gesture;

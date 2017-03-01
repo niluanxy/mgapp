@@ -2,10 +2,11 @@ import Emitter from "LIB_MINJS/emitter.js";
 import Ready from "LIB_MINJS/ready.js";
 import {isFunction, isTrueString} from "LIB_MINJS/check.js";
 import {extend, applyCall} from "LIB_MINJS/utils.js";
+import $config from "MV_BASE/config.js";
 
 var MagicVue = {}, RootEmitter = Emitter(), RootVue = new Vue();
 
-MagicVue.config = {};
+MagicVue.config = $config;
 
 // ========================================================
 // 核心事件相关方法

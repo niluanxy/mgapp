@@ -1,10 +1,10 @@
 import RootMagic from "MG_MAGIC/main.js";
 import Emitter from "LIB_MINJS/emitter.js";
 import Gesture from "MG_UIKIT/gesture/core/main.js";
-import {uiExtend} from "MG_UIKIT/core/tools.js";
+import {uiExtend} from "MG_UIKIT/base/tools.js";
 import {each, value, trim} from "LIB_MINJS/utils.js";
 import {isString, isFunction} from "LIB_MINJS/check.js";
-import $config from "MG_UIKIT/core/config.js";
+import $config from "MG_UIKIT/base/config.js";
 
 import {transform, getTrans} from "MG_UIKIT/scroll/utils/tools.js";
 import Animate from "MG_UIKIT/scroll/utils/animate.js";

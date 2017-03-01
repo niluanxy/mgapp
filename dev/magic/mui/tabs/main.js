@@ -1,7 +1,7 @@
 import RootMagic from "MG_MAGIC/main.js";
-import {uiInit, uiExtend} from "MG_UIKIT/core/tools.js";
+import {uiInit, uiExtend} from "MG_UIKIT/base/tools.js";
 import {isFunction} from "LIB_MINJS/check.js";
-import $config from "MG_UIKIT/core/config.js";
+import $config from "MG_UIKIT/base/config.js";
 
 var CFG = $config.tabs = {
     class: "tabs",
