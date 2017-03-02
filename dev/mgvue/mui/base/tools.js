@@ -1,4 +1,5 @@
 import {isTrueString} from "LIB_MINJS/check.js";
+import {extend, value as valueBase} from "LIB_MINJS/utils.js";
 
 export function getScope(scope, find) {
     if (scope && isTrueString(find)) {
@@ -44,4 +45,18 @@ export function getVmScope(scope) {
     }
 
     return;
+}
+
+export function value() {
+    var args = extend([], arguments);
+
+    for(var i=0; i<args.length; i++) {
+        if (args[i] === "true") {
+            args[i] = true;
+        } else if (args[i] === "false") {
+            args[i] = false;
+        }
+    }
+
+    return valueBase.apply(null, args);
 }

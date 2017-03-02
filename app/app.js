@@ -9,11 +9,13 @@ $$.$mount("#mgapp", function() {
                     init(resolve, name)({
                         template: "<mg-page>"+
                             '<mg-header><h3 class="title">{{title}}</h3></mg-header>'+
-                            '<input type="text" v-model="print"></br>'+
-                            '<p>{{print}}</p>'+
-                            '<mg-button :disabled="dis" link="#user">你好</mg-button>'+
-                            '<a class="button-primary" @click="root">root</a>'+
-                            '<a class="button-primary" @click="log">log</a>'+
+                            '<mg-content>'+
+                                '<input type="text" v-model="print"></br>'+
+                                '<p>{{print}}</p>'+
+                                '<mg-button :disabled="dis" link="#user">你好</mg-button>'+
+                                '<a class="button-primary" @click="root">root</a>'+
+                                '<a class="button-primary" @click="log">log</a>'+
+                            '</mg-content>'+
                         "</mg-page>",
 
                         data: {

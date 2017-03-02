@@ -1,9 +1,8 @@
 import {isTrueString as isTrue, isFunction, isArray} from "LIB_MINJS/check.js";
 import {extend, each, trim} from "LIB_MINJS/utils.js";
-import $config from "MG_UIKIT/base/config.js";
+import $cui from "MG_UIKIT/base/config.js";
 
-var $cui = $config.ui, keyWrap = "wrapClass",
-    keyItem = "itemClass", keyClass = "class";
+var keyWrap = "wrapClass", keyItem = "itemClass", keyClass = "class";
 
 export function uiClass(aClass, type) {
     if (aClass && isTrue(type)) {

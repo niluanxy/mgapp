@@ -77,7 +77,8 @@ Prototype.translate = function(x, y) {
     x = x/bsize.width*wsize.width;
     y = y/bsize.height*wsize.height;
 
-    transform(self.$pointY, getTrans(x, y));
+    transform(self.$pointX, getTrans(x, null));
+    transform(self.$pointY, getTrans(null, y));
 
     return self;
 }
