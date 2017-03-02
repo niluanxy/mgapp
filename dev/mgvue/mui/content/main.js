@@ -1,6 +1,7 @@
 import MagicVue from "MV_BASE/main.js";
 import $ from "MG_CORE/build.js";
 import Scroll from "MG_UIKIT/scroll/main.js";
+import {extend} from "LIB_MINJS/utils.js";
 
 import $config from "MV_UIKIT/base/config.js";
 import {value, getScope} from "MV_UIKIT/base/tools.js";
@@ -11,8 +12,7 @@ var CFG = $config.content = {
     scrollBar : true,
     scrollBarX: true,
     scrollBarY: true,
-}, componentOption = {
-    name: "mgContent",
+}, comOption = {
     template: '<div><div><slot></slot></div></div>',
 
     props: {
@@ -54,5 +54,10 @@ var CFG = $config.content = {
 /**
  * @todo 添加 loading 参数，自动展示加载动画
  */
-MagicVue.component("mgContent", componentOption);
-MagicVue.component("mgScroll", componentOption);
+MagicVue.component("mgContent", extend(comOption, {
+    name: "mgContent",
+}));
+
+MagicVue.component("mgScroll", extend(comOption, {
+    name: "mgScroll",
+}));

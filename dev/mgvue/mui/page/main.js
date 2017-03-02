@@ -1,5 +1,6 @@
 import MagicVue from "MV_BASE/main.js";
 
-MagicVue.component("mg-page", {
+MagicVue.component("mgPage", {
+    name: "mgPage",
     template: "<div class='page'><slot></slot></div>",
 });
