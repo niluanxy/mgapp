@@ -7,7 +7,7 @@ import $config from "MG_UIKIT/base/config.js";
 
 var CFG = $config.tap = {
     active: $config.active,
-    activeItem : '.touch .tabs-item',
+    activeItem : '.touch',
     activeShow : 150,
     activeDelay: 200,
     activeClear: true,              // 移动时，是否清除激活效果

@@ -32,10 +32,11 @@ MagicVue.component("mgButton", {
     },
 
     mounted: function() {
-        var self = this, $el = $(self.$el), type = self.type || CFG.type;
+        var self = this, $el = $(self.$el);
 
         uiAddClass($el, CFG.class, [
-            type, self.size,
+            self.type || CFG.type,
+            self.size,
             !!self.block ? CFG.block : '',
             !!self.disabled ? CFG.disabled : ''
         ]);

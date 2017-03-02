@@ -4,12 +4,6 @@
 
 
 $tabs-styles: (
-    stable: (bg:            $tabs-stable-bg,
-             text:          $tabs-stable-text,
-             border:        $tabs-stable-border,
-             active-text:   $tabs-stable-active-text,
-             striped-bg:    $tabs-stable-striped-bg),
-
     primary:(bg:            $tabs-primary-bg,
              text:          $tabs-primary-text,
              border:        $tabs-primary-border,
@@ -51,16 +45,6 @@ $tabs-styles: (
 
             &.#{$class-actived} {
                 color: $active-text;
-
-                &:before {
-                    background-color: $striped-bg !important;
-                }
-            }
-        }
-
-        &.#{$prefix+$class}-striped, &.#{$prefix+$class}-striped-top {
-            .#{$prefix+$class}-item.#{$class-actived} {
-                color: $text;
 
                 &:before {
                     background-color: $striped-bg !important;
@@ -151,10 +135,10 @@ $tabs-styles: (
             left: 0; right: 0;
         }
 
-        &.border-bottom,
-        &-header {
-            @include retina-border-width(top, 0);
-            @include retina-border-width(bottom);
+        &.border-top,
+        &-footer {
+            @include retina-border-width(bottom, 0);
+            @include retina-border-width(top);
         }
 
         &-header {
@@ -174,7 +158,7 @@ $tabs-styles: (
                 content: ' ';
                 width: $tabs-striped-width;
                 height: rem($tabs-striped-height);
-                background-color: $tabs-primary-text;
+                background-color: $tabs-primary-bg;
             }
         }
 
