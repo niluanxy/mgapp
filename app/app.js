@@ -15,8 +15,8 @@ $$.$mount("#mgapp", function() {
                                 '<mg-button :disabled="dis" block="true" link="#user">你好</mg-button>'+
                                 '<a class="button-primary" @click="root">root</a>'+
                                 '<a class="button-primary" @click="log">log</a>'+
-                                '<mg-tabs striped="true">'+
-                                    '<mg-tabs-item class="actived">用户</mg-tabs-item>'+
+                                '<mg-tabs striped="true" :select="sel">'+
+                                    '<mg-tabs-item>用户</mg-tabs-item>'+
                                     '<mg-tabs-item>商品</mg-tabs-item>'+
                                     '<mg-tabs-item>列表</mg-tabs-item>'+
                                 '</mg-tabs>'+
@@ -27,6 +27,7 @@ $$.$mount("#mgapp", function() {
                             title: "首页测试",
                             print: "default",
                             dis: false,
+                            sel: 2,
                         },
 
                         methods: {
@@ -36,7 +37,9 @@ $$.$mount("#mgapp", function() {
                             },
 
                             log: function() {
-                                console.log("hello world: "+this.print);
+                                this.sel++;
+                                if (this.sel > 2) this.sel = 0;
+                                console.log(this.sel);
                             }
                         }
                     });

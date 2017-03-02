@@ -14,7 +14,13 @@ MagicVue.component("mgTabs", {
     name: "mgTabs",
     template: "<div><slot></slot></div>",
 
-    props: ["ctrl", "icon", "type", "border", "striped"],
+    props: ["ctrl", "icon", "type", "border", "striped", "select", "onSelect"],
+
+    data: function() {
+        return {
+            $ctrl: null,
+        }
+    },
 
     mounted: function() {
         var self = this, $el = $(self.$el),
@@ -29,13 +35,24 @@ MagicVue.component("mgTabs", {
             self.border == "top" ? "top" : "",
         ]);
 
-        $ctrl = new Tabs($el).init();
+        $ctrl = new Tabs($el, {
+            onSelect: function(index) {
+                self.$emit("onSelect", index);
+            }
+        }).init();
+        self.$ctrl = $ctrl.select(parseInt(self.select) || 0);
 
         if (ctrlKey = self.ctrl) {
             $ctrlScope = getScope(self, ctrlKey);
             if ($ctrlScope) $ctrlScope[ctrlKey] = $ctrl;
         }
     },
+
+    watch: {
+        select: function(newVal) {
+            this.$ctrl.select(newVal);
+        }
+    }
 });
 
 MagicVue.component("mgTabsItem", {
