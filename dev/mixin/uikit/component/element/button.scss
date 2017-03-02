@@ -60,6 +60,7 @@ $button-styles: (
         background-color: $bg;
         border-color: $border;
 
+        &:active,
         &.#{$class-active} {
             border-color: $active-border;
             background-color: $active-bg;

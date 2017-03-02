@@ -25,7 +25,7 @@
 }
 
 @mixin disabled($opacity: 0.3) {
-    cursor: default !important;
+    cursor: not-allowed !important;
     pointer-events: none;
     opacity: $opacity;
 }
@@ -280,7 +280,7 @@ $retina-pixel-ratio: 2 !default; // 缩放系数
 @mixin button-appearance() {
     @include button-like();
     display: inline-block;
-    z-index: $zindex-element;    
+    z-index: $zindex-element;
 
     // 添加一个隐藏的区域，增大按钮的点击面积
     &:after {

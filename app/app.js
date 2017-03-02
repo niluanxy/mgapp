@@ -12,7 +12,7 @@ $$.$mount("#mgapp", function() {
                             '<mg-content>'+
                                 '<input type="text" v-model="print"></br>'+
                                 '<p>{{print}}</p>'+
-                                '<mg-button :disabled="dis" link="#user">你好</mg-button>'+
+                                '<mg-button :disabled="dis" block="true" link="#user">你好</mg-button>'+
                                 '<a class="button-primary" @click="root">root</a>'+
                                 '<a class="button-primary" @click="log">log</a>'+
                             '</mg-content>'+

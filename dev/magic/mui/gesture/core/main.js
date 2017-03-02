@@ -8,7 +8,7 @@ import $config from "MG_UIKIT/base/config.js";
 
 var CFG = $config.gesture = {
     passive : true,
-    preventMove : false,
+    preventMove : true,
     debounceTime: 20,
 },
     Prototype = {}, touchFilter, getTouch, touchSum,
