@@ -1,4 +1,19 @@
 // ========================================================
+// 内容区默认样式变量
+// ========================================================
+
+$content-padding:                     $padding-large !default;
+$content-back-color:                  #ffffff !default;
+
+$content-head-size:                   $block-header-height !default;
+$content-foot-size:                   $block-footer-height !default;
+
+$content-point-bg:                    rgba(0, 0, 0, 0.3) !default;
+$content-point-size:                  3px !default;
+$content-point-offset:                3px !default;
+$content-point-radius:                3px !default;
+
+// ========================================================
 // content 内容UI生成器
 // ========================================================
 
