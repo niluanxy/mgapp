@@ -18,7 +18,7 @@ MagicVue.component("mgTabs", {
         "$name": { type: String, default: "mg-tabs" },
 
         "ctrl"   : {}, "icon"  : {}, "border"  : {},
-        "striped": {}, "select": {}, "onSelect": {},
+        "striped": {}, "active": {}, "select": {},
     },
 
     data: function() {
@@ -42,10 +42,10 @@ MagicVue.component("mgTabs", {
 
         $ctrl = new Tabs($el, {
             onSelect: function(index) {
-                self.$emit("onSelect", index);
+                self.$emit("select", index);
             }
         }).init();
-        self.$ctrl = $ctrl.select(parseInt(self.select) || 0);
+        self.$ctrl = $ctrl.select(parseInt(self.active) || 0);
 
         if (ctrlKey = self.ctrl) {
             $ctrlScope = getScope(self, ctrlKey);
