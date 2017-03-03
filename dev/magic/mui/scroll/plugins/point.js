@@ -7,7 +7,7 @@ import $config from "MG_UIKIT/base/config.js";
 import {transform, getTrans} from "MG_UIKIT/scroll/utils/tools.js";
 
 var CFG = $config.scroll.point = {
-    pointHide : "",
+    pointHide : "hide",
     pointClass: "scroll_point",
 }, Prototype = {}, ABS = Math.abs;
 
@@ -24,6 +24,10 @@ function Point(scope, option) {
 
     self.wrapSize = {};
     self.bodySize = {};
+
+    self.pointXShow  = false;
+    self.pointYShow  = false;
+    self.pointHandle = null;
 }; Scroll.register("point", Point, Prototype);
 
 Prototype.init = function(root) {
@@ -59,11 +63,13 @@ Prototype.refresh = function() {
 
     if (opt.pointX == true) {
         ratioX = woff.width/coff.width;
+        ratioX = ratioX >= 1 ? 1 : ratioX;
         self.$pointX.width(ratioX*woff.width);
     }
 
     if (opt.pointY == true) {
         ratioY = woff.height/coff.height;
+        ratioY = ratioY >= 1 ? 1 : ratioY;
         self.$pointY.height(ratioY*woff.height);
     }
 
@@ -83,8 +89,54 @@ Prototype.translate = function(x, y) {
     return self;
 }
 
+Prototype.start = function(e, touches, root, translate) {
+    clearTimeout(this.pointHandle);
+}
+
 Prototype.move = function(e, touches, root, translate) {
     this.translate(-translate.scrollX, -translate.scrollY);
+    this.togglePoint(true, true);
+}
+
+Prototype.togglePoint = function(typeX, typeY) {
+    var self = this, opt = self.option;
+
+    typeX = typeX == null ? undefined : !typeX;
+    typeY = typeY == null ? undefined : !typeY;
+
+    if (self.$pointX && self.pointXShow == typeX) {
+        self.$pointX.toggleClass(opt.pointHide, typeX);
+        self.pointXShow = !typeX;
+    }
+
+    if (self.$pointY && self.pointYShow == typeX) {
+        self.$pointY.toggleClass(opt.pointHide, typeY);
+        self.pointYShow = !typeY;
+    }
+};
+
+Prototype.end = function(e, touches, root, translate) {
+    var self = this, opt = self.option, transM;
+
+    transM = root.computeScroll(e.velocity);
+
+    // 没有越界，且没动画效果，直接隐藏指示条
+    if ((ABS(transM.scroll) < 5) && !root.boundryCheck()) {
+        self.togglePoint(false, false);
+    } else {
+        self.pointHandle = setTimeout(function() {
+            self.togglePoint(false, false);
+        }, transM.duration+50);
+
+        root.once("boundry", function() {
+            clearTimeout(self.pointHandle);
+            self.togglePoint(true, true);
+        });
+
+        root.once("animated", function() {
+            self.togglePoint(false, false);
+        });
+    }
 }
 
 Prototype.scroll = function(root, scrollX, scrollY) {

@@ -21,14 +21,10 @@ MagicVue.component("mgButton", {
         '</a>',
 
     props: {
-        link:       { type: String,     default: '' },
+        "$name": { type: String, default: "mg-button" },
 
-        type:       { type: String,     default: '' },
-        size:       { type: String,     default: '' },
-        icon:       { type: String,     default: '' },
-
-        block:      {},
-        disabled:   {},
+        "link": {}, "type" : {}, "size"    : {},
+        "icon": {}, "block": {}, "disabled": {},
     },
 
     mounted: function() {

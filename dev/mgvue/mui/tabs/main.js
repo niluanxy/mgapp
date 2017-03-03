@@ -14,7 +14,12 @@ MagicVue.component("mgTabs", {
     name: "mgTabs",
     template: "<div><slot></slot></div>",
 
-    props: ["ctrl", "icon", "type", "border", "striped", "select", "onSelect"],
+    props: {
+        "$name": { type: String, default: "mg-tabs" },
+
+        "ctrl"   : {}, "icon"  : {}, "border"  : {},
+        "striped": {}, "select": {}, "onSelect": {},
+    },
 
     data: function() {
         return {
@@ -57,7 +62,11 @@ MagicVue.component("mgTabs", {
 
 MagicVue.component("mgTabsItem", {
     name: "mgTabsItem",
-    props: ["icon"],
+    props: {
+        "$name": { type: String, default: "mg-tabs-item" },
+
+        "icon": {},
+    },
     template: '<a>'+
         '<i v-if="icon" class="icon" :class="\'icon-\'+icon"></i>'+
         '<slot></slot>'+

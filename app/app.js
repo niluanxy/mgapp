@@ -11,7 +11,7 @@ $$.$mount("#mgapp", function() {
                             '<mg-header><h3 class="title">{{title}}</h3></mg-header>'+
                             '<mg-content>'+
                                 '<input type="text" v-model="print"></br>'+
-                                '<p>{{print}}</p>'+
+                                '<p v-for="x in 10">{{print}}</p>'+
                                 '<mg-button :disabled="dis" block="true" link="#user">你好</mg-button>'+
                                 '<a class="button-primary" @click="root">root</a>'+
                                 '<a class="button-primary" @click="log">log</a>'+

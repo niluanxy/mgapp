@@ -154,7 +154,7 @@ $tabs-styles: (
                 position: absolute;
                 left: 50%;
                 bottom: 0;
-                transform: translate(-50%, 0);
+                transform: translateX(-50%);
                 content: ' ';
                 width: $tabs-striped-width;
                 height: rem($tabs-striped-height);

@@ -14,7 +14,8 @@ MagicVue.component("mgHeader", {
     template: "<div><slot></slot></div>",
 
     props: {
-        type: { type: String, default: '' },
+        "$name": { type: String, default: "mg-header" },
+        "type": { type: String, default: '' },
     },
 
     mounted: function() {

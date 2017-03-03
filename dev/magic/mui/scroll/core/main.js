@@ -245,13 +245,13 @@ Prototype.refresh = function(minSX, minSY) {
 
     self.minScrollX = minX;
     self.minScrollY = minY;
-    self.maxScrollX = maxX;
-    self.maxScrollY = maxY;
+    self.maxScrollX = maxX <= 0 ? maxX : 0;
+    self.maxScrollY = maxY <= 0 ? maxY : 0;
 
     self.boundryTopX = minX+width*rate;
-    self.boundryTopY = minY+width*rate;
+    self.boundryTopY = minY+height*rate;
     self.boundryBomX = maxX-width*rate;
-    self.boundryBomY = maxY-width*rate;
+    self.boundryBomY = maxY-height*rate;
 
     // 触发插件的 refresh 方法
     self.emitter.emit(CoreEves[3], self, self.option);
@@ -344,6 +344,8 @@ Prototype.boundry = function() {
     y = y > minY ? minY : y < maxY ? maxY : y;
 
     if (x != self.x || y != self.y) {
+        self.emitter.emit("boundry", self, self.x, self.y);
+
         self.animate.reset({
             time: opt.boundryTime,
             style: self.getTrans(x, y),

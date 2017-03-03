@@ -20,21 +20,6 @@ Prototype.start = function(e, touches, root, translate) {
     scrollX = translate.scrollX || root.getScroll("x");
     scrollY = translate.scrollY || root.getScroll("y");
 
-    // 防止暂停动画时，已经越界太多，导致页面空白问题
-    // if (root.boundryCheck()) {
-    //     if (scrollX < root.maxScrollX) {
-    //         scrollX = scrollX < root.boundryBomX ? root.boundryBomX : scrollX;
-    //     } else {
-    //         scrollX = scrollX > root.boundryTopX ? root.boundryTopX : scrollX;
-    //     }
-    //
-    //     if (scrollY < root.maxScrollY) {
-    //         scrollY = scrollY < root.boundryBomY ? root.boundryBomY : scrollY;
-    //     } else {
-    //         scrollY = scrollY > root.boundryTopY ? root.boundryTopY : scrollY;
-    //     }
-    // }
-
     self.thresholdX = scrollX;
     self.thresholdY = scrollY;
 
@@ -109,7 +94,7 @@ Prototype.end = function(e, touches, root, translate) {
         animate  = "";
     }
 
-    // 没有越界，且没动画效果，则直接更新状态，触发事件
+    // 没有越界，且没动画效果，则直接更新状态，触发事件
     if (!duration && !root.boundryCheck()) {
         translate.scrollX = root.x;
         translate.scrollY = root.y;
