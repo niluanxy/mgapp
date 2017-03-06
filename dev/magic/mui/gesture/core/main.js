@@ -4,9 +4,9 @@ import {extend, each, element, trim} from "LIB_MINJS/utils.js";
 import fastCall from "LIB_MINJS/fastcall.js";
 import Emitter from "LIB_MINJS/emitter.js";
 import {copyEvent} from "MG_MODULE/event/core/main.js";
-import $config from "MG_UIKIT/base/config.js";
+import ConfigUI from "MG_UIKIT/base/config.js";
 
-var CFG = $config.gesture = {
+var CFG = ConfigUI.gesture = {
     passive : true,
     preventMove : true,
     debounceTime: 20,

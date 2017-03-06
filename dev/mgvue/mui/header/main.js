@@ -1,11 +1,11 @@
 import MagicVue from "MV_BASE/main.js";
-import $ from "MG_CORE/build.js";
+import RootMagic from "MG_CORE/build.js";
 import {uiAddClass} from "MG_UIKIT/base/tools.js";
 
-import $config from "MV_UIKIT/base/config.js";
+import ConfigUi from "MV_UIKIT/base/config.js";
 
-var CFG = $config.header = {
-    type: $config.type,
+var CFG = ConfigUi.header = {
+    type: ConfigUi.type,
     class: "bar",
 };
 
@@ -19,7 +19,7 @@ MagicVue.component("mgHeader", {
     },
 
     mounted: function() {
-        var $el = $(this.$el), type = this.type || CFG.type;
+        var $el = RootMagic(this.$el), type = this.type || CFG.type;
 
         uiAddClass($el, CFG.class, type);
     }

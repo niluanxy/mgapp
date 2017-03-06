@@ -1,9 +1,9 @@
 import Scroll from "MG_UIKIT/scroll/core/main.js";
 import {uiExtend} from "MG_UIKIT/base/tools.js";
 import {value} from "LIB_MINJS/utils.js";
-import $config from "MG_UIKIT/base/config.js";
+import ConfigUI from "MG_UIKIT/base/config.js";
 
-var CFG = $config.scroll.snap = {
+var CFG = ConfigUI.scroll.snap = {
     snap       : "",
     snapTime   : 500,
     snapResize : null,

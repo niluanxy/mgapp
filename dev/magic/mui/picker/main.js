@@ -2,12 +2,12 @@ import RootMagic from "MG_MAGIC/main.js";
 import {uiExtend, uiInit, uiItemClass} from "MG_UIKIT/base/tools.js";
 import {isTrueString, isArray, isFunction} from "LIB_MINJS/check.js";
 import {each, extend} from "LIB_MINJS/utils.js";
-import $config from "MG_UIKIT/base/config.js";
+import ConfigUI from "MG_UIKIT/base/config.js";
 
 import Place from "MG_UIKIT/place/main.js";
 import Scroll from "MG_UIKIT/scroll/core/main.js";
 
-var CFG = $config.picker = {
+var CFG = ConfigUI.picker = {
     class: "picker",
 
     hideClass: "hide",

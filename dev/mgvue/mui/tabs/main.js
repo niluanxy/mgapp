@@ -1,12 +1,12 @@
 import MagicVue from "MV_BASE/main.js";
-import $ from "MG_CORE/build.js";
+import RootMagic from "MG_CORE/build.js";
 import Tabs from "MG_UIKIT/tabs/main.js";
 
-import $config from "MV_UIKIT/base/config.js";
+import ConfigUi from "MV_UIKIT/base/config.js";
 import {uiAddClass} from "MG_UIKIT/base/tools.js";
 
-var CFG = $config.tabs = {
-    type: $config.type,
+var CFG = ConfigUi.tabs = {
+    type: ConfigUi.type,
     class: "tabs",
 };
 
@@ -28,7 +28,7 @@ MagicVue.component("mgTabs", {
     },
 
     mounted: function() {
-        var self = this, $el = $(self.$el),
+        var self = this, $el = RootMagic(self.$el),
             striped, $ctrl, $ctrlScope, ctrlKey;
 
         striped = self.striped ? (self.striped == "top" ? "striped-top" : "striped") : "";

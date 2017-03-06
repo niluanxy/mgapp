@@ -22,7 +22,7 @@ Animate.RESETS = "style time bezier runCall endCall".split(" ");
 Animate.BEZIER = {
     ease     : "0.25, 0.1, 0.25, 1",
     bounce   : "0.71, 1.35, 0.47, 1.41",
-    circular :  "0.1, 0.57, 0.1, 1",
+    circular : "0.1, 0.57, 0.1, 1",
     quadratic: "0.33, 0.66, 0.66, 1",
 };
 

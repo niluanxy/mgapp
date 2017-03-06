@@ -21,4 +21,7 @@
 @include popup();
 @include modal();
 
+@include view();
+@include page();
+@include loader();
 @include content();

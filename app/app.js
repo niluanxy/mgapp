@@ -3,7 +3,7 @@ $$.$mount("#mgapp", function() {
 
     $$.route({
         "/home": {
-            title: "首页",
+            title: "首页测试",
             on: load("home", function(resolve, name) {
                 setTimeout(function() {
                     init(resolve, name)({
@@ -43,7 +43,7 @@ $$.$mount("#mgapp", function() {
                             }
                         }
                     });
-            	}, 100);
+            	}, 1000);
             }),
         },
 

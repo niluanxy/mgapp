@@ -1,9 +1,9 @@
 import RootMagic from "MG_MAGIC/main.js";
 import {uiInit, uiExtend} from "MG_UIKIT/base/tools.js";
 import {isFunction} from "LIB_MINJS/check.js";
-import $config from "MG_UIKIT/base/config.js";
+import ConfigUI from "MG_UIKIT/base/config.js";
 
-var CFG = $config.tabs = {
+var CFG = ConfigUI.tabs = {
     class: "tabs",
 
     wrapClass: "",

@@ -3,9 +3,9 @@ import {uiExtend} from "MG_UIKIT/base/tools.js";
 import {extend, value} from "LIB_MINJS/utils.js";
 import {isFunction, isString} from "LIB_MINJS/check.js";
 import Popup from "MG_UIKIT/popup/main.js";
-import $config from "MG_UIKIT/base/config.js";
+import ConfigUI from "MG_UIKIT/base/config.js";
 
-var CFG = $config.tip = {
+var CFG = ConfigUI.tip = {
     class: "tip",
 
     wrapClass: "tip",

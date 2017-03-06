@@ -1,0 +1,42 @@
+// ========================================================
+// view 样式生成器
+// ========================================================
+
+%full_screen {
+    position: absolute;
+    top: 0; right: 0;
+    bottom: 0; left: 0;
+    overflow: hidden;
+    background-color: #FFF;
+}
+
+@mixin view($class: view, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        @extend %full_screen;
+        z-index: 100;
+
+        @content;   // 样式自定义扩展代码位置
+    }
+}
+
+@mixin page($class: page, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        @extend %full_screen;
+        z-index: 10;
+
+        @content;   // 样式自定义扩展代码位置
+    }
+}
+
+@mixin loader($class: loader, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        @extend %full_screen;
+        z-index: 100;
+
+        &.hidden {
+            @include animate(fadeOut, 0.2s);
+        }
+
+        @content;   // 样式自定义扩展代码位置
+    }
+}

@@ -2,9 +2,9 @@ import RootMagic from "MG_MAGIC/main.js";
 import {uiExtend} from "MG_UIKIT/base/tools.js";
 import {isFunction, isElement} from "LIB_MINJS/check.js";
 import {extend, arrayRemove} from "LIB_MINJS/utils.js";
-import $config from "MG_UIKIT/base/config.js";
+import ConfigUI from "MG_UIKIT/base/config.js";
 
-var CFG = $config.popup = {
+var CFG = ConfigUI.popup = {
     class: "pop",
 
     insertTo : "body", 

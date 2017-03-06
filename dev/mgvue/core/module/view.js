@@ -22,6 +22,7 @@ function createWraper(dom) {
     if (!isElement($wrap)) {
         $wrap = document.createElement("div");
         $wrap.innerHTML = "<div></div><div></div>";
+        $wrap.className = "view";
 
         MagicVue.$root.appendChild($wrap);
     }

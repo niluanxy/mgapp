@@ -1,15 +1,15 @@
 import MagicVue from "MV_BASE/main.js";
-import $ from "MG_CORE/build.js";
+import RootMagic from "MG_CORE/build.js";
 import {uiClass, uiAddClass} from "MG_UIKIT/base/tools.js";
 
-import $config from "MV_UIKIT/base/config.js";
+import ConfigUI from "MV_UIKIT/base/config.js";
 
-var CFG = $config.button = {
-    type :    $config.type,
+var CFG = ConfigUI.button = {
+    type :    ConfigUI.type,
     class:    "button",
 
-    block:    $config.block,
-    disabled: $config.disabled,
+    block:    ConfigUI.block,
+    disabled: ConfigUI.disabled,
 };
 
 MagicVue.component("mgButton", {
@@ -28,7 +28,7 @@ MagicVue.component("mgButton", {
     },
 
     mounted: function() {
-        var self = this, $el = $(self.$el);
+        var self = this, $el = RootMagic(self.$el);
 
         uiAddClass($el, CFG.class, [
             self.type || CFG.type,
@@ -40,7 +40,7 @@ MagicVue.component("mgButton", {
 
     watch: {
         disabled: function(newVal) {
-            $(this.$el).toggleClass(uiClass(CFG.class, CFG.disabled), !!newVal);
+            RootMagic(this.$el).toggleClass(uiClass(CFG.class, CFG.disabled), !!newVal);
         }
     }
 });

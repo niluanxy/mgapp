@@ -1,9 +1,9 @@
 import RootMagic from "MG_MAGIC/main.js";
 import {extend, value, element} from "LIB_MINJS/utils.js";
 import {isElement} from "LIB_MINJS/check.js";
-import $config from "MG_UIKIT/base/config.js";
+import ConfigUI from "MG_UIKIT/base/config.js";
 
-var CFG = $config.place = {
+var CFG = ConfigUI.place = {
     hideClass: "hide",
 
     outer    : false,

@@ -1,0 +1,73 @@
+@mixin animate($name, $time: 1s, $ease: linear, $mode: both) {
+    animation-name: $name;
+    animation-duration: $time;
+    animation-fill-mode: $mode;
+    animation-timing-function: $ease;
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+
+        to {
+            opacity: 0;
+            z-index: 1;
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            visibility: visible;
+
+            transform: translate3d(100%, 0, 0);
+        }
+
+        to {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+    @keyframes slideOutRight {
+        from {
+            transform: translate3d(0, 0, 0);
+        }
+
+        to {
+            visibility: hidden;
+            transform: translate3d(100%, 0, 0);
+        }
+    }
+
+    @keyframes slideInLeft {
+        from {
+            visibility: visible;
+
+            transform: translate3d(-100%, 0, 0);
+        }
+
+        to {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+    @keyframes slideOutLeft {
+        from {
+            transform: translate3d(0, 0, 0);
+        }
+
+        to {
+            visibility: hidden;
+            transform: translate3d(-100%, 0, 0);
+        }
+    }
+}

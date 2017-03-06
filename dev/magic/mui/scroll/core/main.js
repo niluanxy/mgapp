@@ -4,7 +4,7 @@ import Gesture from "MG_UIKIT/gesture/core/main.js";
 import {uiExtend} from "MG_UIKIT/base/tools.js";
 import {each, value, trim} from "LIB_MINJS/utils.js";
 import {isString, isFunction} from "LIB_MINJS/check.js";
-import $config from "MG_UIKIT/base/config.js";
+import ConfigUI from "MG_UIKIT/base/config.js";
 
 import {transform, getTrans} from "MG_UIKIT/scroll/utils/tools.js";
 import Animate from "MG_UIKIT/scroll/utils/animate.js";
@@ -12,7 +12,7 @@ import Animate from "MG_UIKIT/scroll/utils/animate.js";
 /**
  * @TODO 添加绑定事件到 document 参数
  */
-var CFG = $config.scroll = {
+var CFG = ConfigUI.scroll = {
     class: "scroll",
 
     wrapClass: "scroll",
