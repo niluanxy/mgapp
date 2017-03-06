@@ -53,8 +53,9 @@ var DIR_APP   = __dirname + "/app/",
     DIR_MIXIN = DIR_DEV + "mixin/",
     DIR_MINJS = DIR_DEV + "minjs/",
     DIR_MAGIC = DIR_DEV + "magic/",
-    DIR_MAGIC_VUE = DIR_DEV + "mgvue/",
+    DIR_MGVUE = DIR_DEV + "mgvue/",
 
+    DIR_CONCAT = DIR_DEV + "concat/",
     DIR_APP_LIBS = DIR_APP + "libs/";
 
 var CONCAT_PRE        = "_concat_",
@@ -66,6 +67,10 @@ var CONCAT_PRE        = "_concat_",
 
     CONCAT_MAGIC_BASE = CONCAT_PRE+"magic.js",
     CONCAT_MAGIC_UIKIT= CONCAT_PRE+"magic.ui.js",
+
+    CONCAT_MGVUE_STYLE_VARS = CONCAT_PRE+"mgvue-vars.scss",
+    CONCAT_MGVUE_STYLE_UIKIT= CONCAT_PRE+"mgvue-uikit.scss",
+    CONCAT_MGVUE_STYLE_BUILD= "mgvue.scss",
 
     CONCAT_MGVUE_BASE = CONCAT_PRE+"mgvue.js",
     CONCAT_MGVUE_UIKIT= CONCAT_PRE+"mgvue.ui.js";
@@ -82,11 +87,11 @@ var DIR_MAGIC_ALIAS = {
     MG_STATIC  : DIR_MAGIC+"core/static",
     MG_UIKIT   : DIR_MAGIC+"mui",
 
-    MV_CORE    : DIR_MAGIC_VUE+"core",
-    MV_BASE    : DIR_MAGIC_VUE+"core/base",
-    MV_MODULE  : DIR_MAGIC_VUE+"core/module",
-    MV_PLUGIN  : DIR_MAGIC_VUE+"core/plugin",
-    MV_UIKIT   : DIR_MAGIC_VUE+"mui",
+    MV_CORE    : DIR_MGVUE+"core",
+    MV_BASE    : DIR_MGVUE+"core/base",
+    MV_MODULE  : DIR_MGVUE+"core/module",
+    MV_PLUGIN  : DIR_MGVUE+"core/plugin",
+    MV_UIKIT   : DIR_MGVUE+"mui",
 };
 
 var reload = throttle(20, function() {
@@ -121,42 +126,39 @@ function task_concat_mixin() {
             DIR_MIXIN+"core/text.scss",
             DIR_MIXIN+"core/base.scss"])
         .pipe(concat(CONCAT_MIXIN_CORE))
-        .pipe(gulp.dest(DIR_DEV))
+        .pipe(gulp.dest(DIR_CONCAT))
         .on("finish", function() { defer_core.resolve(); })
 
         // 变量文件合并
         gulp.src([DIR_MIXIN+"uikit/varible/element/button.scss",
             DIR_MIXIN+"uikit/varible/**/*.scss"])
         .pipe(concat(CONCAT_MIXIN_VARS))
-        .pipe(gulp.dest(DIR_DEV))
+        .pipe(gulp.dest(DIR_CONCAT))
         .on("finish", function() { defer_vars.resolve(); })
 
         // UI文件合并
         gulp.src([DIR_MIXIN+"uikit/tools.scss",
             DIR_MIXIN+"uikit/component/**/*.scss"])
         .pipe(concat(CONCAT_MIXIN_UIKIT))
-        .pipe(gulp.dest(DIR_DEV))
+        .pipe(gulp.dest(DIR_CONCAT))
         .on("finish", function() { defer_uikit.resolve(); })
+    });
 
-        return Q.all([
-            defer_core.promise,
-            defer_vars.promise,
-            defer_uikit.promise
-        ]).then(function() {
-            log("--- mixin concat finish");
-        });
-    }).then(function() {
+    Q.all([
+        defer_core.promise,
+        defer_vars.promise,
+        defer_uikit.promise
+    ]).then(function() {
         gulp.src([DIR_DEV+CONCAT_MIXIN_CORE,
             DIR_DEV+CONCAT_MIXIN_VARS,
             DIR_DEV+CONCAT_MIXIN_UIKIT,
             DIR_MIXIN+"build.scss"])
         .pipe(concat(CONCAT_MIXIN_BUILD))
-        .pipe(gulp.dest(DIR_DEV))
+        .pipe(gulp.dest(DIR_CONCAT))
         .on("finish", function() {
-            log("--- mixin build to css finish");
             defer_all.resolve();
         })
-    })
+    });
 
     return defer_all.promise;
 }
@@ -165,6 +167,8 @@ function task_build_mixin() {
     var build = Q.defer();
 
     task_concat_mixin().then(function() {
+        log("--- mixin concat finish");
+
         gulp.src([DIR_DEV+CONCAT_MIXIN_BUILD])
         .pipe(sass.sync().on('error', sass.logError))
         .pipe(autoprefixer())
@@ -184,18 +188,18 @@ gulp.task("dev-build-mixin", task_build_mixin);
 
 function clean_mixin_build() {
     return Q.all([
-        del(DIR_DEV+CONCAT_MIXIN_CORE),
-        del(DIR_DEV+CONCAT_MIXIN_VARS),
-        del(DIR_DEV+CONCAT_MIXIN_UIKIT)
+        del(DIR_CONCAT+CONCAT_MIXIN_CORE),
+        del(DIR_CONCAT+CONCAT_MIXIN_VARS),
+        del(DIR_CONCAT+CONCAT_MIXIN_UIKIT)
     ]);
 }
 
 function clean_mixin() {
-    var css = DIR_DEV+CONCAT_MIXIN_BUILD;
+    var css = DIR_CONCAT+CONCAT_MIXIN_BUILD;
 
     return Q.all([
         clean_mixin_build(),
-        del(DIR_DEV+CONCAT_MIXIN_BUILD),
+        del(DIR_CONCAT+CONCAT_MIXIN_BUILD),
         del(css.replace(/scss$/, "css"))
     ]);
 }
@@ -291,10 +295,10 @@ function task_build_magic() {
 
     gulp.src(DIR_CORE+"build.js")
     .pipe(rename(CONCAT_MAGIC_BASE))
-    .pipe(gulp.dest(DIR_DEV))
+    .pipe(gulp.dest(DIR_CONCAT))
     .on("finish", function() {
         rollup({
-            entry: DIR_DEV+CONCAT_MAGIC_BASE,
+            entry: DIR_CONCAT+CONCAT_MAGIC_BASE,
             format: 'umd',
             moduleName: "Magic",
             plugins: plugins,
@@ -310,10 +314,10 @@ function task_build_magic() {
 
     gulp.src([DIR_MUI+"build.js"])
     .pipe(rename(CONCAT_MAGIC_UIKIT))
-    .pipe(gulp.dest(DIR_DEV))
+    .pipe(gulp.dest(DIR_CONCAT))
     .on("finish", function() {
         rollup({
-            entry: DIR_DEV+CONCAT_MAGIC_UIKIT,
+            entry: DIR_CONCAT+CONCAT_MAGIC_UIKIT,
             format: 'umd',
             moduleName: "Magic",
             plugins: plugins,
@@ -342,8 +346,8 @@ gulp.task("dev-build-magic", task_build_magic);
 
 function clean_magic() {
     return Q.all([
-        del(DIR_DEV+CONCAT_MAGIC_BASE),
-        del(DIR_DEV+CONCAT_MAGIC_UIKIT)
+        del(DIR_CONCAT+CONCAT_MAGIC_BASE),
+        del(DIR_CONCAT+CONCAT_MAGIC_UIKIT)
     ]);
 }
 
@@ -354,8 +358,8 @@ function task_build_mgvue() {
     var defer_all = Q.defer(), defer_core = Q.defer(),
         defer_mui = Q.defer(), plugins,
 
-    DIR_CORE = DIR_MAGIC_VUE+"core/",
-    DIR_MUI  = DIR_MAGIC_VUE+"mui/",
+    DIR_CORE = DIR_MGVUE+"core/",
+    DIR_MUI  = DIR_MGVUE+"mui/",
 
     oldBuild = BUILD_RELEASE ? /(\w)(\.MagicVue=)(\w\(\))/
                              : /(\(global.MagicVue = factory\(\)\)\;)/,
@@ -378,10 +382,10 @@ function task_build_mgvue() {
 
     gulp.src(DIR_CORE+"build.js")
     .pipe(rename(CONCAT_MGVUE_BASE))
-    .pipe(gulp.dest(DIR_DEV))
+    .pipe(gulp.dest(DIR_CONCAT))
     .on("finish", function() {
         rollup({
-            entry: DIR_DEV+CONCAT_MGVUE_BASE,
+            entry: DIR_CONCAT+CONCAT_MGVUE_BASE,
             format: 'umd',
             moduleName: "MagicVue",
             plugins: plugins,
@@ -397,10 +401,10 @@ function task_build_mgvue() {
 
     gulp.src([DIR_MUI+"build.js"])
     .pipe(rename(CONCAT_MGVUE_UIKIT))
-    .pipe(gulp.dest(DIR_DEV))
+    .pipe(gulp.dest(DIR_CONCAT))
     .on("finish", function() {
         rollup({
-            entry: DIR_DEV+CONCAT_MGVUE_UIKIT,
+            entry: DIR_CONCAT+CONCAT_MGVUE_UIKIT,
             format: 'umd',
             moduleName: "MagicVue",
             plugins: plugins,
@@ -418,7 +422,7 @@ function task_build_mgvue() {
         defer_core.promise,
         defer_mui.promise,
     ]).then(function() {
-        clean_magic();
+        clean_mgvue();
         log("mgvue task all finish");
         defer_all.resolve();
     });
@@ -429,8 +433,75 @@ gulp.task("dev-build-mgvue", task_build_mgvue);
 
 function clean_mgvue() {
     return Q.all([
-        del(DIR_DEV+CONCAT_MGVUE_BASE),
-        del(DIR_DEV+CONCAT_MGVUE_UIKIT)
+        del(DIR_CONCAT+CONCAT_MGVUE_BASE),
+        del(DIR_CONCAT+CONCAT_MGVUE_UIKIT)
+    ]);
+}
+
+/**===============================================
+ * magic vue style 文件合并脚本函数
+ =================================================*/
+function task_concat_mgvue_style() {
+    var defer_all = Q.defer(), defer_var = Q.defer(),
+        defer_com = Q.defer(), DIR = DIR_MGVUE+"style/";
+
+    gulp.src(DIR+"/varible/*.scss")
+    .pipe(concat(CONCAT_MGVUE_STYLE_VARS))
+    .pipe(gulp.dest(DIR_CONCAT))
+    .on("finish", function() { defer_var.resolve() });
+
+    gulp.src(DIR+"/component/*.scss")
+    .pipe(concat(CONCAT_MGVUE_STYLE_UIKIT))
+    .pipe(gulp.dest(DIR_CONCAT))
+    .on("finish", function() { defer_com.resolve() });
+
+    Q.all([defer_var, defer_com, task_concat_mixin()])
+    .then(function() {
+        gulp.src([DIR_CONCAT+CONCAT_MIXIN_CORE,
+            DIR_CONCAT+CONCAT_MIXIN_VARS,
+            DIR_CONCAT+CONCAT_MGVUE_STYLE_VARS,
+            DIR_CONCAT+CONCAT_MIXIN_UIKIT,
+            DIR_CONCAT+CONCAT_MGVUE_STYLE_UIKIT,
+            DIR_MGVUE+"style/build.scss"
+        ])
+        .pipe(concat(CONCAT_MGVUE_STYLE_BUILD))
+        .pipe(gulp.dest(DIR_CONCAT))
+        .on("finish", function() { defer_all.resolve() });
+    });
+
+    return defer_all.promise;
+}
+
+function task_build_mgvue_style() {
+    var defer_build = Q.defer();
+
+    task_concat_mgvue_style()
+    .then(function() {
+        log("--- mgvue style concot finish");
+
+        gulp.src(DIR_CONCAT+CONCAT_MGVUE_STYLE_BUILD)
+        .pipe(sass.sync().on('error', sass.logError))
+        .pipe(autoprefixer())
+        .pipe(px2rem(px2remConfig))
+        .pipe(gulpif(BUILD_RELEASE, minifycss()))
+        .pipe(gulp.dest(DIR_APP_LIBS))
+        .on("finish", function() {
+            log("mgvue style build css finish");
+            clean_mgvue_style();
+            defer_build.resolve();
+        });
+    });
+
+    return defer_build.promise;
+}
+gulp.task("dev-build-mgvue-style", task_build_mgvue_style);
+
+function clean_mgvue_style() {
+    return Q.all([
+        clean_mixin(),
+        del(DIR_CONCAT+CONCAT_MGVUE_STYLE_VARS),
+        del(DIR_CONCAT+CONCAT_MGVUE_STYLE_UIKIT),
+        del(DIR_CONCAT+CONCAT_MGVUE_STYLE_BUILD)
     ]);
 }
 
@@ -438,7 +509,7 @@ function clean_mgvue() {
 /**===============================================
  * 项目整体相关函数
  =================================================*/
-gulp.task("build", function(r) {
+gulp.task("build-all", function(r) {
     BUILD_RELEASE = r ? true : false;
 
     task_build_mixin()
@@ -447,8 +518,19 @@ gulp.task("build", function(r) {
     }).then(function() {
         return task_build_magic();
     }).then(function() {
+        return task_build_mgvue_style();
+    }).then(function() {
         return task_build_mgvue();
     })
+})
+
+gulp.task("build", function(r) {
+    BUILD_RELEASE = r ? true : false;
+
+    return Q.all([
+        task_build_mgvue_style(),
+        task_build_mgvue()
+    ]);
 })
 
 gulp.task("serve", function() {
@@ -460,10 +542,12 @@ gulp.task("serve", function() {
 
     gulp.watch([DIR_MIXIN+"**/*"],    ["dev-build-mixin"]);
     gulp.watch([DIR_MINJS+"**/*.js"], ["dev-build-minjs"]);
-    
+
     gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-magic"]);
+
+    gulp.watch([DIR_MIXIN+"**/*", DIR_MGVUE+"style/**/*"], ["dev-build-mgvue-style"]);
     gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js",
-                DIR_MAGIC_VUE+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-mgvue"]);
+                DIR_MGVUE+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-mgvue"]);
 
     gulp.watch([DIR_APP_LIBS+"/*", DIR_APP+"/*"]).on("change", reload);
 });
@@ -472,6 +556,7 @@ gulp.task("clean", function() {
     return Q.all([
         clean_mixin(),
         clean_magic(),
-        clean_mgvue()
+        clean_mgvue(),
+        clean_mgvue_style(),
     ]);
 })

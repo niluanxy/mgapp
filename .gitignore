@@ -12,5 +12,6 @@
 /dev/_concat*
 /dev/mixin.css
 /dev/mixin.scss
+/dev/concat
 
 /app/libs
