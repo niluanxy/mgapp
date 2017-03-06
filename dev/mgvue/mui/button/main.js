@@ -1,5 +1,7 @@
 import MagicVue from "MV_BASE/main.js";
 import RootMagic from "MG_CORE/build.js";
+import {isTrueString} from "LIB_MINJS/check.js";
+import RootRouter from "MV_MODULE/router.js";
 import {uiClass, uiAddClass} from "MG_UIKIT/base/tools.js";
 
 import ConfigUI from "MV_UIKIT/base/config.js";

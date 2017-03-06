@@ -163,14 +163,14 @@ export function once(eve, select, callback, extScope, setAll) {
 }
 
 function propaEmit(/* el, eveName, args... */) {
-    var args = $.extend([], arguments), el,
-        src = element(args[0]), eveName = args[1], evePre;
+    var args = extend([], arguments), el,
+        src  = element(args[0]), eveName = args[1], evePre;
 
     el = src;
     args = slice(args, 1);
     evePre = getPrefix(eveName);
 
-    do {
+    while(el) {
         var creEvent, eveCtrl, runArgs;
 
         runArgs = extend([], args);
@@ -198,7 +198,7 @@ function propaEmit(/* el, eveName, args... */) {
         } else {
             return;
         }
-    } while(el && el.parentNode);
+    };
 }
 
 function emitProxy(/* eve, args... */) {

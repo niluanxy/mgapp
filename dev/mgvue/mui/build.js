@@ -3,6 +3,8 @@ import RootMagic from "MG_CORE/build.js";
 import MagicVue from "MV_CORE/build.js";
 import ConfigUI from "MV_UIKIT/base/config.js";
 
+import "MG_UIKIT/gesture/main.js";
+
 import "MV_UIKIT/page/main.js";
 import "MV_UIKIT/router/main.js";
 import "MV_UIKIT/scroll/main.js";

@@ -363,9 +363,12 @@ function task_build_mgvue() {
 
     oldBuild = BUILD_RELEASE ? /(\w)(\.MagicVue=)(\w\(\))/
                              : /(\(global.MagicVue = factory\(\)\)\;)/,
-    newBuild = BUILD_RELEASE ? '$1$2$3;if("undefined"==typeof define&&!$1.$)$1.$$=$1.MagicVue;'
+    newBuild = BUILD_RELEASE ? '$1$2$3;if("undefined"==typeof define&&!$1.$$)$1.$$=$1.MagicVue;'+
+                               'if("undefined"==typeof define&&!$1.$)$1.$=$1.MagicVue.Magic;'
                              : '$1\n\tif(typeof define === "undefined" && !global.$$) '+
-                               'global.$$ = global.MagicVue;';
+                               'global.$$ = global.MagicVue;'+
+                               '\n\tif(typeof define === "undefined" && !global.$) '+
+                                 'global.$ = global.MagicVue.Magic;';
 
     plugins = [
         rollupAlias(DIR_MAGIC_ALIAS),

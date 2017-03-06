@@ -12,9 +12,10 @@ $$.$mount("#mgapp", function() {
                             '<mg-content>'+
                                 '<input type="text" v-model="print"></br>'+
                                 '<p v-for="x in 10">{{print}}</p>'+
-                                '<mg-button :disabled="dis" block="true" link="#user">你好</mg-button>'+
-                                '<a class="button-primary" @click="root">root</a>'+
-                                '<a class="button-primary" @click="log">log</a>'+
+                                '<mg-button :disabled="dis" block="true" link="#user">user</mg-button>'+
+                                '<mg-button  block="true" link="#home">home</mg-button>'+
+                                '<a class="button-primary" @tap="root">root</a>'+
+                                '<a class="button-primary" @tap="log">log</a>'+
                                 '<mg-tabs striped="true" :select="sel">'+
                                     '<mg-tabs-item>用户</mg-tabs-item>'+
                                     '<mg-tabs-item>商品</mg-tabs-item>'+
@@ -50,9 +51,16 @@ $$.$mount("#mgapp", function() {
         "/user": {
             title: "用户中心",
             on: load("user", {
-                template: "<div><div>user name: {{name}}</div><ma-home></ma-home></div>",
+                template: "<mg-page>"+
+                    "<mg-header><h3 class='title'>{{title}}</h3></mg-header>"+
+                    "<mg-content>"+
+                        "<div>user name: {{name}}</div>"+
+                    "</mg-content>"+
+                "</mg-page>",
+
                 data: {
                     name: "jack",
+                    title: "用户中心"
                 }
             }),
         },
