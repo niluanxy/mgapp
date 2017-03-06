@@ -14,8 +14,9 @@ $$.$mount("#mgapp", function() {
                                 '<p v-for="x in 10">{{print}}</p>'+
                                 '<mg-button :disabled="dis" block="true" link="#user">user</mg-button>'+
                                 '<mg-button  block="true" link="#home">home</mg-button>'+
-                                '<a class="button-primary" @tap="root">root</a>'+
-                                '<a class="button-primary" @tap="log">log</a>'+
+                                '<mg-button block="true" @tap="back">back</mg-button>'+
+                                '<mg-button @tap="root">root</mg-button>'+
+                                '<mg-button @click="log">log</mg-button>'+
                                 '<mg-tabs striped="true" :select="sel">'+
                                     '<mg-tabs-item>用户</mg-tabs-item>'+
                                     '<mg-tabs-item>商品</mg-tabs-item>'+
@@ -41,6 +42,10 @@ $$.$mount("#mgapp", function() {
                                 this.sel++;
                                 if (this.sel > 2) this.sel = 0;
                                 console.log(this.sel);
+                            },
+
+                            back: function() {
+                                $$.location.back();
                             }
                         }
                     });
@@ -55,12 +60,21 @@ $$.$mount("#mgapp", function() {
                     "<mg-header><h3 class='title'>{{title}}</h3></mg-header>"+
                     "<mg-content>"+
                         "<div>user name: {{name}}</div>"+
+                        '<mg-button block="true" link="#user">user</mg-button>'+
+                        '<mg-button block="true" link="#home">home</mg-button>'+
+                        '<mg-button block="true" @tap="back">back</mg-button>'+
                     "</mg-content>"+
                 "</mg-page>",
 
                 data: {
                     name: "jack",
                     title: "用户中心"
+                },
+
+                methods: {
+                    back: function() {
+                        $$.location.back();
+                    }
                 }
             }),
         },

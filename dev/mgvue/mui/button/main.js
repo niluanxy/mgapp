@@ -5,6 +5,7 @@ import RootRouter from "MV_MODULE/router.js";
 import {uiClass, uiAddClass} from "MG_UIKIT/base/tools.js";
 
 import ConfigUI from "MV_UIKIT/base/config.js";
+import {domListener} from "MV_UIKIT/base/tools.js";
 
 var CFG = ConfigUI.button = {
     type :    ConfigUI.type,
@@ -28,6 +29,8 @@ MagicVue.component("mgButton", {
         "link": {}, "type" : {}, "size"    : {},
         "icon": {}, "block": {}, "disabled": {},
     },
+
+    mixins: domListener(),
 
     mounted: function() {
         var self = this, $el = RootMagic(self.$el);

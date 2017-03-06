@@ -3,7 +3,7 @@ import RootMagic from "MG_CORE/build.js";
 import Scroll from "MG_UIKIT/scroll/main.js";
 import {extend} from "LIB_MINJS/utils.js";
 
-import ConfigUi from "MV_UIKIT/base/config.js";
+import ConfigUI from "MV_UIKIT/base/config.js";
 import {value, getScope} from "MV_UIKIT/base/tools.js";
 
 function createScroll(scope, CFG, options) {
@@ -39,8 +39,8 @@ var CFG_BASE = {
     scrollBarX: true,
     scrollBarY: true,
 },
-CFG_SCROLL = ConfigUi.scroll = extend({}, CFG_BASE),
-CFG_CONTENT = ConfigUi.content = extend({}, CFG_BASE, {
+CFG_SCROLL = ConfigUI.scroll = extend({}, CFG_BASE),
+CFG_CONTENT = ConfigUI.content = extend({}, CFG_BASE, {
     wrapClass : "content",
     bodyClass : "content_body",
     pointClass: "content_point",

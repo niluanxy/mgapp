@@ -2,10 +2,10 @@ import MagicVue from "MV_BASE/main.js";
 import RootMagic from "MG_CORE/build.js";
 import {uiAddClass} from "MG_UIKIT/base/tools.js";
 
-import ConfigUi from "MV_UIKIT/base/config.js";
+import ConfigUI from "MV_UIKIT/base/config.js";
 
-var CFG = ConfigUi.header = {
-    type: ConfigUi.type,
+var CFG = ConfigUI.header = {
+    type: ConfigUI.type,
     class: "bar",
 };
 

@@ -47,8 +47,10 @@ export function renderView(name, params, $wrap) {
     // 保存到返回对象上，用于同步调用获取参数
     $render.$$name   = name;
     $render.$$render = $parent;
+    $render.$$params = params || {};
 
     // 保存到渲染元素上，用于异步组件获取参数
+    $wraper.$$name   = name;
     $wraper.$$params = params || {};
     $wraper.$$render = $parent;
 
@@ -126,6 +128,7 @@ viewMixins = {
         var self = this, $opt = self.$options, $el = $opt.el;
 
         // 尝试恢复 view 模式组件的渲染参数
+        self.$$name   = $el ? $el.$$name : "";
         self.$$params = $el ? $el.$$params : {};
         self.$$render = $el ? $el.$$render : null;
 

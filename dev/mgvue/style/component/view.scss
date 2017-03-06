@@ -17,6 +17,22 @@
         @extend %full_screen;
         z-index: 100;
 
+        &.slideInLeft {
+            @include animate(slideInLeft, 0.2s);
+        }
+
+        &.slideInRight {
+            @include animate(slideInRight, 0.2s);
+        }
+
+        &.slideOutLeft {
+            @include animate(slideOutLeft, 0.2s);
+        }
+
+        &.slideOutRight {
+            @include animate(slideOutRight, 0.2s);
+        }
+
         @content;   // 样式自定义扩展代码位置
     }
 }

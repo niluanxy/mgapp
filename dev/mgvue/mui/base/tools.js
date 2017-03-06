@@ -1,5 +1,8 @@
+import RootMagic from "MG_CORE/build.js";
 import {isTrueString} from "LIB_MINJS/check.js";
 import {extend, value as valueBase} from "LIB_MINJS/utils.js";
+
+import ConfigUI from "MV_UIKIT/base/config.js";
 
 export function getScope(scope, find) {
     if (scope && isTrueString(find)) {
@@ -59,4 +62,26 @@ export function value() {
     }
 
     return valueBase.apply(null, args);
+}
+
+function makeListener(events) {
+    return function() {
+        var self = this, $el = RootMagic(self.$el);
+
+        $el.on(events, function(eve) {
+            self.$emit(eve.type, eve);
+        });
+    }
+}
+
+export function domListener(events, returnCall) {
+    events = events || ConfigUI.nativeListen;
+
+    if (returnCall === true) {
+        return makeListener(events);
+    } else {
+        return [{
+            mounted: makeListener(events)
+        }]
+    }
 }

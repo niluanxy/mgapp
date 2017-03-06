@@ -1,12 +1,13 @@
 import MagicVue from "MV_BASE/main.js";
 import RootMagic from "MG_CORE/build.js";
 import Tabs from "MG_UIKIT/tabs/main.js";
-
-import ConfigUi from "MV_UIKIT/base/config.js";
 import {uiAddClass} from "MG_UIKIT/base/tools.js";
 
-var CFG = ConfigUi.tabs = {
-    type: ConfigUi.type,
+import ConfigUI from "MV_UIKIT/base/config.js";
+import {domListener} from "MV_UIKIT/base/tools.js";
+
+var CFG = ConfigUI.tabs = {
+    type: ConfigUI.type,
     class: "tabs",
 };
 
@@ -71,4 +72,6 @@ MagicVue.component("mgTabsItem", {
         '<i v-if="icon" class="icon" :class="\'icon-\'+icon"></i>'+
         '<slot></slot>'+
     '</a>',
+
+    mixins: domListener(),
 })

@@ -4,8 +4,9 @@ import {isFunction, isTrueString} from "LIB_MINJS/check.js";
 import {addProxy as addClass} from "MG_MODULE/style/class/main.js";
 
 import {viewModeBind} from "MV_MODULE/view.js";
+import ConfigUI from "MV_UIKIT/base/config.js";
 
-var CFG = MagicVue.config.loader = {};
+var CFG = ConfigUI.loader = {};
 
 CFG.template  = '<div class="bar-primary"><h3 class="title">{{title}}</h3></div>';
 CFG.template += '<div class="loading"></div>'
@@ -24,7 +25,9 @@ MagicVue.on("mgViewChange.viewLoader", function(viewGo, viewLast, routeType, rou
             info.loader(info, wrap, routeType);
         } else {
             CFG.class += isTrueString(info.loadClass) ? " "+info.loadClass : "";
-            $wrap.tpl(CFG.template, info).addClass(CFG.class);
+            $wrap.tpl(CFG.template, info)
+                .removeClass(CFG.hideClass)
+                .addClass(CFG.class);
         }
 
         viewModeBind(view.$$name, "ready", function() {
