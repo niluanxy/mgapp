@@ -49,6 +49,8 @@ MagicVue.on("mgViewChange.viewAnimate", function(viewGo, viewLast, routeType, ro
                 $goView.removeClass(CFG.slideInLeft+ " "+CFG.slideInRight);
                 $laView.removeClass(CFG.slideOutLeft+" "+CFG.slideOutRight
                     +" "+CFG.animate).addClass(CFG.hidden);
+
+                if (viewLast && viewLast.$emit) viewLast.$emit("mgViewHide");
             });
         });
     } else {

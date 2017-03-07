@@ -235,7 +235,7 @@ export function loadView(viewName, bindView) {
         }
 
         $viewLast = $CACHE_SHOW ? $CACHE_SHOW.scope : null;
-        $CACHE_SHOW = $cache;
+        $CACHE_SHOW = $cache;   // 更新页面缓存对象，用于下次访问使用
 
         MagicVue.emit("mgViewChange", $viewGo, $viewLast, routeType, routeGo, routeLast);
     }
