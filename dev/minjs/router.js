@@ -28,15 +28,14 @@ var CFG = {
 var Router = function(maps, option) {
     var self = this, opt = extend({}, CFG, option), ctrl = Emitter();
 
-    self.ctrl = ctrl;
+    self.callPatch = ctrl;
     self.option = opt;
 
-    self.route = self.ctrl.tables;          // 路由表信息
+    self.route = self.callPatch.tables;          // 路由表信息
     self.stack = [];                        // 路由栈信息
     self.backBlock = 1;                     // 记录需要back修复系统路由栈的次数
 
-    self.last  = null;                      // 当前路由信息
-    self.prev  = null;                      // 上次路由信息
+    self.lastRoute = null;                  // 当前路由信息
 
     ctrl.on("routeInit", opt.onInit, self);
     ctrl.on("routeSuccess", opt.onSuccess, self);
@@ -56,7 +55,7 @@ Prototype.init = function() {
     var opt = this.option, fire;
 
     opt.native && this.bindBrower();
-    this.ctrl.emit("routeInit");
+    this.callPatch.emit("routeInit");
 
     if (opt.repath === true) {
         fire = opt.home;
@@ -117,11 +116,15 @@ Prototype.fire = function(url) {
         cacheArr.push(extend({}, find));
     };
 
-    if ((aFind = this.ctrl.find(aUrl, false, cacheCall))) {
+    aFind = this.callPatch.find(aUrl, false, cacheCall);
+
+    if (aFind && aFind.match) {
         aFind = extend({}, aFind);
         aFind.url = aUrl;
         aFind.items = cacheArr.reverse();
         aFind.params = this.transParams(url, aFind.match);
+    } else {
+        aFind = null;
     }
 
     return aFind;
@@ -150,7 +153,7 @@ Prototype.findPath = function(maps, prefix) {
 }
 
 Prototype.addPath = function(url, addOption, context) {
-    var route = {}, ctrl = this.ctrl, save, fixUrl,
+    var route = {}, ctrl = this.callPatch, save, fixUrl,
         dels = "on onBefore onEmit onLeave _prefix".split(" ");
 
     if (isFunction(addOption)) {
@@ -207,7 +210,7 @@ Prototype.on = function(url, addOption, context) {
 
 // 移除一条路由信息，默认不移除子类
 Prototype.off = function(url) {
-    this.ctrl.remove(url);
+    this.callPatch.remove(url);
 
     return this;
 }
@@ -223,7 +226,7 @@ Prototype.off = function(url) {
  */
 Prototype.emit = function(url, routeType, routeGo, routeLast, stateType) {
     var args = [url, routeType, routeGo, routeLast],
-        OPT = this.option, CTRL = this.ctrl, STACK = this.stack,
+        OPT = this.option, CTRL = this.callPatch, STACK = this.stack,
         CALLS = "onBefore onEmit".split(" "), emitResult = false;
 
     // 尝试运行上个页面的 leave 方法
@@ -260,8 +263,7 @@ Prototype.emit = function(url, routeType, routeGo, routeLast, stateType) {
         }
 
         STACK.push(routeGo);
-        this.prev  = STACK[STACK.length-2];
-        this.last  = routeGo;
+        this.lastRoute = routeGo;
 
         args.shift(); args.unshift("routeSuccess");
         CTRL.emit.apply(CTRL, args);
@@ -276,26 +278,44 @@ Prototype.emit = function(url, routeType, routeGo, routeLast, stateType) {
     return this;
 }
 
+Prototype.routeType = function(nowRoute, single) {
+    var self = this, stack = self.stack;
+
+    if (nowRoute && nowRoute.match) {
+        for(var i=0; i<stack.length; i++) {
+            var item = stack[i];
+
+            if (single && item.url == nowRoute.url) {
+                return "back";
+            } else if (item.match == nowRoute.match) {
+                return "back";
+            }
+        }
+    }
+
+    return "go";
+}
+
 // 跳转到给定 URL 或者 路由对象
 Prototype.go = function(url, inReplace, outClear, inRefresh) {
-    var clear, refresh, single, routeGo, routeLast, routePrev,
-        STACK = this.stack, OPT = this.option, routeType, historyAction;
+    var self = this, clear, refresh, single, routeGo, routeLast,
+        STACK = self.stack, OPT = self.option, routeType, historyAction;
 
-    url = this.transUrl(url);
+    url = self.transUrl(url);
 
-    if (url && (routeGo = this.fire(url))) {
-        routePrev = this.prev || {};
-        routeLast = this.last || {};
-        routeType = routeGo.url === routePrev.url ? "back" : "go";
+    if (url && (routeGo = self.fire(url))) {
+        routeLast = self.lastRoute || {};
 
         clear   = value(inReplace, routeGo.replace, routeLast.outClear);
         single  = value(routeGo.single, OPT.single);
         refresh = value(inRefresh, routeGo.refresh);
 
+        routeType = self.routeType(routeGo, single);
+
         // 当前页面和跳转页面相同时，后续操作判断
         if (routeGo.url === routeLast.url) {
             if (refresh) clear = true;
-            else         return this;
+            else         return self;
         }
 
         // 如果开启相同参数自动 replace 加载，则自动处理
@@ -307,16 +327,16 @@ Prototype.go = function(url, inReplace, outClear, inRefresh) {
         if (clear) routeLast.outClear = true;
         routeGo.outClear = outClear;
 
-        this.emit(url, routeType, routeGo, routeLast, clear ? "replace" : "push");
+        self.emit(url, routeType, routeGo, routeLast, clear ? "replace" : "push");
     } else if (url && !routeGo) {
-        this.ctrl.emit("routeNotFound", url, routeLast);
+        self.callPatch.emit("routeNotFound", url, routeLast);
     }
 
-    return this;
+    return self;
 }
 
 Prototype.back = function(url, native) {
-    var STACK = this.stack, routeLast = this.last || {}, routeGo;
+    var STACK = this.stack, routeLast = this.lastRoute || {}, routeGo;
 
     routeGo = url ? this.fire(url) : STACK[STACK.length-2];
 
@@ -355,7 +375,7 @@ Prototype.bindBrower = function() {
 
     // 所有事件全部认为 back 动作，简化逻辑
     self.addEventListener("popstate", function(event) {
-        var block = --that.backBlock, last = that.last;
+        var block = --that.backBlock, last = that.lastRoute;
 
         if (block ==  0) {
             history.replaceState(null, last.title, "#"+last.url);

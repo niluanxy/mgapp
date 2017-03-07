@@ -44,7 +44,7 @@ MagicVue.init = function(option, repath) {
         RootRouter[bindKey] = applyCall(bindKey, $Router);
     }
 
-    MagicVue.location = RootRouter; Tables = null;
+    MagicVue.location = $Router; Tables = null;
 
     return MagicVue;
 }

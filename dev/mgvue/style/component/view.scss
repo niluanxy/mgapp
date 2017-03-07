@@ -76,6 +76,7 @@
         z-index: 100;
 
         &.hidden {
+            z-index: 1;
             @include animate(fadeOut, 0.2s);
         }
 

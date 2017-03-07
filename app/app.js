@@ -15,6 +15,7 @@ $$.$mount("#mgapp", function() {
                                 '<mg-button :disabled="dis" block="true" link="#user">user</mg-button>'+
                                 '<mg-button  block="true" link="#home">home</mg-button>'+
                                 '<mg-button block="true" @tap="back">back</mg-button>'+
+                                '<mg-button block="true" link="#shop/123">shop</mg-button>'+
                                 '<mg-button @tap="root">root</mg-button>'+
                                 '<mg-button @click="log">log</mg-button>'+
                                 '<mg-tabs striped="true" :select="sel">'+
@@ -62,6 +63,7 @@ $$.$mount("#mgapp", function() {
                         "<div>user name: {{name}}</div>"+
                         '<mg-button block="true" link="#user">user</mg-button>'+
                         '<mg-button block="true" link="#home">home</mg-button>'+
+                        '<mg-button block="true" link="#shop/123">shop</mg-button>'+
                         '<mg-button block="true" @tap="back">back</mg-button>'+
                     "</mg-content>"+
                 "</mg-page>",
@@ -78,6 +80,26 @@ $$.$mount("#mgapp", function() {
                 }
             }),
         },
+
+        "/shop/:shopid": {
+            title: "商品中心",
+            on: load("shop", {
+                template: "<mg-page>"+
+                    "<mg-header><h3 class='title'>{{title}}</h3></mg-header>"+
+                    "<mg-content>"+
+                        "<div>user name: {{name}}</div>"+
+                        '<mg-button block="true" link="#user">user</mg-button>'+
+                        '<mg-button block="true" link="#home">home</mg-button>'+
+                        '<mg-button block="true" link="#shop">shop</mg-button>'+
+                    "</mg-content>"+
+                "</mg-page>",
+
+                data: {
+                    name: "jack",
+                    title: "商品中心"
+                },
+            }),
+        }
     }).init({
         home: "home",
     }, true);
