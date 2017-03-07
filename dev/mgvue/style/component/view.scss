@@ -18,19 +18,32 @@
         z-index: 100;
 
         &.slideInLeft {
-            @include animate(slideInLeft, 0.2s);
+            @include animate(slideInLeft, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
         }
 
         &.slideInRight {
-            @include animate(slideInRight, 0.2s);
+            @include animate(slideInRight, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
         }
 
         &.slideOutLeft {
-            @include animate(slideOutLeft, 0.2s);
+            @include animate(slideOutLeft, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
         }
 
         &.slideOutRight {
-            @include animate(slideOutRight, 0.2s);
+            @include animate(slideOutRight, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
+        }
+
+        &.hidden {
+            z-index: 50;
+            display: none;
+        }
+
+        &.animate {
+            z-index: 100;
+        }
+
+        &.display {
+            z-index: 200;
         }
 
         @content;   // 样式自定义扩展代码位置

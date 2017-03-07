@@ -100,30 +100,19 @@ Prototype.trans = function() {
 }
 
 Prototype.rebind = function(bind) {
-    var TRANS_END, test = "transitionend oTransitionEnd webkitTransitionEnd".split(" ");
+    var self = this, endCall = self.config.endCall,
+        eventEnd = "transitionend.scroll_animate";
 
-    each(test, function(i, name) {
-        if (window["on"+name] !== undefined) {
-            TRANS_END = name; return false;
-        }
-    });
+    self.$el.off(eventEnd);
 
-    TRANS_END += ".SCROLL_ANIMATE";
+    if (bind === true) {
+        self.$el.on(eventEnd, function() {
+            self.stop();
+            isFunction(endCall) && endCall();
+        });
+    }
 
-    return (Prototype.rebind = function(bind) {
-        var self = this, endCall = self.config.endCall;
-
-        self.$el.off(TRANS_END);
-
-        if (bind === true) {
-            self.$el.on(TRANS_END, function() {
-                self.stop();
-                isFunction(endCall) && endCall();
-            });
-        }
-
-        return self;
-    }).call(this, bind);
+    return self;
 }
 
 export default Animate;

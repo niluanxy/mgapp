@@ -6,7 +6,7 @@ import ConfigUI from "MG_UIKIT/base/config.js";
 
 var CFG = ConfigUI.tap = {
     active: ConfigUI.active,
-    activeItem : '.touch',
+    activeItem : '.touch [class|="button"]',
     activeShow : 150,
     activeDelay: 200,
     activeClear: true,              // 移动时，是否清除激活效果

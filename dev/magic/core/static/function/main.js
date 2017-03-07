@@ -9,24 +9,24 @@ export var fast = fastBase;
 var rafCall, rafCancel;
 
 (function() {
-    var vendors = ['webkit', 'moz'];
+    var vendors = ['webkit', 'moz'], addCall, delCall;
 
-    rafCall = window.requestAnimationFrame;
-    rafCancel = window.cancelAnimationFrame || window.cancelRequestAnimationFrame;
+    addCall = window.requestAnimationFrame;
+    delCall = window.cancelAnimationFrame || window.cancelRequestAnimationFrame;
 
-    for (var i = 0; i < vendors.length && !rafCall; ++i) {
+    for (var i = 0; i < vendors.length && !addCall; ++i) {
         var prefix = vendors[i];
 
-        rafCall = window[prefix + 'RequestAnimationFrame'];
-        rafCancel = (window[prefix + 'CancelAnimationFrame'] || window[prefix + 'CancelRequestAnimationFrame']);
+        addCall = window[prefix + 'RequestAnimationFrame'];
+        delCall = (window[prefix + 'CancelAnimationFrame'] || window[prefix + 'CancelRequestAnimationFrame']);
     }
 
     if (/iP(ad|hone|od).*OS 6/.test(window.navigator.userAgent) // iOS6 is buggy
-        || !rafCall || !rafCancel) {
+        || !addCall || !delCall) {
 
         var lastTime = 0;
 
-        rafCall = function (callback) {
+        addCall = function (callback) {
             var now = time(), nextTime = Math.max(lastTime + 16.7, now);
 
             return setTimeout(function () {
@@ -34,7 +34,15 @@ var rafCall, rafCancel;
             }, nextTime - now);
         };
 
-        rafCancel = clearTimeout;
+        delCall = clearTimeout;
+    }
+
+    rafCall = function(callback) {
+        addCall.call(window, callback);
+    }
+
+    rafCancel = function(rafid) {
+        delCall.call(window, rafid);
     }
 })();
 

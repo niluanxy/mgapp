@@ -1,12 +1,25 @@
+import RootMagic from "MG_MAGIC/main.js";
 import Emitter from "LIB_MINJS/emitter.js";
 import {isFunction, isTrueString, isObject} from "LIB_MINJS/check.js";
 import {allProxy} from "MG_MAGIC/proxy.js";
 import {element, extend, slice, each} from "LIB_MINJS/utils.js";
 import {parent, below, eq} from "MG_MODULE/dom/search/main.js";
 import {dataEvent} from "MG_MAGIC/tools.js";
-import RootMagic from "MG_MAGIC/main.js";
 
-function getPrefix(eve) {
+var EventPlugin = Emitter();
+
+export function PluginBind(type, callback) {
+    EventPlugin.on(type, callback);
+}
+
+export function PluginCall(type, args) {
+    var copy = extend([], args);
+
+    EventPlugin.emit(type, copy);
+    return copy;
+}
+
+export function getPrefix(eve) {
     var find = eve.match(/[^\.]*\./);
 
     if (find) {
@@ -88,11 +101,17 @@ export function copyEvent(event, scope) {
     fix.originalEvent = event;
     fix.target = event.originalTarget || event.target;
 
+    PluginCall("event", [fix]); // 调用 event 对象处理插件
+
     return fix;
 }
 
-function addProxy(bind, eve, select, callback, extScope) {
-    var el = element(this), adds, scope, handle;
+function addProxy(/* bind, eve, select, callback, extScope */) {
+    var args = PluginCall("add", arguments),
+        el = element(this), adds, scope, handle,
+
+        bind = args[0], eve = args[1], select = args[2],
+        callback = args[3], extScope = args[4];
 
     if (el && isTrueString(eve) && isFunction(callback)) {
         adds = eve.split(" ");
@@ -163,47 +182,51 @@ export function once(eve, select, callback, extScope, setAll) {
 }
 
 function propaEmit(/* el, eveName, args... */) {
-    var args = extend([], arguments), el,
-        src  = element(args[0]), eveName = args[1], evePre;
+    var args = extend([], arguments),
+        el, creEvent, evePre, runArgs,
+        src = element(args[0]), eveName = args[1];
 
     el = src;
     args = slice(args, 1);
     evePre = getPrefix(eveName);
 
-    while(el) {
-        var creEvent, eveCtrl, runArgs;
+    if (evePre === eveName) {
+        creEvent = new Event(evePre, {
+            bubbles: true, cancelable: true,
+        });
 
+        creEvent.originalArgs = args;
+        creEvent.originalTarget = src;
+
+        el.dispatchEvent(creEvent);
+    } else {
         runArgs = extend([], args);
         creEvent = new Event(evePre, {
             bubbles: false, cancelable: true,
         });
 
-        if (evePre === eveName) {
-            creEvent.originalArgs = runArgs;
-            creEvent.originalTarget = src;
-
-            el.dispatchEvent(creEvent);
-        } else {
-            eveCtrl = dataEvent(el, evePre);
+        while(el) {
+            var eveCtrl = dataEvent(el, evePre);
 
             if (eveCtrl && eveCtrl.emit) {
                 runArgs.splice(1, 0, creEvent);
+
                 eveCtrl.emit.apply(eveCtrl, runArgs);
             }
-        }
 
-        // 尝试手动进行事件冒泡，为 false 不冒泡
-        if (creEvent.magicPropagation !== false) {
-            el = el.parentNode;
-        } else {
-            return;
-        }
-    };
+            // 尝试手动进行事件冒泡，为 false 不冒泡
+            if (creEvent.magicPropagation !== false) {
+                el = el.parentNode;
+            } else {
+                return;
+            }
+        };
+    }
 }
 
 function emitProxy(/* eve, args... */) {
-    var el = element(this), runs, scope,
-        args = extend([], arguments);
+    var args = PluginCall("emit", arguments),
+        el = element(this), runs, scope;
 
     if (el && isTrueString(args[0])) {
         runs = args[0].split(" ");
@@ -228,8 +251,9 @@ export function emit(/* eve, args... */) {
     return allProxy.apply(this, args);
 }
 
-function offProxy(eve) {
-    var el = element(this), dels;
+function offProxy(/* eve */) {
+    var args = PluginCall("off", arguments),
+        el = element(this), eve = args[0], dels;
 
     if (el && isTrueString(eve)) {
         dels = eve.split(" ");

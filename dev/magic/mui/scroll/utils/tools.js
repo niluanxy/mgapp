@@ -1,4 +1,4 @@
-import RootMagic from "MG_MAGIC/main.js";
+import Support from "MG_CORE/support/main.js";
 import {element} from "LIB_MINJS/utils.js";
 
 function trans(el, type, val) {
@@ -16,7 +16,7 @@ function trans(el, type, val) {
 }
 
 export function transform(el, val) {
-    var PREFIX = RootMagic.stylePrefix, KEY_TRANSFROM;
+    var PREFIX = Support.stylePrefix, KEY_TRANSFROM;
 
     KEY_TRANSFROM = PREFIX ? PREFIX+"Transform" : "transform";
 
@@ -24,7 +24,7 @@ export function transform(el, val) {
 }
 
 export function transition(el, val) {
-    var PREFIX = RootMagic.stylePrefix, KEY_TRANSITION;
+    var PREFIX = Support.stylePrefix, KEY_TRANSITION;
 
     KEY_TRANSITION = PREFIX ? PREFIX+"Transition" : "transition";
 

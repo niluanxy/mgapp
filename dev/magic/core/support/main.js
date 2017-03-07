@@ -1,39 +1,50 @@
 import {each} from "LIB_MINJS/utils.js";
 import RootMagic from "MG_MAGIC/main.js";
 
+var Support = {};
+
 RootMagic(function() {
-RootMagic.extend({
+    /* link: https://github.com/x-tag/x-tag */
+    Support.vender = (function() {
+        var styles = window.getComputedStyle(document.documentElement, ''),
+            vender = (Array.prototype.slice
+                .call(styles)
+                .join('')
+                .match(/-(moz|webkit|ms)-/) || (styles.OLink === '' && ['', 'o'])
+            )[1];
 
-supportPassive: (function() {
-    var canPassive = false;
+        return vender;
+    })();
 
-    try {
-        var opts = Object.defineProperty({}, 'passive', {
-            get: function() {
-                canPassive = true;
+    Support.stylePrefix = (function() {
+        var vender = ["", "-webkit-", "-moz-", "-ms-", "-o-"],
+            prefix, test = "transform";
+
+        each(vender, function(i, pre) {
+            if ((pre+test) in document.body.style) {
+                prefix = pre; return false;
             }
         });
-        window.addEventListener("testPassive", null, opts);
-    } catch (e) {};
 
-    return canPassive;
-})(),
+        return prefix;
+    })();
 
-stylePrefix: (function() {
-    var vender = ["", "-webkit-", "-moz-", "-ms-"],
-        prefix, test = "transform";
+    Support.supportPassive = (function() {
+        var canPassive = false;
 
-    each(vender, function(i, pre) {
-        if ((pre+test) in document.body.style) {
-            prefix = pre; return false;
-        }
-    });
+        try {
+            var opts = Object.defineProperty({}, 'passive', {
+                get: function() {
+                    canPassive = true;
+                }
+            });
+            window.addEventListener("testPassive", null, opts);
+        } catch (e) {};
 
-    return prefix;
-})(),
+        return canPassive;
+    })();
 
-
-
+    RootMagic.extend(Support);
 });
-});
-    
+
+export default Support;
