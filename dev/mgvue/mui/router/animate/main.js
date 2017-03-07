@@ -17,9 +17,10 @@ var CFG = ConfigUI.view = {
 };
 
 MagicVue.on("mgViewChange.viewAnimate", function(viewGo, viewLast, routeType, routeGo, routeLast) {
-    if (viewGo && viewGo.$$render && viewLast && viewLast.$$render) {
-        var $goView = RootMagic(viewGo.$$render),
-            $laView = RootMagic(viewLast.$$render);
+    var $goView = RootMagic(viewGo.$$render), $laView;
+
+    if (viewLast && viewLast.$$render) {
+        $laView = RootMagic(viewLast.$$render);
 
         raf(function() {
             $goView.removeClass(CFG.hidden+" "+CFG.animate);
@@ -50,5 +51,7 @@ MagicVue.on("mgViewChange.viewAnimate", function(viewGo, viewLast, routeType, ro
                     +" "+CFG.animate).addClass(CFG.hidden);
             });
         });
+    } else {
+        $goView.addClass(CFG.display);
     }
 });
