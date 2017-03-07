@@ -76,8 +76,7 @@
         z-index: 100;
 
         &.hidden {
-            z-index: 1;
-            @include animate(fadeOut, 0.2s);
+            @include animate(fadeOut, 0.16s);
         }
 
         @content;   // 样式自定义扩展代码位置

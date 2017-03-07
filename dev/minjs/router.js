@@ -31,7 +31,7 @@ var Router = function(maps, option) {
     self.callPatch = ctrl;
     self.option = opt;
 
-    self.route = self.callPatch.tables;          // 路由表信息
+    self.route = self.callPatch.tables;     // 路由表信息
     self.stack = [];                        // 路由栈信息
     self.backBlock = 1;                     // 记录需要back修复系统路由栈的次数
 

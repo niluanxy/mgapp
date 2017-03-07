@@ -1,4 +1,4 @@
-@mixin animate($name, $time: 1s, $ease: linear, $mode: both) {
+@mixin animate($name, $time: 1s, $ease: linear, $mode: forwards) {
     animation-name: $name;
     animation-duration: $time;
     animation-fill-mode: $mode;

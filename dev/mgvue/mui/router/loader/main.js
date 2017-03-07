@@ -33,5 +33,9 @@ MagicVue.on("mgViewChange.viewLoader", function(viewGo, viewLast, routeType, rou
         viewModeBind(view.$$name, "ready", function() {
             $wrap.addClass(CFG.hideClass);
         });
+
+        $wrap.on("animationend", function() {
+            $wrap.hide();
+        });
     }
 });
