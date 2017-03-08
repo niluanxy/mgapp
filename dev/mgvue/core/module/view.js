@@ -1,6 +1,7 @@
 import MagicVue from "MV_BASE/main.js";
 import {extend} from "LIB_MINJS/utils.js";
 import {removeProxy} from "MG_MODULE/dom/editer/main.js";
+import {getValue} from "MV_UIKIT/base/tools.js";
 import {raf} from "MG_STATIC/function/main.js";
 import {isFunction, isObject, isTrueString, isElement, isArray} from "LIB_MINJS/check.js";
 
@@ -65,11 +66,11 @@ function viewFactory(view) {
 
     if (!isFunction(oldData)) {
         view.data = function() {
-            return extend(true, {
-                $params: {}
-            }, oldData);
+            return extend(true, {}, oldData);
         }
     }
+
+    view.props = ["params"];
 
     if (isArray(view.mixins)) {
         view.mixins.push(viewMixins);
@@ -128,11 +129,23 @@ viewMixins = {
         var self = this, $opt = self.$options, $el = $opt.el;
 
         // 尝试恢复 view 模式组件的渲染参数
-        self.$$name   = $el ? $el.$$name : "";
-        self.$$params = $el ? $el.$$params : {};
+        self.$$name   = $el ? $el.$$name : $opt.name || $opt._componentTag || "";
         self.$$render = $el ? $el.$$render : null;
 
-        self.$params = self.$$params || {};
+        if (self.params !== undefined) {
+            var params = self.params, value;
+
+            if (isTrueString(params)) {
+                value = getValue(self.$parent, params) || {};
+            } else {
+                value = params || {};
+            }
+
+            self.$$params = extend(true, {}, value);
+        } else {
+            self.$$params = $el ? $el.$$params : {};
+        }
+
         self.$emit("mgViewCreated");
 
         // 尝试调用 view 模式页面回调事件

@@ -11,13 +11,13 @@ $$.$mount("#mgapp", function() {
                             '<mg-header><h3 class="title">{{title}}</h3></mg-header>'+
                             '<mg-content>'+
                                 '<input type="text" v-model="print"></br>'+
-                                '<p v-for="x in 10">{{print}}</p>'+
+                                '<mg-button @tap="root">root</mg-button>'+
+                                '<mg-button @click="log">log</mg-button>'+
+                                '<p v-for="x in 10">{{print}} {{$$params.age}}</p>'+
                                 '<mg-button :disabled="dis" block="true" link="#user">user</mg-button>'+
                                 '<mg-button block="true" link="#home">home</mg-button>'+
                                 '<mg-button block="true" @tap="back">back</mg-button>'+
                                 '<mg-button block="true" link="#shop/123">shop</mg-button>'+
-                                '<mg-button @tap="root">root</mg-button>'+
-                                '<mg-button @click="log">log</mg-button>'+
                                 '<mg-tabs striped="true" :select="sel">'+
                                     '<mg-tabs-item>用户</mg-tabs-item>'+
                                     '<mg-tabs-item>商品</mg-tabs-item>'+
@@ -42,7 +42,8 @@ $$.$mount("#mgapp", function() {
                             log: function() {
                                 this.sel++;
                                 if (this.sel > 2) this.sel = 0;
-                                console.log(this.sel);
+                                console.log(this.$$params);
+                                console.log(this.params)
                             },
 
                             back: function() {
@@ -65,12 +66,14 @@ $$.$mount("#mgapp", function() {
                         '<mg-button block="true" link="#home">home</mg-button>'+
                         '<mg-button block="true" link="#shop/123">shop</mg-button>'+
                         '<mg-button block="true" @tap="back">back</mg-button>'+
+                        '<ma-home params="test"></ma-home>'+
                     "</mg-content>"+
                 "</mg-page>",
 
                 data: {
                     name: "jack",
-                    title: "用户中心"
+                    title: "用户中心",
+                    test: {age: 123, name: "params"},
                 },
 
                 methods: {
