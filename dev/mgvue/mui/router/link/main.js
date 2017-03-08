@@ -4,13 +4,13 @@ import "MG_UIKIT/gesture/tap/main.js";
 import RootRouter from "MV_MODULE/router.js";
 
 function findLink(target) {
-    var find = target, tag;
+    var find = target, tag, link;
 
     while(find) {
         tag = find.tagName;
 
-        if (tag === "A" && find.getAttribute("link")) {
-            return find;
+        if (tag === "A" && (link = find.getAttribute("link"))) {
+            return {el: find, link: link};
         }
 
         find = find.parentNode;
@@ -21,10 +21,12 @@ function findLink(target) {
 
 Ready(function() {
     RootMagic(document).on("tap", function(e) {
-        var $link = findLink(e.target), link;
+        var $link = findLink(e.target);
 
-        if ($link && (link = $link.getAttribute("link"))) {
-            RootRouter.go(link);
+        if ($link && $link.link) {
+            setTimeout(function() {
+                RootRouter.go($link.link);
+            }, 17);
         }
     });
 });
