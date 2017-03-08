@@ -2,11 +2,12 @@ import RootMagic from "MG_MAGIC/main.js";
 import Emitter from "LIB_MINJS/emitter.js";
 import {isFunction, isTrueString, isObject} from "LIB_MINJS/check.js";
 import {allProxy} from "MG_MAGIC/proxy.js";
+import {uuid} from "MG_STATIC/utils/main.js";
 import {element, extend, slice, each} from "LIB_MINJS/utils.js";
 import {parent, below, eq} from "MG_MODULE/dom/search/main.js";
 import {dataEvent} from "MG_MAGIC/tools.js";
 
-var EventPlugin = Emitter();
+var EventPlugin = Emitter(), EventBus = Emitter();
 
 export function PluginBind(type, callback) {
     EventPlugin.on(type, callback);
@@ -41,6 +42,10 @@ function checkIn(event, el, select) {
     }
 
     return false;
+}
+
+function uuidEvent(uuid, eveName) {
+    return uuid+"_"+eveName;
 }
 
 var copyNames = ("altKey bubbles cancelable cancelable changedTouches composed "+
@@ -106,40 +111,43 @@ export function copyEvent(event, scope) {
     return fix;
 }
 
-function addProxy(/* bind, eve, select, callback, extScope */) {
+function addProxy(/* bind, eve, select, callback, capture, extScope */) {
     var args = PluginCall("add", arguments),
         el = element(this), adds, scope, handle,
 
         bind = args[0], eve = args[1], select = args[2],
-        callback = args[3], extScope = args[4];
+        callback = args[3], capture = args[4], extScope = args[5];
+
+    capture = isObject(capture) ? capture : !!capture;
 
     if (el && isTrueString(eve) && isFunction(callback)) {
-        adds = eve.split(" ");
-        scope = extScope || el;
+        adds = eve.split(" "); scope = extScope || el;
 
         each(adds, function(index, eveName) {
             var evePre  = getPrefix(eveName),
-                eveCtrl = dataEvent(el, evePre);
+                eveUUID = dataEvent(el, evePre);
 
-            if (!eveCtrl || !eveCtrl.on) {
-                eveCtrl = Emitter();
-                dataEvent(el, evePre, eveCtrl);
+            if (!eveUUID) {
+                eveUUID = uuid(); dataEvent(el, evePre, eveUUID);
 
                 // 绑定到原生事件，从而保证事件执行顺序
                 el.addEventListener(evePre, function(event) {
-                    var args = event.originalArgs, eveName;
+                    var args = event.originalArgs || [];
 
-                    if (!args || !args.length) {
-                        args = [event.type];
+                    args[0] = uuidEvent(eveUUID, eveName);
+
+                    if (!(args[1] instanceof Event)) {
+                        args.splice(1, 0, event);
                     }
 
-                    args.splice(1, 0, event);
-                    eveCtrl.emit.apply(eveCtrl, args);
-                });
+                    EventBus.emit.apply(EventBus, args);
+                }, capture);
             }
 
             (function(Selecter, El) {
-                eveCtrl[bind](eveName, function(event) {
+                var bindName = uuidEvent(eveUUID, eveName);
+
+                EventBus[bind](bindName, function(event) {
                     if (checkIn(event, El, Selecter)) {
                         var args = extend([], arguments);
 
@@ -162,9 +170,14 @@ function addFixArgs(proxy, bind, args) {
         copy.splice(1, 0, null);
     }
 
+    // 修复 绑定事件参数 参数
+    if (copy[3] === undefined) {
+        copy.splice(3, 0, false);
+    }
+
     // 修复 extScope 参数
     if (!isObject(copy[3])) {
-        copy.splice(3, 0, null);
+        copy.splice(4, 0, null);
     }
 
     copy.unshift(bind);
@@ -181,14 +194,12 @@ export function once(eve, select, callback, extScope, setAll) {
     return allProxy.apply(this, addFixArgs(addProxy, "once", arguments));
 }
 
-function propaEmit(/* el, eveName, args... */) {
+function propaEmit(/* eveName, args... */) {
     var args = extend([], arguments),
-        el, creEvent, evePre, runArgs,
-        src = element(args[0]), eveName = args[1];
+        el, creEvent, evePre,
+        src = element(this), eveName = args[0];
 
-    el = src;
-    args = slice(args, 1);
-    evePre = getPrefix(eveName);
+    el = src; evePre = getPrefix(eveName);
 
     if (evePre === eveName) {
         creEvent = new Event(evePre, {
@@ -200,18 +211,21 @@ function propaEmit(/* el, eveName, args... */) {
 
         el.dispatchEvent(creEvent);
     } else {
-        runArgs = extend([], args);
-        creEvent = new Event(evePre, {
+        creEvent = new Event(eveName, {
             bubbles: false, cancelable: true,
         });
 
+        creEvent.originalArgs = args;
+        creEvent.originalTarget = src;
+
+        args.splice(1, 0, creEvent);
+
         while(el) {
-            var eveCtrl = dataEvent(el, evePre);
+            var eveUUID = dataEvent(el, evePre);
 
-            if (eveCtrl && eveCtrl.emit) {
-                runArgs.splice(1, 0, creEvent);
-
-                eveCtrl.emit.apply(eveCtrl, runArgs);
+            if (eveUUID) {
+                args.splice(0, 1, uuidEvent(eveUUID, eveName));
+                EventBus.emit.apply(EventBus, args);
             }
 
             // 尝试手动进行事件冒泡，为 false 不冒泡
@@ -226,19 +240,14 @@ function propaEmit(/* el, eveName, args... */) {
 
 function emitProxy(/* eve, args... */) {
     var args = PluginCall("emit", arguments),
-        el = element(this), runs, scope;
+        el = element(this), runs;
 
     if (el && isTrueString(args[0])) {
         runs = args[0].split(" ");
-        scope = RootMagic(el);
 
         each(runs, function(index, eveName) {
-            var runArgs = args.slice(1);
-
-            runArgs.unshift(eveName);
-            runArgs.unshift(el);
-
-            propaEmit.apply(null, runArgs);
+            args.splice(0, 1, eveName);
+            propaEmit.apply(el, args);
         });
     }
 
@@ -260,11 +269,9 @@ function offProxy(/* eve */) {
 
         each(dels, function(index, eveName) {
             var evePre  = getPrefix(eveName),
-                eveCtrl = dataEvent(el, evePre);
+                eveUUID = dataEvent(el, evePre);
 
-            if (eveCtrl && eveCtrl.off) {
-                eveCtrl.off(eveName);
-            }
+            if (eveUUID) EventBus.off(uuidEvent(eveUUID, eveName));
         });
     }
 
