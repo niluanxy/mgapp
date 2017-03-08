@@ -15,7 +15,7 @@ var CFG = ConfigUI.gesture = {
     moveDebounce: false,
 },
     Prototype = {}, ABS = Math.abs,
-    touchFind = "changedTouches touches".split(" "), ABS = Math.abs,
+    touchFind = "changedTouches touches".split(" "),
     touchKeys = "pageX pageY clientX clientY screenX screenY".split(" ");
 
 function getTouch(e) {
