@@ -1,10 +1,8 @@
 import RootMagic from "MG_MAGIC/main.js";
 import {time as getTime} from "MG_STATIC/utils/main.js";
 import Support from "MG_CORE/support/main.js";
-import {extend, each, element, trim} from "LIB_MINJS/utils.js";
-import fastCall from "LIB_MINJS/fastcall.js";
+import {extend, each} from "LIB_MINJS/utils.js";
 import Emitter from "LIB_MINJS/emitter.js";
-import {copyEvent} from "MG_MODULE/event/core/main.js";
 import ConfigUI from "MG_UIKIT/base/config.js";
 
 var CFG = ConfigUI.gesture = {
@@ -195,7 +193,7 @@ Prototype._move = function(e, touches) {
         e.preventDefault();
     }
 
-    if (!opt.moveDebounce || new Date().getTime() - self.lastTime >= opt.moveDebounce) {
+    if (!opt.moveDebounce || (getTime() - self.lastTime >= opt.moveDebounce)) {
         touchSum(self, e, touches)
             .emit("move", e, touches[0], touches);
     }
