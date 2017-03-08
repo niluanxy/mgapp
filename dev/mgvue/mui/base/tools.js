@@ -33,18 +33,13 @@ export function getValue(scope, find) {
 }
 
 export function getVmScope(scope) {
-    var $options;
+    while(scope.$parent) {
+        scope = scope.$parent;
 
-    if (scope && scope.$parent) {
-        do {
-            scope = scope.$parent;
+        var $opt = scope.$options,
+            name = scope.$$name || $opt.name || $opt._componentTag || "";
 
-            if (scope && ($opts = scope.$options)) {
-                var name = $opts.name || $opts._componentTag || "";
-
-                if (name.match(/^ma-/)) return scope;
-            }
-        } while(scope);
+        if (name.match(/^ma-/)) return scope;
     }
 
     return;
