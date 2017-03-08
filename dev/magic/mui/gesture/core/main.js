@@ -1,5 +1,6 @@
 import RootMagic from "MG_MAGIC/main.js";
 import {time as getTime} from "MG_STATIC/utils/main.js";
+import Support from "MG_CORE/support/main.js";
 import {extend, each, element, trim} from "LIB_MINJS/utils.js";
 import fastCall from "LIB_MINJS/fastcall.js";
 import Emitter from "LIB_MINJS/emitter.js";
@@ -7,15 +8,17 @@ import {copyEvent} from "MG_MODULE/event/core/main.js";
 import ConfigUI from "MG_UIKIT/base/config.js";
 
 var CFG = ConfigUI.gesture = {
+    capture : true,
     passive : true,
-    preventMove : true,
-    debounceTime: 20,
+
+    movePrevent : true,
+    moveDebounce: false,
 },
-    Prototype = {}, touchFilter, getTouch, touchSum,
+    Prototype = {}, ABS = Math.abs,
     touchFind = "changedTouches touches".split(" "), ABS = Math.abs,
     touchKeys = "pageX pageY clientX clientY screenX screenY".split(" ");
 
-getTouch = function(e) {
+function getTouch(e) {
     var result = [], cache,
         fidLen = touchFind.length,
         keyLen = touchKeys.length;
@@ -42,47 +45,8 @@ getTouch = function(e) {
     return result;
 };
 
-touchFilter = function(callback, scope) {
-    var lastTouches = [], lastType = "", lastEvent, lastCount = 0;
 
-    return function(event) {
-        var touches = getTouch(event), type = event.type,
-            sameLast = true, context = scope || this;
-
-        if (touches.length != lastTouches.length) {
-            sameLast = false;
-        } else {
-            each(touches, function(i, touch) {
-                var lastTouch = lastTouches[i];
-
-                if (touch.pageX !== lastTouch.pageY ||
-                    touch.pageY !== lastTouch.pageY) {
-                    sameLast = false; return false;
-                }
-            });
-        }
-
-        if ((!sameLast && lastEvent) || (lastType != type && type.match(/^touch/))) {
-            callback.call(context, event, touches);
-            lastEvent = null; lastCount++;
-        } else {
-            lastType = type;
-            lastEvent = event;
-            lastTouches = touches;
-
-            (function(checkCount, runContext) {
-                fastCall(function() {
-                    if (checkCount == lastCount && lastEvent) {
-                        callback.call(runContext, lastEvent, lastTouches);
-                        lastEvent = null;
-                    }
-                });
-            })(lastCount, context);
-        }
-    }
-};
-
-touchSum = function(self, e, touches) {
+function touchSum(self, e, touches) {
     var pixRatio = window.devicePixelRatio || 1;
 
     pixRatio = Math.max(pixRatio, document.documentElement.clientWidth/screen.width || 1);
@@ -182,7 +146,7 @@ touchSum = function(self, e, touches) {
 function Gesture(el, option) {
     var self = this, emitter = Emitter(), opt;
 
-    self.el = element(el) || document;
+    self.$el = RootMagic(el || document);
     self.option = opt = extend({}, CFG, option);
     self.emitter= emitter;
 
@@ -192,43 +156,6 @@ function Gesture(el, option) {
     self.endTouch  = [{}];
     self.lastTime  = 0;
     self.lastTouch = [{}];
-
-    self._start = touchFilter(function(e, touches) {
-        self.startTime = self.lastTime = getTime();
-        self.startTouch= self.lastTouch= touches;
-
-        self.lastType = "start";
-
-        // 初始化 event 对象起始值
-        e.deltaX = 0;
-        e.deltaY = 0;
-        e.deltaTime = 0;
-
-        e.direction = 1;
-
-        e.velocity  = 0;
-        e.velocityX = 0;
-        e.velocityY = 0;
-
-        self.bind("move").emit("start", e, touches[0], touches);
-    }, self);
-
-    self._move = touchFilter(function(e, touches) {
-        if (e.cancelable && opt.preventMove) {
-            e.preventDefault();
-        }
-
-        touchSum(self, e, touches)
-            .emit("move", e, touches[0], touches);
-    }, self);
-
-    self._end = touchFilter(function(e, touches) {
-        self.endTime = getTime();
-        self.endTouch = touches;
-
-        touchSum(self, e, touches)
-            .unbind("move").emit("end", e, touches[0], touches);
-    }, self);
 }; Gesture.prototype = Prototype;
 
 extend(Prototype, {
@@ -239,37 +166,82 @@ extend(Prototype, {
     MOVE_DOWN : 16,
 });
 
-Prototype.init = function() {
-    var bindMaps, eveBind, eveUnbind, eveStart, eveMove, eveEnd, DOC = document,
+Prototype._start = function(e, touches) {
+    var self = this, opt = self.option;
 
-        bind = "addEventListener", unbind = "removeEventListener",
-        bindStart = "MSPointerDown pointerdown ",
-        bindMove  = "MSPointerMove pointermove ",
-        bindEnd   = "MSPointerUp pointerup ", bindArrs, supportPassive = RootMagic.supportPassive,
-        touchStart = "touchstart", touchMove = "touchmove", touchEnd = "touchend touchcancel",
-        mouseStart = "mousedown", mouseMove = "mousemove", mouseEnd = "mouseup";
+    self.startTime = self.lastTime = getTime();
+    self.startTouch= self.lastTouch= touches;
 
-    if (window.ontouchstart !== undefined) {
-        eveStart = bindStart + touchStart;
-        eveMove  = bindMove + touchMove;
-        eveEnd   = bindEnd + touchEnd;
-    } else {
-        eveStart = bindStart + mouseStart;
-        eveMove  = bindMove + mouseMove;
-        eveEnd   = bindEnd + mouseEnd;
+    self.lastType = "start";
+
+    // 初始化 event 对象起始值
+    e.deltaX = 0;
+    e.deltaY = 0;
+    e.deltaTime = 0;
+
+    e.direction = 1;
+
+    e.velocity  = 0;
+    e.velocityX = 0;
+    e.velocityY = 0;
+
+    self.bind("move").emit("start", e, touches[0], touches);
+}
+
+Prototype._move = function(e, touches) {
+    var self = this, opt = self.option;
+
+    if (e.cancelable && opt.movePrevent) {
+        e.preventDefault();
     }
 
-    bindMaps = {
-        start: eveStart.split(" "),
-        move : eveMove.split(" "),
-        end  : eveEnd.split(" "),
-    };
+    if (!opt.moveDebounce || new Date().getTime() - self.lastTime >= opt.moveDebounce) {
+        touchSum(self, e, touches)
+            .emit("move", e, touches[0], touches);
+    }
+}
 
-    eveBind = DOC[bind] ? bind : "attachEvent",
-    eveUnbind = DOC[unbind] ? unbind : "detachEvent";
+Prototype._end = function(e, touches) {
+    var self = this, opt = self.option;
+
+    self.endTime = getTime();
+    self.endTouch = touches;
+
+    touchSum(self, e, touches).unbind("move")
+        .emit("end", e, touches[0], touches);
+}
+
+Prototype.init = function() {
+    var binds = [
+        {start: "touchstart",    move: "touchmove",     end: "touchend touchcancel"},
+        {start: "pointerdown",   move: "pointermove",   end: "pointerup"},
+        {start: "MSPointerDown", move: "MSPointerMove", end: "MSPointerUp"},
+        {start: "mousedown",     move: "mousemove",     end: "mouseup"}
+    ], bindEve, supportPassive = Support.supportPassive, WIN = window;
+
+    for(var i=0; i<binds.length; i++) {
+        var item = binds[i], key = "on"+item.start;
+
+        if (WIN[key] !== undefined) {
+            bindEve = item; break;
+        }
+    }
+
+    each(bindEve, function(key, val) {
+        if (val.match(/\s/)) {
+            var arrs = val.split(" ");
+
+            arrs[0] = arrs[0]+".gesture";
+            arrs[1] = arrs[1]+".gesture";
+
+            bindEve[key] = arrs.join(" ");
+        } else {
+            bindEve[key] = val+".gesture";
+        }
+    });
 
     Prototype.init = function() {
-        var self = this, bindDom = self.el;
+        var self = this;
 
         self.bind("start").bind("end");
 
@@ -277,29 +249,25 @@ Prototype.init = function() {
     };
 
     Prototype.bind = function(type) {
-        var self = this, bindDom = self.el, opt = self.option,
-            eveNames = bindMaps[type], listener = self["_"+type], eveOption;
+        var self = this, $el = self.$el, opt = self.option,
+            eveName = bindEve[type], eveOption, call = "_"+type;
 
         eveOption = supportPassive ? {
-            capture: true,
-            passive: type=="move" && !opt.preventMove && opt.passive,
-        } : true;
+            capture: CFG.capture,
+            passive: type=="move" && !opt.movePrevent && opt.passive,
+        } : CFG.capture;
 
-        self.unbind(type);
-        each(eveNames, function(i, name) {
-            bindDom[eveBind](name, listener, eveOption);
-        });
+        $el.off(eveName).on(eveName, function(e) {
+            self[call].call(self, e, getTouch(e));
+        }, eveOption);
 
         return self;
     }
 
     Prototype.unbind = function(type) {
-        var self = this, bindDom = self.el,
-            eveNames = bindMaps[type], listener = self["_"+type];
+        var self = this, $el = self.$el;
 
-        each(eveNames, function(i, name) {
-            bindDom[eveUnbind](name, listener, true);
-        });
+        $el.off(bindEve[type], CFG.capture);
 
         return self;
     }

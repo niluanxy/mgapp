@@ -29,7 +29,7 @@ var CFG = ConfigUI.scroll = {
     boundryAcceleration: 0.382,  // 1 - 0.618
 
     velocityMin: 0.15,
-    preventMove: true,
+    movePrevent: true,
 
     lockX: true,
     lockY: false,
@@ -73,7 +73,8 @@ export default function Scroll(el, option) {
     self.animate = null;
     self.emitter = Emitter();
     self.gesture = Gesture(self.$el, {
-        preventMove: self.option.preventMove
+        movePrevent : self.option.movePrevent,
+        moveDebounce: false,
     });
 }; Scroll.prototype = Prototype;
 

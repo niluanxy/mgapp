@@ -13,7 +13,7 @@ $$.$mount("#mgapp", function() {
                                 '<input type="text" v-model="print"></br>'+
                                 '<p v-for="x in 10">{{print}}</p>'+
                                 '<mg-button :disabled="dis" block="true" link="#user">user</mg-button>'+
-                                '<mg-button  block="true" link="#home">home</mg-button>'+
+                                '<mg-button block="true" link="#home">home</mg-button>'+
                                 '<mg-button block="true" @tap="back">back</mg-button>'+
                                 '<mg-button block="true" link="#shop/123">shop</mg-button>'+
                                 '<mg-button @tap="root">root</mg-button>'+
