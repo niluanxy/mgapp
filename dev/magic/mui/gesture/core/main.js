@@ -7,12 +7,12 @@ import ConfigUI from "MG_UIKIT/base/config.js";
 
 var CFG = ConfigUI.gesture = {
     capture : true,
-    passive : true,
+    passive : false,
 
     movePrevent : true,
     moveDebounce: false,
 },
-    Prototype = {}, ABS = Math.abs,
+    Prototype = {}, ABS = Math.abs, MOVE_FLAG,
     touchFind = "changedTouches touches".split(" "),
     touchKeys = "pageX pageY clientX clientY screenX screenY".split(" ");
 
@@ -156,13 +156,13 @@ function Gesture(el, option) {
     self.lastTouch = [{}];
 }; Gesture.prototype = Prototype;
 
-extend(Prototype, {
+MOVE_FLAG = {
     MOVE_NONE :  1,
     MOVE_LEFT :  2,
     MOVE_RIGHT:  4,
     MOVE_UP   :  8,
     MOVE_DOWN : 16,
-});
+}; extend(Prototype, MOVE_FLAG);
 
 Prototype._start = function(e, touches) {
     var self = this, opt = self.option;
@@ -303,9 +303,11 @@ function Creater(el, option) {
 };
 
 // 创建一个默认的单例对象，用于默认实例
-var single = new Gesture(), proxy = "on off init filter".split(" ");
+var single = new Gesture(),
+    proxy = "on off init filter".split(" ");
 
 Creater.option = single.option;
+extend(Creater, MOVE_FLAG);
 for(var i=0; i<proxy.length; i++) {
     var key = proxy[i];
 
