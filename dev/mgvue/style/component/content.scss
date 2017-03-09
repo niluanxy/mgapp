@@ -41,8 +41,13 @@
             display: block;
             width: 100%;
             top: 0; left: 0;
-            touch-action: none;
             transform-origin: 0px 0px 0px;
+        }
+
+        &.native {
+            height: auto;
+            overflow-x: hidden;
+            overflow-y: scroll;
         }
 
         &_point_x, &_point_y {

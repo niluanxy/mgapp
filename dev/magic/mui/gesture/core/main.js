@@ -304,6 +304,8 @@ function Creater(el, option) {
 
 // 创建一个默认的单例对象，用于默认实例
 var single = new Gesture(), proxy = "on off init filter".split(" ");
+
+Creater.option = single.option;
 for(var i=0; i<proxy.length; i++) {
     var key = proxy[i];
 
