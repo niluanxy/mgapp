@@ -1,3 +1,4 @@
+import MagicVue from "MV_BASE/main.js";
 import RootMagic from "MG_CORE/build.js";
 import Ready from "LIB_MINJS/ready.js";
 import "MG_UIKIT/gesture/tap/main.js";
@@ -19,7 +20,7 @@ function findLink(target) {
     return null;
 }
 
-Ready(function() {
+MagicVue.$bind(function() {
     RootMagic(document).on("tap", function(e) {
         var $link = findLink(e.target);
 

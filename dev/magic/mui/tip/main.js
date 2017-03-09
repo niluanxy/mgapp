@@ -28,7 +28,7 @@ var CFG = ConfigUI.tip = {
  *     onHide : [function] 消息隐藏后的回调方法
  * }
  */
-export default function Tips(text, option) {
+export default function Tip(text, option) {
     this.$el    = null;
     this.$back  = null;
     this.$ctrl  = null;
@@ -36,7 +36,7 @@ export default function Tips(text, option) {
     this.text   = text || "";
     this.delay  = null;
     this.option = uiExtend(CFG, option);
-} Tips.prototype = Prototype;
+} Tip.prototype = Prototype;
 
 
 Prototype.make = function(text, icon) {
@@ -50,17 +50,17 @@ Prototype.make = function(text, icon) {
 }
 
 Prototype.init = function() {
-    var opt = this.option, $ctrl, $dom, $back;
+    var self = this, opt = this.option, $ctrl, $dom, $back;
 
-    $dom  = this.make(this.text, opt.icon);
+    $dom  = self.make(self.text, opt.icon);
     $back = RootMagic('<div class="'+opt.backClass+'"></div>');
     $ctrl = new Popup($dom, {insertTo: opt.insertTo}).init();
 
     $ctrl.$el.append($dom).append($back);
 
-    this.$el   = $dom;
-    this.$back = $back;
-    this.$ctrl = $ctrl;
+    self.$el   = $dom;
+    self.$back = $back;
+    self.$ctrl = $ctrl;
 
     return this;
 }
@@ -129,10 +129,10 @@ Prototype.destroy = function() {
 
 // 绑定到 RootMagic 调用链上
 RootMagic.extend({tip: function(text, option) {
-    return new Tips(text, option).init();
+    return new Tip(text, option).init();
 }});
 
 RootMagic.fn.extend({tip: function(text, option) {
     var opt = extend({insertTo: this[0]}, option);
-    return new Tips(text, opt).init();
+    return new Tip(text, opt).init();
 }});

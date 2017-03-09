@@ -44,6 +44,16 @@ MagicVue.RootVue = RootVue;
 MagicVue.use = applyCall("use", Vue);
 MagicVue.mixin = applyCall("mixin", Vue);
 
+
+// ========================================================
+// bind 初始化方法，在 mount 后执行
+// ========================================================
+MagicVue.$bind = function(callback) {
+    RootEmitter.on("__MG__BIND", callback);
+
+    return MagicVue;
+}
+
 // ========================================================
 // 全局对象绑定方法
 // ========================================================
@@ -73,6 +83,8 @@ MagicVue.$mount = (function() {
             }
 
             MagicVue.$root = $bind;
+
+            RootEmitter.emit("__MG__BIND");
             if (isFunction(callback)) callback();
         });
     };

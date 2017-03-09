@@ -7,9 +7,9 @@ import ConfigUI from "MG_UIKIT/base/config.js";
 var CFG = ConfigUI.popup = {
     class: "pop",
 
-    insertTo : "body", 
+    insertTo : "body",
 
-    wrapIndex: 100,
+    wrapIndex: 400,
     hideClass: "hide",
     blurClass: "blur",
 
@@ -94,7 +94,7 @@ Prototype.hide = function() {
     //  更新容器 UI 数据
     if (arrayRemove(shows, this.$el).length) needShow = true;
     if (elidx == index) $wrap.data(INDEX, elidx-1);
-    
+
     if (!needShow) {
         $wrap.addClass(hide);
         $wrap.data(INDEX, 0);
@@ -105,7 +105,7 @@ Prototype.hide = function() {
 
 Prototype.toggle = function(set) {
     var toggle = set || this.isHide;
-    
+
     toggle ? this.show() : this.hide();
 
     return this;

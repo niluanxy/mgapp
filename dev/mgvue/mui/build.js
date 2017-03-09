@@ -13,6 +13,8 @@ import "MV_UIKIT/header/main.js";
 import "MV_UIKIT/button/main.js";
 import "MV_UIKIT/tabs/main.js";
 
+import "MV_UIKIT/tip/main.js";
+
 MagicVue.Magic = RootMagic;
 MagicVue.config.ui = ConfigUI;
 
