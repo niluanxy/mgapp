@@ -8,6 +8,7 @@ import ConfigUI from "MG_UIKIT/base/config.js";
 var CFG = ConfigUI.gesture = {
     capture : true,
     passive : false,
+    maxRatio: 1.618,
 
     movePrevent : true,
     moveDebounce: false,
@@ -48,6 +49,7 @@ function touchSum(self, e, touches) {
     var pixRatio = window.devicePixelRatio || 1;
 
     pixRatio = Math.max(pixRatio, document.documentElement.clientWidth/screen.width || 1);
+    pixRatio = pixRatio >= CFG.maxRatio ? CFG.maxRatio : pixRatio;
 
     function updateSelf(self, e, touches, time, delta) {
         self.lastTime = time || getTime();
