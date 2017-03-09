@@ -7,7 +7,7 @@ import {isTrueString} from "LIB_MINJS/check.js";
 import MgConfig from "MG_UIKIT/base/config.js";
 
 import ConfigUI from "MV_UIKIT/base/config.js";
-import {value, getScope} from "MV_UIKIT/base/tools.js";
+import {tryBindCtrl} from "MV_UIKIT/base/tools.js";
 
 var CFG = ConfigUI.content = {
     native: false,
@@ -71,12 +71,7 @@ MagicVue.component("mgContent", {
                 pointX: false, pointY: true,
             }).init();
 
-            // 尝试绑定 ctrl 对象到页面中
-            if (isTrueString(self.ctrl)) {
-                var key = self.ctrl, $ctrlScope = getScope(self, key);
-
-                if ($ctrlScope) $ctrlScope[key] = $ctrl;
-            }
+            tryBindCtrl(self, $ctrl); // 尝试绑定 父页面 ctrl 对象
         }
     }
 });

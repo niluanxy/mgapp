@@ -47,7 +47,7 @@ var CFG = ConfigUI.slider = {
  *      direction: [string] x 滑动方向还是 y 滑动方向
  * }
  */
-function Slider(el, options) {
+export default function Slider(el, options) {
     this.$el    = RootMagic(el);
     this.$wrap  = null;
     this.$point = null;

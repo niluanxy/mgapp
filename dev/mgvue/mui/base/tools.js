@@ -80,3 +80,14 @@ export function domListener(events, returnCall) {
         }]
     }
 }
+
+export function tryBindCtrl(scope, ctrl, ctrlName) {
+    ctrlName = ctrlName || "ctrl";
+
+    if (isTrueString(scope[ctrlName])) {
+        var ctrlKey   = scope[ctrlName],
+            findScope = getScope(scope, ctrlKey);
+
+        if (findScope) findScope[ctrlKey] = ctrl;
+    }
+}

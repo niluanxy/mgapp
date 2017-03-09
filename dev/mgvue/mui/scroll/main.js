@@ -5,7 +5,7 @@ import {extend} from "LIB_MINJS/utils.js";
 import {isTrueString} from "LIB_MINJS/check.js";
 
 import ConfigUI from "MV_UIKIT/base/config.js";
-import {value, getScope} from "MV_UIKIT/base/tools.js";
+import {value, tryBindCtrl} from "MV_UIKIT/base/tools.js";
 
 var CFG = ConfigUI.scroll = {
     scrollBar : true,
@@ -42,11 +42,6 @@ MagicVue.component("mgScroll", {
         scrollOption = extend(scrollOption, options || {});
         $ctrl = new Scroll($el, scrollOption).init();
 
-        // 尝试绑定 ctrl 对象到页面中
-        if (isTrueString((ctrlKey = self.ctrl))) {
-            $ctrlScope = getScope(self, ctrlKey);
-
-            if ($ctrlScope) $ctrlScope[ctrlKey] = $ctrl;
-        }
+        tryBindCtrl(self, $ctrl); // 尝试绑定 父页面 ctrl 对象
     }
 });

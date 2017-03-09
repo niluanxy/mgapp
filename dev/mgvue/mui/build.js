@@ -13,6 +13,7 @@ import "MV_UIKIT/content/main.js";
 import "MV_UIKIT/header/main.js";
 import "MV_UIKIT/button/main.js";
 import "MV_UIKIT/tabs/main.js";
+import "MV_UIKIT/slider/main.js";
 
 import "MV_UIKIT/tip/main.js";
 

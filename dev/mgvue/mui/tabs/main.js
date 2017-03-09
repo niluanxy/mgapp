@@ -4,7 +4,7 @@ import Tabs from "MG_UIKIT/tabs/main.js";
 import {uiAddClass} from "MG_UIKIT/base/tools.js";
 
 import ConfigUI from "MV_UIKIT/base/config.js";
-import {domListener} from "MV_UIKIT/base/tools.js";
+import {domListener, tryBindCtrl} from "MV_UIKIT/base/tools.js";
 
 var CFG = ConfigUI.tabs = {
     type: ConfigUI.type,
@@ -46,12 +46,9 @@ MagicVue.component("mgTabs", {
                 self.$emit("select", index);
             }
         }).init();
+        
         self.$ctrl = $ctrl.select(parseInt(self.active) || 0);
-
-        if (ctrlKey = self.ctrl) {
-            $ctrlScope = getScope(self, ctrlKey);
-            if ($ctrlScope) $ctrlScope[ctrlKey] = $ctrl;
-        }
+        tryBindCtrl(self, $ctrl);   // 尝试绑定 父页面 ctrl 对象
     },
 
     watch: {
