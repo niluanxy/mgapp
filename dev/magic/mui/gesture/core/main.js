@@ -7,7 +7,7 @@ import ConfigUI from "MG_UIKIT/base/config.js";
 
 var CFG = ConfigUI.gesture = {
     capture : false,
-    passive : false,
+    passive : true,
     maxRatio: 1.618,
 
     movePrevent : false,

@@ -71,6 +71,10 @@ MagicVue.component("mgContent", {
                 pointX: false, pointY: true,
             }).init();
 
+            $ctrl.once("start.refresh", function() {
+                $ctrl.refresh();    // 第一次点击时刷新组件
+            });
+
             tryBindCtrl(self, $ctrl); // 尝试绑定 父页面 ctrl 对象
         }
     }

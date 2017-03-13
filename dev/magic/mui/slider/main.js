@@ -19,7 +19,9 @@ var CFG = ConfigUI.slider = {
 
     moveVel    : 0.25,
     moveRate   : 0.3,
-    preventMove: true,
+
+    movePrevent: true,
+    stopPropagation: true,
 
     animate  : "quadratic",
     duration : 500,
@@ -81,7 +83,8 @@ Prototype.init = function() {
 
         lockX: opt.direction !== "X",
         lockY: opt.direction === "X",
-        preventMove: opt.preventMove,
+        preventMove: opt.movePrevent,
+        stopPropagation: opt.stopPropagation,
     }).init();
 
     self.refresh().updatePage(0);

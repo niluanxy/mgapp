@@ -30,7 +30,7 @@ var CFG = ConfigUI.scroll = {
 
     velocityMin: 0.15,
     movePrevent: true,
-    stopPropagation: true,
+    stopPropagation: false,
 
     lockX: true,
     lockY: false,
