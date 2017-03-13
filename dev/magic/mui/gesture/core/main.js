@@ -1,16 +1,16 @@
 import RootMagic from "MG_MAGIC/main.js";
 import {time as getTime} from "MG_STATIC/utils/main.js";
 import Support from "MG_CORE/support/main.js";
-import {extend, each} from "LIB_MINJS/utils.js";
+import {extend, each, value} from "LIB_MINJS/utils.js";
 import Emitter from "LIB_MINJS/emitter.js";
 import ConfigUI from "MG_UIKIT/base/config.js";
 
 var CFG = ConfigUI.gesture = {
-    capture : true,
+    capture : false,
     passive : false,
     maxRatio: 1.618,
 
-    movePrevent : true,
+    movePrevent : false,
     moveDebounce: false,
 },
     Prototype = {}, ABS = Math.abs, MOVE_FLAG,
@@ -253,7 +253,7 @@ Prototype.init = function() {
             eveName = bindEve[type], eveOption, call = "_"+type;
 
         eveOption = supportPassive ? {
-            capture: CFG.capture,
+            capture: value(opt.capture, CFG.capture),
             passive: type=="move" && !opt.movePrevent && opt.passive,
         } : CFG.capture;
 
@@ -305,7 +305,7 @@ function Creater(el, option) {
 };
 
 // 创建一个默认的单例对象，用于默认实例
-var single = new Gesture(),
+var single = new Gesture(null, {capture: true}),
     proxy = "on off init filter".split(" ");
 
 Creater.option = single.option;

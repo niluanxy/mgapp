@@ -30,6 +30,7 @@ var CFG = ConfigUI.scroll = {
 
     velocityMin: 0.15,
     movePrevent: true,
+    stopPropagation: true,
 
     lockX: true,
     lockY: false,
@@ -108,9 +109,35 @@ Prototype.init = function() {
     return self;
 }
 
+function emitCall(self, index, e, touches) {
+    var cache = {}, runEve = CoreEves[index], opt, $emit;
+
+    $emit = self.emitter; opt = self.option;
+
+    if (index === 0) {
+        cache.scrollX = self.getScroll("x");
+        cache.scrollY = self.getScroll("y");
+
+        self.animate.stop();
+    }
+
+    $emit.emit(runEve, e, touches, self, cache);
+
+    if (index === 2) {
+        self.scrollTo(cache.scrollX, cache.scrollY, cache.duration, cache.animate);
+    } else {
+        self.translate(cache.scrollX, cache.scrollY);
+    }
+
+    $emit.emit(runEve.replace(evesPre, ''), e, self, touches);
+
+    if (index === 1) {
+        $emit.emit("scroll", self, self.x, self.y);
+    }
+}
+
 Prototype.initEvent = function() {
-    var self = this, opt = self.option,
-        $gest = self.gesture, $emit = self.emitter;
+    var self = this, opt = self.option;
 
     each(self.plugins, function(key) {
         self.detach(key);
@@ -120,38 +147,25 @@ Prototype.initEvent = function() {
         self.attach(val);
     });
 
-    function emitCall(index, e, touches) {
-        var cache = {}, runEve = CoreEves[index];
-
-        if (index === 0) {
-            cache.scrollX = self.getScroll("x");
-            cache.scrollY = self.getScroll("y");
-
-            self.animate.stop();
-        }
-
-        $emit.emit(runEve, e, touches, self, cache);
-
-        if (index === 2) {
-            self.scrollTo(cache.scrollX, cache.scrollY, cache.duration, cache.animate);
-        } else {
-            self.translate(cache.scrollX, cache.scrollY);
-        }
-
-        $emit.emit(runEve.replace(evesPre, ''), e, self, touches);
-
-        if (index === 1) {
-            $emit.emit("scroll", self, self.x, self.y);
-        }
-    }
-
-    $gest.off("start").off("move").off("end")
+    self.gesture.off("start").off("move").off("end")
     .on("start", function(e, touch, touches) {
-        emitCall(0, e, touches);
+        if (opt.stopPropagation) {
+            e.stopPropagation();
+        }
+
+        emitCall(self, 0, e, touches);
     }).on("move", function(e, touch, touches) {
-        emitCall(1, e, touches);
+        if (opt.stopPropagation) {
+            e.stopPropagation();
+        }
+
+        emitCall(self, 1, e, touches);
     }).on("end", function(e, touch, touches) {
-        emitCall(2, e, touches);
+        if (opt.stopPropagation) {
+            e.stopPropagation();
+        }
+
+        emitCall(self, 2, e, touches);
     });
 
     return this;
