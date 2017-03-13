@@ -178,8 +178,11 @@ Prototype.setAutoPlay = function(enable) {
 }
 
 Prototype.updatePage = function(next) {
-    var self = this, opt = self.option, base = self.baseSize,
+    var self = this, opt = self.option, base = self.baseSize, $child,
         $scroll = self.scroll, dir = opt.direction, opage = self.page;
+
+    $child = self.$wrap.children();
+    $child.eq(self.page).removeClass(opt.actived);
 
     if (opt.playLoop) {
         next = next > self.maxPage ? 0 : next < 0 ? self.maxPage : next;
@@ -188,6 +191,8 @@ Prototype.updatePage = function(next) {
     }
 
     self.page = next;
+    $child.eq(next).addClass(opt.actived);
+
     $scroll["minScroll"+dir] = next*base*-1;
     $scroll["maxScroll"+dir] = (next+1)*base*-1;
 

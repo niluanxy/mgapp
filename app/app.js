@@ -13,7 +13,11 @@ $$.$mount("#mgapp", function() {
                                 '<input type="text" v-model="print"></br>'+
                                 '<mg-button @tap="root">root</mg-button>'+
                                 '<mg-button @click="log">log</mg-button>'+
-                                '<p v-for="x in 50">{{print}} {{$$params.age}}</p>'+
+                                '<mg-slider>'+
+                                    '<mg-slider-item image="http://www.gztwkadokawa.com/wallpaper/images/1920/03-1920X1080.jpg" />'+
+                                    '<mg-slider-item image="http://h.hiphotos.baidu.com/zhidao/pic/item/34fae6cd7b899e51f82ae10942a7d933c8950d03.jpg" />'+
+                                    '<mg-slider-item image="http://image.tianjimedia.com/uploadImages/2012/289/34N5SW02GFF2.jpg" />'+
+                                '</mg-slider>'+
                                 '<mg-button :disabled="dis" block="true" link="#user">user</mg-button>'+
                                 '<mg-button block="true" link="#home">home</mg-button>'+
                                 '<mg-button block="true" @tap="back">back</mg-button>'+

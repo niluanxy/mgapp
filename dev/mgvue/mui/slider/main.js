@@ -3,6 +3,7 @@ import RootMagic from "MG_CORE/build.js";
 import Slider from "MG_UIKIT/slider/main.js";
 import {uiAddClass} from "MG_UIKIT/base/tools.js";
 
+import RootRouter from "MV_MODULE/router.js";
 import ConfigUI from "MV_UIKIT/base/config.js";
 import {value, tryBindCtrl} from "MV_UIKIT/base/tools.js";
 
@@ -15,7 +16,7 @@ var CFG = ConfigUI.slider = {
 
 MagicVue.component("mgSlider", {
     name: "mgSlider",
-    template: "<div><slot></slot></div>",
+    template: "<div><div><slot></slot></div></div>",
 
     props: {
         "$name": { type: String, default: "mg-slider" },
@@ -50,11 +51,11 @@ MagicVue.component("mgSlider", {
                 self.$emit("before", page);
             },
 
-            onScroll: function() {
+            onScroll: function(page) {
                 self.$emit("scroll", page);
             },
 
-            onAnimate: function() {
+            onAnimate: function(page) {
                 self.$emit("animate", page);
             }
         }).init();
@@ -71,18 +72,24 @@ MagicVue.component("mgSlider", {
 
 MagicVue.component("mgSliderItem", {
     name: "mgSliderItem",
-    template: "<div><slot></slot></div>",
+    template: '<div><img v-if="image" :src="image"></img><slot></slot></div>',
 
     props: {
         "$name": { type: String, default: "mg-slider-item" },
+
+        "link" : { type: String, default: "" },
+        "image": { type: String, default: "" },
     },
 
     mounted: function() {
         var self = this, $el = RootMagic(self.$el);
 
-        uiAddClass($el, CFG.class, [
-            "item"
+        uiAddClass($el, CFG.class, ["item"]);
 
-        ]);
+        $el.on("tap", function() {
+            if (isTrueString(self.link)) {
+                RootRouter.go(self.link);
+            }
+        });
     }
 });
