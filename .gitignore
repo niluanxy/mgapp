@@ -19,3 +19,11 @@
 
 # app 目录忽略相关文件
 /app/public/style/mixin.scss
+
+/app/assets/magic.css
+/app/assets/magic.js
+/app/assets/magic.ui.js
+
+/app/assets/mgvue.css
+/app/assets/mgvue.js
+/app/assets/mgvue.ui.js

@@ -20,5 +20,4 @@ import "MV_UIKIT/tip/main.js";
 MagicVue.Magic = RootMagic;
 MagicVue.config.ui = ConfigUI;
 
-export RootMagic;
 export default MagicVue;
