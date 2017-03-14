@@ -56,7 +56,12 @@ var DIR_APP   = __dirname + "/app/",
     DIR_MGVUE = DIR_DEV + "mgvue/",
 
     DIR_CONCAT = DIR_DEV + "concat/",
-    DIR_APP_LIBS = DIR_APP + "libs/";
+
+    DIR_APP_PUBLIC = DIR_APP + "public/",
+    DIR_APP_ASSETS = DIR_APP + "assets/",
+    DIR_APP_MODULE = DIR_APP + "module/",
+
+    DIR_APP_DIST   = __dirname + "/dist/";
 
 var CONCAT_PRE        = "_concat_",
 
@@ -76,22 +81,29 @@ var CONCAT_PRE        = "_concat_",
     CONCAT_MGVUE_UIKIT= CONCAT_PRE+"mgvue.ui.js";
 
 var DIR_MAGIC_ALIAS = {
-    resolve: ['.jsx', '.js'],
+    resolve: ['.jsx', '.js', ".scss", ".jpg", ".jpeg", ".png"],
 
     LIB_MINJS: DIR_MINJS,
 
-    MG_CORE    : DIR_MAGIC+"core",
-    MG_UTILS   : DIR_MAGIC+"utils",
-    MG_MAGIC   : DIR_MAGIC+"core/magic",
-    MG_MODULE  : DIR_MAGIC+"core/module",
-    MG_STATIC  : DIR_MAGIC+"core/static",
-    MG_UIKIT   : DIR_MAGIC+"mui",
+    MG_CORE  : DIR_MAGIC+"core",
+    MG_UTILS : DIR_MAGIC+"utils",
+    MG_MAGIC : DIR_MAGIC+"core/magic",
+    MG_MODULE: DIR_MAGIC+"core/module",
+    MG_STATIC: DIR_MAGIC+"core/static",
+    MG_UIKIT : DIR_MAGIC+"mui",
 
-    MV_CORE    : DIR_MGVUE+"core",
-    MV_BASE    : DIR_MGVUE+"core/base",
-    MV_MODULE  : DIR_MGVUE+"core/module",
-    MV_PLUGIN  : DIR_MGVUE+"core/plugin",
-    MV_UIKIT   : DIR_MGVUE+"mui",
+    MV_CORE  : DIR_MGVUE+"core",
+    MV_BASE  : DIR_MGVUE+"core/base",
+    MV_MODULE: DIR_MGVUE+"core/module",
+    MV_PLUGIN: DIR_MGVUE+"core/plugin",
+    MV_UIKIT : DIR_MGVUE+"mui",
+
+    ASSETS: DIR_APP_ASSETS,
+    PUBLIC: DIR_APP_PUBLIC,
+    MODULE: DIR_APP_MODULE,
+        STYLE: DIR_APP_MODULE+"style",
+        STORE: DIR_APP_MODULE+"store",
+        COMPONENT: DIR_APP_MODULE+"component",
 };
 
 var reload = throttle(20, function() {
@@ -174,7 +186,7 @@ function task_build_mixin() {
         .pipe(autoprefixer())
         .pipe(px2rem(px2remConfig))
         .pipe(gulpif(BUILD_RELEASE, minifycss()))
-        .pipe(gulp.dest(DIR_APP_LIBS))
+        .pipe(gulp.dest(DIR_APP_ASSETS))
         .on("finish", function() {
             clean_mixin_build();
             log("mixin build css finish");
@@ -221,7 +233,7 @@ function task_build_minjs() {
         (BUILD_RELEASE && rollupUglify()),
     ];
 
-    del(DIR_APP_LIBS+"emitter.js").then(function() {
+    del(DIR_APP_ASSETS+"emitter.js").then(function() {
         rollup({
             entry: DIR_MINJS+"emitter.js",
             format: 'umd',
@@ -230,14 +242,14 @@ function task_build_minjs() {
             plugins: plugins,
         })
         .pipe(source('emitter.js'))
-        .pipe(gulp.dest(DIR_APP_LIBS))
+        .pipe(gulp.dest(DIR_APP_ASSETS))
         .on("finish", function() {
             log("--- minjs emitter.js build finish");
             defer_emit.resolve();
         });
     });
 
-    del(DIR_APP_LIBS+"router.js").then(function() {
+    del(DIR_APP_ASSETS+"router.js").then(function() {
         rollup({
             entry: DIR_MINJS+"router.js",
             format: 'umd',
@@ -245,7 +257,7 @@ function task_build_minjs() {
             plugins: plugins,
         })
         .pipe(source('router.js'))
-        .pipe(gulp.dest(DIR_APP_LIBS))
+        .pipe(gulp.dest(DIR_APP_ASSETS))
         .on("finish", function() {
             log("--- minjs router.js build finish");
             defer_route.resolve();
@@ -305,7 +317,7 @@ function task_build_magic() {
         })
         .pipe(source('magic.js'))
         .pipe(replace(oldBuild, newBuild))
-        .pipe(gulp.dest(DIR_APP_LIBS))
+        .pipe(gulp.dest(DIR_APP_ASSETS))
         .on("finish", function() {
             log("--- magic core build finish");
             defer_core.resolve();
@@ -324,7 +336,7 @@ function task_build_magic() {
         })
         .pipe(source('magic.ui.js'))
         .pipe(replace(oldBuild, newBuild))
-        .pipe(gulp.dest(DIR_APP_LIBS))
+        .pipe(gulp.dest(DIR_APP_ASSETS))
         .on("finish", function() {
             log("--- magic uikit build finish");
             defer_mui.resolve();
@@ -395,7 +407,7 @@ function task_build_mgvue() {
         })
         .pipe(source('mgvue.js'))
         .pipe(replace(oldBuild, newBuild))
-        .pipe(gulp.dest(DIR_APP_LIBS))
+        .pipe(gulp.dest(DIR_APP_ASSETS))
         .on("finish", function() {
             log("--- mgvue core build finish");
             defer_core.resolve();
@@ -414,7 +426,7 @@ function task_build_mgvue() {
         })
         .pipe(source('mgvue.ui.js'))
         .pipe(replace(oldBuild, newBuild))
-        .pipe(gulp.dest(DIR_APP_LIBS))
+        .pipe(gulp.dest(DIR_APP_ASSETS))
         .on("finish", function() {
             log("--- mgvue uikit build finish");
             defer_mui.resolve();
@@ -487,7 +499,7 @@ function task_build_mgvue_style() {
         .pipe(autoprefixer())
         .pipe(px2rem(px2remConfig))
         .pipe(gulpif(BUILD_RELEASE, minifycss()))
-        .pipe(gulp.dest(DIR_APP_LIBS))
+        .pipe(gulp.dest(DIR_APP_ASSETS))
         .on("finish", function() {
             log("mgvue style build css finish");
             clean_mgvue_style();
@@ -508,6 +520,65 @@ function clean_mgvue_style() {
     ]);
 }
 
+/**===============================================
+ * app相关打包任务
+ =================================================*/
+function task_app_style_concat() {
+    var defer_all = Q.defer(), defer_concat = Q.defer(),
+        _DIR_STYLE;
+
+    _DIR_STYLE = DIR_APP_PUBLIC + "style/";
+
+    task_concat_mgvue_style().then(function() {
+        gulp.src([DIR_CONCAT+CONCAT_MIXIN_CORE,
+            DIR_CONCAT+CONCAT_MIXIN_VARS,
+            DIR_CONCAT+CONCAT_MGVUE_STYLE_VARS,
+            _DIR_STYLE + "varible/*.scss",
+            DIR_CONCAT+CONCAT_MIXIN_UIKIT,
+            DIR_CONCAT+CONCAT_MGVUE_STYLE_UIKIT,
+            _DIR_STYLE + "component/*.scss"
+        ])
+        .pipe(concat("mixin.scss"))
+        .pipe(gulp.dest(_DIR_STYLE))
+        .on("finish", function() { defer_concat.resolve() })
+
+        return defer_concat;
+    }).then(function() {
+        defer_all.resolve();
+    });
+
+    return defer_all.promise;
+}
+
+function task_build_mgapp_style() {
+    var defer_all = Q.defer();
+
+    task_app_style_concat().then(function() {
+        log("--- task app style concat finish");
+
+        gulp.src([DIR_APP_PUBLIC+"style/mixin.scss",
+            DIR_APP_PUBLIC+"main.scss"])
+        .pipe(concat("main.scss"))
+        .pipe(replace(/PUBLIC/g, DIR_APP_PUBLIC))
+        .pipe(replace(/ASSETS/g, DIR_APP_ASSETS))
+        .pipe(sass.sync().on('error', sass.logError))
+        .pipe(autoprefixer())
+        .pipe(px2rem(px2remConfig))
+        .pipe(gulpif(BUILD_RELEASE, minifycss()))
+        .pipe(gulp.dest(DIR_APP_DIST))
+        .on("finish", function() {
+            log("magic app style build css finish");
+            defer_all.resolve();
+        });
+    });
+
+    return defer_all.promise;
+}
+gulp.task("dev-build-mgapp-style", task_build_mgapp_style);
+
+function task_build_mgapp() {
+
+}
 
 /**===============================================
  * 项目整体相关函数
@@ -552,7 +623,7 @@ gulp.task("serve", function() {
     gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js",
                 DIR_MGVUE+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-mgvue"]);
 
-    gulp.watch([DIR_APP_LIBS+"/*", DIR_APP+"/*"]).on("change", reload);
+    gulp.watch([DIR_APP_ASSETS+"/*", DIR_APP+"/*"]).on("change", reload);
 });
 
 gulp.task("clean", function() {

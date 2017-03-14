@@ -8,10 +8,14 @@
 /.sass-cache
 
 # 过滤 项目 编译生成的临时文件
-/app/dist
+/dist
 /dev/_concat*
 /dev/mixin.css
 /dev/mixin.scss
 /dev/concat
 
 /app/libs
+
+
+# app 目录忽略相关文件
+/app/public/style/mixin.scss
