@@ -558,32 +558,6 @@ function task_app_style_concat() {
     return defer_all.promise;
 }
 
-function task_build_mgapp_style() {
-    var defer_all = Q.defer();
-
-    task_app_style_concat().then(function() {
-        log("--- task app style concat finish");
-
-        gulp.src([DIR_APP_PUBLIC+"style/mixin.scss",
-            DIR_APP_PUBLIC+"main.scss"])
-        .pipe(concat("main.scss"))
-        .pipe(replace(/PUBLIC/g, DIR_APP_PUBLIC))
-        .pipe(replace(/ASSETS/g, DIR_APP_ASSETS))
-        .pipe(sass.sync().on('error', sass.logError))
-        .pipe(autoprefixer())
-        .pipe(px2rem(px2remConfig))
-        .pipe(gulpif(BUILD_RELEASE, minifycss()))
-        .pipe(gulp.dest(DIR_APP_DIST+"public/"))
-        .on("finish", function() {
-            log("magic app style build css finish");
-            defer_all.resolve();
-        });
-    });
-
-    return defer_all.promise;
-}
-gulp.task("dev-build-mgapp-style", task_build_mgapp_style);
-
 function task_build_mgapp_assets() {
     var defer_all = Q.defer(), defer_assets = Q.defer(),
         defer_html = Q.defer();
@@ -603,6 +577,32 @@ function task_build_mgapp_assets() {
 
     return defer_all.promise;
 }
+
+function task_build_mgapp_style() {
+    var defer_all = Q.defer();
+
+    task_app_style_concat().then(function() {
+        log("--- task app style concat finish");
+
+        gulp.src([DIR_APP_PUBLIC+"style/mixin.scss",
+            DIR_APP_PUBLIC+"main.scss"])
+        .pipe(concat("main.scss"))
+        .pipe(replace(/PUBLIC/g, DIR_APP_PUBLIC))
+        .pipe(replace(/ASSETS/g, DIR_APP_ASSETS))
+        .pipe(sass.sync().on('error', sass.logError))
+        .pipe(autoprefixer())
+        .pipe(px2rem(px2remConfig))
+        .pipe(gulpif(BUILD_RELEASE, minifycss()))
+        .pipe(gulp.dest(DIR_APP_DIST+"assets/"))
+        .on("finish", function() {
+            log("magic app style build css finish");
+            defer_all.resolve();
+        });
+    });
+
+    return defer_all.promise;
+}
+gulp.task("dev-build-mgapp-style", task_build_mgapp_style);
 
 function task_build_mgapp() {
     var defer_all = Q.defer(), alias, plugins = [], oldBuild, newBuild;
@@ -650,7 +650,7 @@ function task_build_mgapp() {
     .on("finish", function() {
         gulp.src(DIR_APP_DIST+"pages/main*.js")
         .pipe(rename("main.js"))
-        .pipe(gulp.dest(DIR_APP_DIST+"public/"))
+        .pipe(gulp.dest(DIR_APP_DIST+"assets/"))
         .on("finish", function() {
             del(DIR_APP_DIST+"pages/main*.js");
             defer_all.resolve();
