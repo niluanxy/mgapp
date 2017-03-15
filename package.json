@@ -12,6 +12,7 @@
     "browser-sync": "^2.18.5",
     "colors": "^1.1.2",
     "del": "^2.2.2",
+    "extend": "^3.0.0",
     "fs": "^0.0.1-security",
     "gulp": "^3.9.0",
     "gulp-autoprefixer": "^3.1.1",
@@ -24,6 +25,7 @@
     "gulp-replace": "^0.5.4",
     "gulp-sass": "^2.3.0",
     "gulp-shell": "^0.5.2",
+    "html-loader": "^0.4.5",
     "moment": "^2.15.1",
     "q": "^1.4.1",
     "rollup-plugin-alias": "^1.2.0",
@@ -32,8 +34,9 @@
     "rollup-plugin-uglify": "^1.0.1",
     "rollup-stream": "1.14.0",
     "throttle-debounce": "^1.0.1",
+    "uglifyjs-webpack-plugin": "^0.3.0",
     "vinyl-source-stream": "^1.1.0",
-    "webpack": "^1.13.3",
+    "webpack": "^2.2.1",
     "webpack-stream": "^3.2.0"
   }
 }

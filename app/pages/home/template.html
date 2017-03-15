@@ -1,0 +1,27 @@
+<mg-page>
+    <mg-header>
+        <h3 class="title">{{title}}</h3>
+    </mg-header>
+
+    <mg-content>
+        <input type="text" v-model="print"></br>
+
+        <mg-button @tap="root">root</mg-button>
+        <mg-button @click="log">log</mg-button>
+
+        <mg-slider>
+            <mg-slider-item image="http://www.gztwkadokawa.com/wallpaper/images/1920/03-1920X1080.jpg"></mg-slider-item>
+        </mg-slider>
+
+        <mg-button :disabled="dis" block="true" link="#user">user</mg-button>
+        <mg-button block="true" link="#home">home</mg-button>
+        <mg-button block="true" @tap="back">back</mg-button>
+        <mg-button block="true" link="#shop/123">shop</mg-button>
+
+        <mg-tabs striped="true" :select="sel">
+            <mg-tabs-item>用户</mg-tabs-item>
+            <mg-tabs-item>商品</mg-tabs-item>
+            <mg-tabs-item>列表</mg-tabs-item>
+        </mg-tabs>
+    </mg-content>
+</mg-page>

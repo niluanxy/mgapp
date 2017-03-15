@@ -308,6 +308,7 @@ function Creater(el, option) {
 var single = new Gesture(null, {capture: true}),
     proxy = "on off init filter".split(" ");
 
+console.log("gesture has run once")
 Creater.option = single.option;
 extend(Creater, MOVE_FLAG);
 for(var i=0; i<proxy.length; i++) {

@@ -1,0 +1,13 @@
+<mg-page>
+    <mg-header>
+        <h3 class="title">{{title}}</h3>
+    </mg-header>
+
+    <mg-content>
+        <div>user name: {{name}}</div>
+        <mg-button block="true" link="#user">user</mg-button>
+        <mg-button block="true" link="#home">home</mg-button>
+        <mg-button block="true" link="#shop/123">shop</mg-button>
+        <mg-button block="true" @tap="back">back</mg-button>
+    </mg-content>
+</mg-page>

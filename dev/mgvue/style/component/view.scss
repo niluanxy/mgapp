@@ -12,6 +12,15 @@
     background-color: #FFF;
 }
 
+@mixin app-wrap($class: app-wrap, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        @extend %full_screen;
+        z-index: 100;
+
+        @content;
+    }
+}
+
 @mixin view($class: view, $prefix: $config-prefix) {
     .#{$prefix+$class} {
         @extend %full_screen;
