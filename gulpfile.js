@@ -192,7 +192,7 @@ function task_build_mixin() {
         .pipe(autoprefixer())
         .pipe(px2rem(px2remConfig))
         .pipe(gulpif(BUILD_RELEASE, minifycss()))
-        .pipe(gulp.dest(DIR_APP_ASSETS))
+        .pipe(gulp.dest(DIR_APP_ASSETS+"debug/"))
         .on("finish", function() {
             clean_mixin_build();
             log("mixin build css finish");
@@ -248,7 +248,7 @@ function task_build_minjs() {
             plugins: plugins,
         })
         .pipe(source('emitter.js'))
-        .pipe(gulp.dest(DIR_APP_ASSETS))
+        .pipe(gulp.dest(DIR_APP_ASSETS+"debug/"))
         .on("finish", function() {
             log("--- minjs emitter.js build finish");
             defer_emit.resolve();
@@ -263,7 +263,7 @@ function task_build_minjs() {
             plugins: plugins,
         })
         .pipe(source('router.js'))
-        .pipe(gulp.dest(DIR_APP_ASSETS))
+        .pipe(gulp.dest(DIR_APP_ASSETS+"debug/"))
         .on("finish", function() {
             log("--- minjs router.js build finish");
             defer_route.resolve();
@@ -323,7 +323,7 @@ function task_build_magic() {
         })
         .pipe(source('magic.js'))
         .pipe(replace(oldBuild, newBuild))
-        .pipe(gulp.dest(DIR_APP_ASSETS))
+        .pipe(gulp.dest(DIR_APP_ASSETS+"debug/"))
         .on("finish", function() {
             log("--- magic core build finish");
             defer_core.resolve();
@@ -342,7 +342,7 @@ function task_build_magic() {
         })
         .pipe(source('magic.ui.js'))
         .pipe(replace(oldBuild, newBuild))
-        .pipe(gulp.dest(DIR_APP_ASSETS))
+        .pipe(gulp.dest(DIR_APP_ASSETS+"debug/"))
         .on("finish", function() {
             log("--- magic uikit build finish");
             defer_mui.resolve();
@@ -417,7 +417,7 @@ function task_build_mgvue_style() {
         .pipe(autoprefixer())
         .pipe(px2rem(px2remConfig))
         .pipe(gulpif(BUILD_RELEASE, minifycss()))
-        .pipe(gulp.dest(DIR_APP_ASSETS))
+        .pipe(gulp.dest(DIR_APP_ASSETS+"debug/"))
         .on("finish", function() {
             log("mgvue style build css finish");
             clean_mgvue_style();
@@ -482,7 +482,7 @@ function task_build_mgvue() {
         })
         .pipe(source('mgvue.js'))
         .pipe(replace(oldBuild, newBuild))
-        .pipe(gulp.dest(DIR_APP_ASSETS))
+        .pipe(gulp.dest(DIR_APP_ASSETS+"debug/"))
         .on("finish", function() {
             log("--- mgvue core build finish");
             defer_core.resolve();
@@ -501,7 +501,7 @@ function task_build_mgvue() {
         })
         .pipe(source('mgvue.ui.js'))
         .pipe(replace(oldBuild, newBuild))
-        .pipe(gulp.dest(DIR_APP_ASSETS))
+        .pipe(gulp.dest(DIR_APP_ASSETS+"debug/"))
         .on("finish", function() {
             log("--- mgvue uikit build finish");
             defer_mui.resolve();
@@ -588,12 +588,7 @@ function task_build_mgapp_assets() {
     var defer_all = Q.defer(), defer_assets = Q.defer(),
         defer_html = Q.defer();
 
-    gulp.src([
-        DIR_APP+"assets/**/*.*",
-        "!"+DIR_APP+"assets/magic*",
-        "!"+DIR_APP+"assets/mixin*",
-        "!"+DIR_APP+"assets/mgvue*"
-    ])
+    gulp.src([ DIR_APP+"assets/**/*" ])
     .pipe(gulp.dest(DIR_APP_DIST+"assets/"))
     .on("finish", function() { defer_assets.resolve() })
 
@@ -669,6 +664,11 @@ gulp.task("dev-build-mgapp", task_build_mgapp);
 function clean_mgapp() {
     return del([DIR_APP_DIST+"**/*"]);
 }
+
+function clean_assets() {
+    return del([ DIR_APP_ASSETS+"debug" ]);
+}
+
 /**===============================================
  * 项目整体相关函数
  =================================================*/
@@ -698,23 +698,34 @@ gulp.task("build", function(r) {
     });
 })
 
-gulp.task("serve", function() {
+gulp.task("serve", function(d) {
+    var DEBUG = d ? true : false;
+
     browserSync.init({
         server: {
             baseDir: DIR_APP_DIST
         }
     });
 
-    gulp.watch([DIR_MIXIN+"**/*"],    ["dev-build-mixin"]);
-    gulp.watch([DIR_MINJS+"**/*.js"], ["dev-build-minjs"]);
+    if (DEBUG === true) {
+        gulp.watch([DIR_MIXIN+"**/*"],    ["dev-build-mixin"]);
+        gulp.watch([DIR_MINJS+"**/*.js"], ["dev-build-minjs"]);
 
-    gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-magic"]);
+        gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-magic"]);
 
-    gulp.watch([DIR_MIXIN+"**/*", DIR_MGVUE+"style/**/*"], ["dev-build-mgvue-style"]);
+        gulp.watch([DIR_MIXIN+"**/*", DIR_MGVUE+"style/**/*"], ["dev-build-mgvue-style"]);
+        gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js",
+                    DIR_MGVUE+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-mgvue"]);
+    }
+
+    gulp.watch([DIR_MIXIN+"**/*", DIR_MGVUE+"style/**/*",
+                DIR_APP_PUBLIC+"**/*.scss"], ["dev-build-mgapp-style"]);
+
     gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js",
-                DIR_MGVUE+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-mgvue"]);
+                DIR_MGVUE+"**/*.js", DIR_MINJS+"**/*.js",
+                DIR_APP_PUBLIC+"**/*.js"], ["dev-build-mgapp"]);
 
-    gulp.watch([DIR_APP_ASSETS+"/*", DIR_APP+"/*"]).on("change", reload);
+    gulp.watch([DIR_APP_DIST+"**/*", DIR_APP+"/index.html"]).on("change", reload);
 });
 
 gulp.task("clean", function() {
@@ -724,5 +735,6 @@ gulp.task("clean", function() {
         clean_mgvue(),
         clean_mgvue_style(),
         clean_mgapp(),
+        clean_assets()
     ]);
 })
