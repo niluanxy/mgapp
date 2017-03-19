@@ -11,8 +11,10 @@
   "devDependencies": {
     "browser-sync": "^2.18.5",
     "colors": "^1.1.2",
+    "css-loader": "^0.27.3",
     "del": "^2.2.2",
     "extend": "^3.0.0",
+    "file-loader": "^0.10.1",
     "fs": "^0.0.1-security",
     "gulp": "^3.9.0",
     "gulp-autoprefixer": "^3.1.1",
@@ -37,11 +39,13 @@
     "rollup-plugin-replace": "^1.1.1",
     "rollup-plugin-uglify": "^1.0.1",
     "rollup-stream": "1.14.0",
+    "style-loader": "^0.14.1",
     "throttle-debounce": "^1.0.1",
     "uglifyjs-webpack-plugin": "^0.3.0",
     "vinyl-source-stream": "^1.1.0",
     "vue": "^2.2.4",
     "webpack": "^2.2.1",
+    "webpack-dev-server": "^2.4.2",
     "webpack-stream": "^3.2.0"
   }
 }

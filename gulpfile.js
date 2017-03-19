@@ -26,6 +26,7 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     sass                = require("gulp-sass"),
     extend              = require("extend"),
     webpack             = require("webpack"),
+    webpackDevServer    = require("webpack-dev-server"),
     gulpWebpack         = require("webpack-stream"),
     webpackUglifyJS     = require('uglifyjs-webpack-plugin');
 
@@ -619,19 +620,11 @@ function task_build_mgapp_style() {
 }
 gulp.task("dev-build-mgapp-style", task_build_mgapp_style);
 
-function task_build_mgapp() {
-    var defer_all = Q.defer(), defer_build = Q.defer(),
-        alias, plugins = [], oldBuild, newBuild;
+function initWebpackConfig() {
+    var alias, plugins = [], entry;
 
     alias = extend({}, DIR_ALIAS); delete alias.resolve;
     alias.vue = BUILD_RELEASE ? "vue/dist/vue.min.js" : "vue/dist/vue.js";
-
-    oldBuild = BUILD_RELEASE ? /(\w)(\.MagicVue=)(\w\(\))/
-                             : /else\s*root\[\"MagicVue\"\] = factory\(\);/;
-    newBuild = BUILD_RELEASE ? '$1$2$3;if("undefined"==typeof define&&!$1.$$)$1.$$=$1.MagicVue;'+
-                               'if("undefined"==typeof define&&!$1.$)$1.$=$1.MagicVue.Magic;'
-                             : 'else {\n\t\troot.MagicVue = root.$$$ = factory().default;'+
-                               ' \n\t\troot.Magic = root.$ = root.MagicVue.Magic;\n\t}';
 
     if (BUILD_RELEASE) {
         plugins.push(new webpackUglifyJS());
@@ -640,9 +633,19 @@ function task_build_mgapp() {
         plugins.push(new webpack.NamedModulesPlugin());
     }
 
-    webpack({
+    if (BUILD_RELEASE) {
+        entry = "./app/public/main.js";
+    } else {
+        entry = [
+            'webpack-dev-server/client?http://localhost:3000',
+            'webpack/hot/only-dev-server',
+            "./app/public/main.js"
+        ]
+    }
+
+    return {
+        entry: entry,
         context: DIR_BASE,
-        entry: './app/public/main.js',
 
         output: {
             publicPath: '/pages/',
@@ -663,7 +666,19 @@ function task_build_mgapp() {
         },
 
         resolve: { alias: alias }, plugins: plugins,
-    }, function(err, stats) {
+    }
+}
+
+function task_build_mgapp() {
+    var defer_all = Q.defer(), defer_build = Q.defer(), oldBuild, newBuild;
+
+    oldBuild = BUILD_RELEASE ? /(\w)(\.MagicVue=)(\w\(\))/
+                             : /else\s*root\[\"MagicVue\"\] = factory\(\);/;
+    newBuild = BUILD_RELEASE ? '$1$2$3;if("undefined"==typeof define&&!$1.$$)$1.$$=$1.MagicVue;'+
+                               'if("undefined"==typeof define&&!$1.$)$1.$=$1.MagicVue.Magic;'
+                             : 'else {\n\t\troot.MagicVue = root.$$$ = factory().default;'+
+                               ' \n\t\troot.Magic = root.$ = root.MagicVue.Magic;\n\t}';
+    webpack(initWebpackConfig(), function(err, stats) {
         var error = null;
 
         if (err) {
@@ -744,10 +759,24 @@ gulp.task("build", function(r) {
 })
 
 gulp.bindTask("serve", function(d, r) {
-    var args = arguments, DEBUG = args[0] ? true : false;
+    var args = arguments, DEBUG, alias, server
+
+    DEBUG = args[0] ? true : false;
     BUILD_RELEASE = args[1] ? true : false;
 
+    alias = extend({}, DIR_ALIAS); delete alias.resolve;
+    alias.vue = BUILD_RELEASE ? "vue/dist/vue.min.js" : "vue/dist/vue.js";
 
+    server = new webpackDevServer(webpack(initWebpackConfig()), {
+        hot: true,
+
+        publicPath: '/pages/',
+        contentBase: DIR_APP_DIST,
+    });
+
+    server.listen(3000, "127.0.0.1", function() {
+        console.log("Starting server on http://localhost:3000");
+    });
     // browserSync.init({
     //     server: {
     //         baseDir: DIR_APP_DIST
