@@ -1,5 +1,6 @@
 import Emitter from "LIB_MINJS/emitter.js";
 import Ready from "LIB_MINJS/ready.js";
+import Vue from "vue";
 import {isFunction, isTrueString} from "LIB_MINJS/check.js";
 import {extend, applyCall} from "LIB_MINJS/utils.js";
 import Config from "MV_BASE/config.js";

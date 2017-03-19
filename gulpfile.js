@@ -20,24 +20,18 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     rollupReplace       = require("rollup-plugin-replace"),
     rollupAlias         = require("rollup-plugin-alias"),
     rollupUglify        = require("rollup-plugin-uglify"),
+    rollupCommonjs      = require("rollup-plugin-commonjs"),
+    rollupNodeResolve   = require("rollup-plugin-node-resolve"),
     source              = require("vinyl-source-stream"),
     sass                = require("gulp-sass"),
     extend              = require("extend"),
     webpack             = require("webpack"),
-    gulpWebpack         = require("webpack-stream");
+    gulpWebpack         = require("webpack-stream"),
+    webpackUglifyJS     = require('uglifyjs-webpack-plugin');
 
-colors.setTheme({
-    silly: 'rainbow',
-    input: 'grey',
-    verbose: 'cyan',
-    prompt: 'red',
-    info: 'green',
-    data: 'blue',
-    help: 'cyan',
-    warn: 'yellow',
-    debug: 'magenta',
-    error: 'red',
-    time: 'gray'
+colors.setTheme({ silly: 'rainbow', input: 'grey', verbose: 'cyan',
+    prompt: 'red', info: 'green', data: 'blue', help: 'cyan',
+    warn: 'yellow', debug: 'magenta', error: 'red', time: 'gray'
 });
 
 var px2remConfig = {
@@ -121,10 +115,25 @@ function log(str, style) {
 
     var _time = moment().format("HH:mm:ss").time;
 
-    console.log("["+_time+"] "+str[style]);
+    console.log("["+_time+"] "+str.toString()[style]);
 }
 
-var BUILD_RELEASE = false;
+var BUILD_RELEASE = false, bindTask = gulp.task;
+
+gulp.bindTask = bindTask;
+gulp.task = function(taskName, taskFunction) {
+    bindTask(taskName, function(r) {
+        BUILD_RELEASE = r ? true : false;
+
+        if (BUILD_RELEASE === true) {
+            process.env.node_env = 'development';
+        } else {
+            process.env.node_env = 'production';
+        }
+
+        return taskFunction();
+    })
+}
 
 /**===============================================
  * mixin 文件合并脚本函数
@@ -443,10 +452,9 @@ function clean_mgvue_style() {
  =================================================*/
 function task_build_mgvue() {
     var defer_all = Q.defer(), defer_core = Q.defer(),
-        defer_mui = Q.defer(), plugins,
+        defer_mui = Q.defer(), plugins, alias,
 
-    DIR_CORE = DIR_MGVUE+"core/",
-    DIR_MUI  = DIR_MGVUE+"mui/",
+    DIR_CORE = DIR_MGVUE+"core/", DIR_MUI  = DIR_MGVUE+"mui/",
 
     oldBuild = BUILD_RELEASE ? /(\w)(\.MagicVue=)(\w\(\))/
                              : /(\(global.MagicVue = factory\(\)\)\;)/,
@@ -457,12 +465,18 @@ function task_build_mgvue() {
                                '\n\tif(typeof define === "undefined" && !global.$) '+
                                  'global.$ = global.MagicVue.Magic;';
 
+    alias = extend({}, DIR_ALIAS);
+    alias.vue = BUILD_RELEASE ? "vue/dist/vue.min.js" : "vue/dist/vue.js";
+    alias.vue = DIR_BASE+"/node_modules/"+alias.vue;
+
     plugins = [
-        rollupAlias(DIR_ALIAS),
+        rollupAlias(alias),
         rollupReplace({
             exclude: 'node_modules/**',
-            ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
+            ENV: BUILD_RELEASE ? '"production"' : '"development"',
         }),
+        rollupCommonjs(),
+        rollupNodeResolve({ jsnext: true, main: true, browser: true }),
         (BUILD_RELEASE && rollupUglify({
             mangle: {
                 except: ['MagicVue']
@@ -572,6 +586,7 @@ function task_build_mgapp_assets() {
 
     Q.all([defer_html, defer_assets])
     .then(function() {
+        log("magic app assets task finish");
         defer_all.resolve();
     });
 
@@ -605,12 +620,11 @@ function task_build_mgapp_style() {
 gulp.task("dev-build-mgapp-style", task_build_mgapp_style);
 
 function task_build_mgapp() {
-    var defer_all = Q.defer(), alias, plugins = [], oldBuild, newBuild;
+    var defer_all = Q.defer(), defer_build = Q.defer(),
+        alias, plugins = [], oldBuild, newBuild;
 
-    var UglifyJSPlugin = require('uglifyjs-webpack-plugin');
-
-    alias = extend({}, DIR_ALIAS);
-    delete alias.resolve;
+    alias = extend({}, DIR_ALIAS); delete alias.resolve;
+    alias.vue = BUILD_RELEASE ? "vue/dist/vue.min.js" : "vue/dist/vue.js";
 
     oldBuild = BUILD_RELEASE ? /(\w)(\.MagicVue=)(\w\(\))/
                              : /else\s*root\[\"MagicVue\"\] = factory\(\);/;
@@ -619,43 +633,78 @@ function task_build_mgapp() {
                              : 'else {\n\t\troot.MagicVue = root.$$$ = factory().default;'+
                                ' \n\t\troot.Magic = root.$ = root.MagicVue.Magic;\n\t}';
 
-    BUILD_RELEASE && plugins.push(new UglifyJSPlugin());
+    if (BUILD_RELEASE) {
+        plugins.push(new webpackUglifyJS());
+    } else {
+        plugins.push(new webpack.HotModuleReplacementPlugin());
+        plugins.push(new webpack.NamedModulesPlugin());
+    }
 
-    gulp.src(DIR_APP_PUBLIC+"main.js")
-    .pipe(gulpWebpack({
+    webpack({
         context: DIR_BASE,
+        entry: './app/public/main.js',
 
         output: {
-            filename: "[name].js",
-            publicPath: "./pages/",
+            publicPath: '/pages/',
+            path: DIR_APP_DIST+"pages/",
+
+            filename: '[name].js',
 
             library: 'MagicVue',
             libraryTarget: "umd",
         },
 
-        resolve: {
-            alias: alias
-        },
-
         module: {
             rules: [
+                { test: /pages\/.*index\.js$/, use: [ "mgvue-loader" ] },
                 { test: /\.html$/, use: [ "html-loader" ] },
+                { test: /\.css$/, use: [ "style-loader", "css-loader" ] }
             ],
         },
 
-        plugins: plugins,
-    }, webpack))
-    .pipe(replace(oldBuild, newBuild))
-    .pipe(gulp.dest(DIR_APP_DIST+"pages/"))
-    .on("finish", function() {
-        gulp.src(DIR_APP_DIST+"pages/main*.js")
-        .pipe(rename("main.js"))
-        .pipe(gulp.dest(DIR_APP_DIST+"assets/"))
-        .on("finish", function() {
-            del(DIR_APP_DIST+"pages/main*.js");
+        resolve: { alias: alias }, plugins: plugins,
+    }, function(err, stats) {
+        var error = null;
+
+        if (err) {
+            log(err.stack || err, "error");
+            if (err.details) log(err.details, "error");
+            error = err.details || err.stack || err;
+        }
+
+        if (stats.hasErrors() || stats.hasWarnings()) {
+            var info = stats.toJson(), style;
+
+            if (stats.hasErrors()) {
+                log(info.errors, "error");
+            } else {
+                log(info.warnings, "warn");
+            }
+
+            error = info.errors || null;
+        }
+
+        defer_build.resolve(error);
+    });
+
+    defer_build.promise.then(function(error) {
+        if (error) {
             defer_all.resolve();
-        })
-    })
+        } else {
+            log("--- magic app webpack build finish");
+
+            gulp.src(DIR_APP_DIST+"pages/main*.js")
+            .pipe(replace(oldBuild, newBuild))
+            .pipe(gulp.dest(DIR_APP_DIST+"assets/"))
+            .on("finish", function() {
+                del(DIR_APP_DIST+"pages/main*.js")
+                .then(function() {
+                    log("magic app all task build finish");
+                    defer_all.resolve();
+                });
+            });
+        }
+    });
 
     return defer_all.promise;
 }
@@ -672,9 +721,7 @@ function clean_assets() {
 /**===============================================
  * 项目整体相关函数
  =================================================*/
-gulp.task("build-all", function(r) {
-    BUILD_RELEASE = r ? true : false;
-
+gulp.task("build-all", function() {
     task_build_mixin()
     .then(function() {
         return task_build_minjs();
@@ -688,8 +735,6 @@ gulp.task("build-all", function(r) {
 })
 
 gulp.task("build", function(r) {
-    BUILD_RELEASE = r ? true : false;
-
     return Q.all([
         task_build_mgapp_style(),
         task_build_mgapp_assets()
@@ -698,34 +743,36 @@ gulp.task("build", function(r) {
     });
 })
 
-gulp.task("serve", function(d) {
-    var DEBUG = d ? true : false;
+gulp.bindTask("serve", function(d, r) {
+    var args = arguments, DEBUG = args[0] ? true : false;
+    BUILD_RELEASE = args[1] ? true : false;
 
-    browserSync.init({
-        server: {
-            baseDir: DIR_APP_DIST
-        }
-    });
 
-    if (DEBUG === true) {
-        gulp.watch([DIR_MIXIN+"**/*"],    ["dev-build-mixin"]);
-        gulp.watch([DIR_MINJS+"**/*.js"], ["dev-build-minjs"]);
-
-        gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-magic"]);
-
-        gulp.watch([DIR_MIXIN+"**/*", DIR_MGVUE+"style/**/*"], ["dev-build-mgvue-style"]);
-        gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js",
-                    DIR_MGVUE+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-mgvue"]);
-    }
-
-    gulp.watch([DIR_MIXIN+"**/*", DIR_MGVUE+"style/**/*",
-                DIR_APP_PUBLIC+"**/*.scss"], ["dev-build-mgapp-style"]);
-
-    gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js",
-                DIR_MGVUE+"**/*.js", DIR_MINJS+"**/*.js",
-                DIR_APP_PUBLIC+"**/*.js"], ["dev-build-mgapp"]);
-
-    gulp.watch([DIR_APP_DIST+"**/*", DIR_APP+"/index.html"]).on("change", reload);
+    // browserSync.init({
+    //     server: {
+    //         baseDir: DIR_APP_DIST
+    //     }
+    // });
+    //
+    // if (DEBUG === true) {
+    //     gulp.watch([DIR_MIXIN+"**/*"],    ["dev-build-mixin"]);
+    //     gulp.watch([DIR_MINJS+"**/*.js"], ["dev-build-minjs"]);
+    //
+    //     gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-magic"]);
+    //
+    //     gulp.watch([DIR_MIXIN+"**/*", DIR_MGVUE+"style/**/*"], ["dev-build-mgvue-style"]);
+    //     gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js",
+    //                 DIR_MGVUE+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-mgvue"]);
+    // }
+    //
+    // gulp.watch([DIR_MIXIN+"**/*", DIR_MGVUE+"style/**/*",
+    //             DIR_APP_PUBLIC+"**/*.scss"], ["dev-build-mgapp-style"]);
+    //
+    // gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js",
+    //             DIR_MGVUE+"**/*.js", DIR_MINJS+"**/*.js",
+    //             DIR_APP_PUBLIC+"**/*.js"], ["dev-build-mgapp"]);
+    //
+    // gulp.watch([DIR_APP_DIST+"**/*", DIR_APP+"/index.html"]).on("change", reload);
 });
 
 gulp.task("clean", function() {

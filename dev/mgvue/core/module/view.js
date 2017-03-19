@@ -172,7 +172,7 @@ viewMixins = {
     beforeDestroy: function() {
         var self = this, delEl = self.$$render || self.$el;
 
-        slef.$emit("mgViewHide", self.$$params);
+        self.$emit("mgViewHide", self.$$params);
         self.$emit("mgViewDestory");
         raf(function() { removeProxy.call(delEl) });
     }
