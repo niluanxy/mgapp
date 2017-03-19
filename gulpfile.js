@@ -13,7 +13,6 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     gulpif              = require("gulp-if"),
     minifycss           = require("gulp-clean-css"),
     px2rem              = require("gulp-px2rem"),
-    browserSync         = require("browser-sync"),
     throttle            = require("throttle-debounce/throttle"),
     debounce            = require("throttle-debounce/debounce"),
     rollup              = require("rollup-stream"),
@@ -106,10 +105,6 @@ var DIR_ALIAS = {
 
     pages: DIR_APP+"pages",
 };
-
-var reload = throttle(20, function() {
-    browserSync.reload();
-});
 
 function log(str, style) {
     style = style || "info";
@@ -777,31 +772,17 @@ gulp.bindTask("serve", function(d, r) {
     server.listen(3000, "127.0.0.1", function() {
         console.log("Starting server on http://localhost:3000");
     });
-    // browserSync.init({
-    //     server: {
-    //         baseDir: DIR_APP_DIST
-    //     }
-    // });
-    //
-    // if (DEBUG === true) {
-    //     gulp.watch([DIR_MIXIN+"**/*"],    ["dev-build-mixin"]);
-    //     gulp.watch([DIR_MINJS+"**/*.js"], ["dev-build-minjs"]);
-    //
-    //     gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-magic"]);
-    //
-    //     gulp.watch([DIR_MIXIN+"**/*", DIR_MGVUE+"style/**/*"], ["dev-build-mgvue-style"]);
-    //     gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js",
-    //                 DIR_MGVUE+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-mgvue"]);
-    // }
-    //
-    // gulp.watch([DIR_MIXIN+"**/*", DIR_MGVUE+"style/**/*",
-    //             DIR_APP_PUBLIC+"**/*.scss"], ["dev-build-mgapp-style"]);
-    //
-    // gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js",
-    //             DIR_MGVUE+"**/*.js", DIR_MINJS+"**/*.js",
-    //             DIR_APP_PUBLIC+"**/*.js"], ["dev-build-mgapp"]);
-    //
-    // gulp.watch([DIR_APP_DIST+"**/*", DIR_APP+"/index.html"]).on("change", reload);
+
+    if (DEBUG === true) {
+        gulp.watch([DIR_MIXIN+"**/*"],    ["dev-build-mixin"]);
+        gulp.watch([DIR_MINJS+"**/*.js"], ["dev-build-minjs"]);
+
+        gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-magic"]);
+
+        gulp.watch([DIR_MIXIN+"**/*", DIR_MGVUE+"style/**/*"], ["dev-build-mgvue-style"]);
+        gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js",
+                    DIR_MGVUE+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-mgvue"]);
+    }
 });
 
 gulp.task("clean", function() {

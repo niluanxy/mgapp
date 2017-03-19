@@ -9,7 +9,6 @@
   "author": "木风 <smufeng@126.com>",
   "license": "MIT",
   "devDependencies": {
-    "browser-sync": "^2.18.5",
     "colors": "^1.1.2",
     "css-loader": "^0.27.3",
     "del": "^2.2.2",
