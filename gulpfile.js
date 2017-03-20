@@ -23,6 +23,7 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     rollupNodeResolve   = require("rollup-plugin-node-resolve"),
     source              = require("vinyl-source-stream"),
     sass                = require("gulp-sass"),
+    open                = require("opn"),
     extend              = require("extend"),
     webpack             = require("webpack"),
     webpackDevServer    = require("webpack-dev-server"),
@@ -664,8 +665,8 @@ function initWebpackConfig() {
     }
 }
 
-function task_build_mgapp() {
-    var defer_all = Q.defer(), defer_build = Q.defer(), oldBuild, newBuild;
+function task_mgapp_fix_main() {
+    var defer_all = Q.defer(), oldBuild, newBuild;
 
     oldBuild = BUILD_RELEASE ? /(\w)(\.MagicVue=)(\w\(\))/
                              : /else\s*root\[\"MagicVue\"\] = factory\(\);/;
@@ -673,16 +674,27 @@ function task_build_mgapp() {
                                'if("undefined"==typeof define&&!$1.$)$1.$=$1.MagicVue.Magic;'
                              : 'else {\n\t\troot.MagicVue = root.$$$ = factory().default;'+
                                ' \n\t\troot.Magic = root.$ = root.MagicVue.Magic;\n\t}';
-    webpack(initWebpackConfig(), function(err, stats) {
+
+    gulp.src(DIR_APP_DIST+"pages/main*.js")
+    .pipe(replace(oldBuild, newBuild))
+    .pipe(gulp.dest(DIR_APP_DIST+"assets/"))
+    .on("finish", function() {
+        del(DIR_APP_DIST+"pages/main*.js")
+        .then(function() { defer_all.resolve(); });
+    });
+
+    return defer_all.promise;
+}
+
+function initCallback(callback) {
+    return function(err, stats) {
         var error = null;
 
         if (err) {
             log(err.stack || err, "error");
             if (err.details) log(err.details, "error");
             error = err.details || err.stack || err;
-        }
-
-        if (stats.hasErrors() || stats.hasWarnings()) {
+        } else if (stats.hasErrors() || stats.hasWarnings()) {
             var info = stats.toJson(), style;
 
             if (stats.hasErrors()) {
@@ -694,27 +706,27 @@ function task_build_mgapp() {
             error = info.errors || null;
         }
 
-        defer_build.resolve(error);
-    });
+        if (typeof callback === "function") {
+            callback(error);
+        }
+    }
+}
 
-    defer_build.promise.then(function(error) {
+function task_build_mgapp() {
+    var defer_all = Q.defer();
+
+    webpack(initWebpackConfig(), initCallback(function(error) {
         if (error) {
-            defer_all.resolve();
+            log(error, "error"); defer_all.resolve();
         } else {
             log("--- magic app webpack build finish");
 
-            gulp.src(DIR_APP_DIST+"pages/main*.js")
-            .pipe(replace(oldBuild, newBuild))
-            .pipe(gulp.dest(DIR_APP_DIST+"assets/"))
-            .on("finish", function() {
-                del(DIR_APP_DIST+"pages/main*.js")
-                .then(function() {
-                    log("magic app all task build finish");
-                    defer_all.resolve();
-                });
+            task_mgapp_fix_main().then(function() {
+                log("magic app all task build finish");
+                defer_all.resolve();
             });
         }
-    });
+    }));
 
     return defer_all.promise;
 }
@@ -744,34 +756,22 @@ gulp.task("build-all", function() {
     })
 })
 
-gulp.task("build", function(r) {
+function task_build() {
     return Q.all([
         task_build_mgapp_style(),
         task_build_mgapp_assets()
     ]).then(function() {
         return task_build_mgapp();
     });
-})
+}
+gulp.task("build", task_build);
 
 gulp.bindTask("serve", function(d, r) {
-    var args = arguments, DEBUG, alias, server
+    var args = arguments, DEBUG, compile, server,
+        defer_build = Q.defer(), defer_assets = Q.defer();
 
     DEBUG = args[0] ? true : false;
     BUILD_RELEASE = args[1] ? true : false;
-
-    alias = extend({}, DIR_ALIAS); delete alias.resolve;
-    alias.vue = BUILD_RELEASE ? "vue/dist/vue.min.js" : "vue/dist/vue.js";
-
-    server = new webpackDevServer(webpack(initWebpackConfig()), {
-        hot: true,
-
-        publicPath: '/pages/',
-        contentBase: DIR_APP_DIST,
-    });
-
-    server.listen(3000, "127.0.0.1", function() {
-        console.log("Starting server on http://localhost:3000");
-    });
 
     if (DEBUG === true) {
         gulp.watch([DIR_MIXIN+"**/*"],    ["dev-build-mixin"]);
@@ -782,6 +782,50 @@ gulp.bindTask("serve", function(d, r) {
         gulp.watch([DIR_MIXIN+"**/*", DIR_MGVUE+"style/**/*"], ["dev-build-mgvue-style"]);
         gulp.watch([DIR_MAGIC+"**/*.js", DIR_MINJS+"**/*.js",
                     DIR_MGVUE+"**/*.js", DIR_MINJS+"**/*.js"], ["dev-build-mgvue"]);
+    }
+
+    if (BUILD_RELEASE === false) {
+        Q.all([
+            task_build_mgapp_style(),
+            task_build_mgapp_assets()
+        ]).then(function() {
+            defer_assets.resolve();
+            log("----------------------------------------------");
+        })
+
+        compile = webpack(initWebpackConfig());
+        compile.run(initCallback(function(error) {
+            if (error) {
+                log(error, "error");
+                defer_build.reject();
+            } else {
+                defer_build.resolve();
+            }
+        }));
+
+        Q.all([
+            defer_assets.promise,
+            defer_build.promise
+        ]).then(function() {
+            task_mgapp_fix_main().then(function() {
+                server = new webpackDevServer(compile, {
+                    hot: true,
+                    noInfo: true,
+                    watchContentBase: true,
+                    publicPath: '/pages/',
+                    contentBase: DIR_APP_DIST,
+                });
+
+                server.listen(3000, "0.0.0.0", function() {
+                    log("Server has run on http://localhost:3000");
+                    open("http://localhost:3000");
+                });
+            })
+        });
+    } else {
+        task_build().then(function() {
+            browserSync.init({ server: { baseDir: DIR_APP_DIST } });
+        });
     }
 });
 
