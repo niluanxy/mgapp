@@ -28,7 +28,8 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     webpack             = require("webpack"),
     webpackDevServer    = require("webpack-dev-server"),
     gulpWebpack         = require("webpack-stream"),
-    webpackUglifyJS     = require('uglifyjs-webpack-plugin');
+    webpackUglifyJS     = require('uglifyjs-webpack-plugin'),
+    webSocket           = require('ws');
 
 colors.setTheme({ silly: 'rainbow', input: 'grey', verbose: 'cyan',
     prompt: 'red', info: 'green', data: 'blue', help: 'cyan',
@@ -123,9 +124,9 @@ gulp.task = function(taskName, taskFunction) {
         BUILD_RELEASE = r ? true : false;
 
         if (BUILD_RELEASE === true) {
-            process.env.node_env = 'development';
+            process.env.NODE_ENV = 'development';
         } else {
-            process.env.node_env = 'production';
+            process.env.NODE_ENV = 'production';
         }
 
         return taskFunction();
@@ -571,13 +572,26 @@ function task_app_style_concat() {
 
 function task_build_mgapp_assets() {
     var defer_all = Q.defer(), defer_assets = Q.defer(),
-        defer_html = Q.defer();
+        defer_html = Q.defer(), reloadScript;
+
+    reloadScript = '\n\t<script type="text/javascript">'+
+        '\n\t\tvar socket = new WebSocket("ws://localhost:3001/"),'+
+        '\n\t\t\tHOT_KEY = "__HOT_MG_VUE_HAST__";'+
+        '\n\t\tsocket.onmessage = function(event) {'+
+        '\n\t\t\tif (event.data == "_MG_RELOAD_") {'+
+        '\n\t\t\t\tlocalStorage.setItem(HOT_KEY, window[HOT_KEY]);'+
+        '\n\t\t\t\tlocation.reload();'+
+        '\n\t\t\t}'+
+        '\n\t\t};'+
+        '\n\t</script>\n</body>';
+
 
     gulp.src([ DIR_APP+"assets/**/*" ])
     .pipe(gulp.dest(DIR_APP_DIST+"assets/"))
     .on("finish", function() { defer_assets.resolve() })
 
     gulp.src(DIR_APP+"index.html")
+    .pipe(replace(/\<\/body\>/, reloadScript))
     .pipe(gulp.dest(DIR_APP_DIST))
     .on("finish", function() { defer_html.resolve() })
 
@@ -640,6 +654,7 @@ function initWebpackConfig() {
     }
 
     return {
+        cache: false,
         entry: entry,
         context: DIR_BASE,
 
@@ -666,7 +681,8 @@ function initWebpackConfig() {
 }
 
 function task_mgapp_fix_main() {
-    var defer_all = Q.defer(), oldBuild, newBuild;
+    var defer_all = Q.defer(), oldBuild, newBuild,
+        oldVarHash, newVarHash, oldSetHash, newSetHash;
 
     oldBuild = BUILD_RELEASE ? /(\w)(\.MagicVue=)(\w\(\))/
                              : /else\s*root\[\"MagicVue\"\] = factory\(\);/;
@@ -675,12 +691,22 @@ function task_mgapp_fix_main() {
                              : 'else {\n\t\troot.MagicVue = root.$$$ = factory().default;'+
                                ' \n\t\troot.Magic = root.$ = root.MagicVue.Magic;\n\t}';
 
+    oldVarHash = /var\shotCurrentHash\s\=\s(.{22});/;
+    newVarHash = 'var hotCurrentHash = '+
+                    'localStorage.getItem("__HOT_MG_VUE_HAST__") || $1;'+
+                    'localStorage.removeItem("__HOT_MG_VUE_HAST__");'
+
+    oldSetHash = "hotCurrentHash = hotUpdateNewHash;";
+    newSetHash = "window.__HOT_MG_VUE_HAST__ = hotCurrentHash = hotUpdateNewHash;";
+
     gulp.src(DIR_APP_DIST+"pages/main*.js")
     .pipe(replace(oldBuild, newBuild))
+    .pipe(replace(oldVarHash, newVarHash))
+    .pipe(replace(oldSetHash, newSetHash))
     .pipe(gulp.dest(DIR_APP_DIST+"assets/"))
     .on("finish", function() {
-        del(DIR_APP_DIST+"pages/main*.js")
-        .then(function() { defer_all.resolve(); });
+        del(DIR_APP_DIST+"pages/main*.js");
+        defer_all.resolve();
     });
 
     return defer_all.promise;
@@ -767,11 +793,12 @@ function task_build() {
 gulp.task("build", task_build);
 
 gulp.bindTask("serve", function(d, r) {
-    var args = arguments, DEBUG, compile, server,
+    var args = arguments, DEBUG, server, compile, wss,
         defer_build = Q.defer(), defer_assets = Q.defer();
 
     DEBUG = args[0] ? true : false;
     BUILD_RELEASE = args[1] ? true : false;
+    process.env.NODE_ENV = args[1] ? 'production' : 'development';
 
     if (DEBUG === true) {
         gulp.watch([DIR_MIXIN+"**/*"],    ["dev-build-mixin"]);
@@ -790,38 +817,63 @@ gulp.bindTask("serve", function(d, r) {
             task_build_mgapp_assets()
         ]).then(function() {
             defer_assets.resolve();
-            log("----------------------------------------------");
         })
 
         compile = webpack(initWebpackConfig());
         compile.run(initCallback(function(error) {
             if (error) {
-                log(error, "error");
                 defer_build.reject();
             } else {
                 defer_build.resolve();
             }
         }));
 
-        Q.all([
-            defer_assets.promise,
-            defer_build.promise
-        ]).then(function() {
+        Q.all([defer_assets.promise, defer_build.promise])
+        .then(function() {
             task_mgapp_fix_main().then(function() {
                 server = new webpackDevServer(compile, {
                     hot: true,
                     noInfo: true,
-                    watchContentBase: true,
+                    quiet: true,
                     publicPath: '/pages/',
                     contentBase: DIR_APP_DIST,
                 });
 
                 server.listen(3000, "0.0.0.0", function() {
-                    log("Server has run on http://localhost:3000");
+                    log("----------------------------------------------", "verbose");
+                    log("Server has run on http://localhost:3000", "verbose");
+                    log("----------------------------------------------", "verbose");
                     open("http://localhost:3000");
                 });
-            })
+            });
         });
+
+        gulp.watch([DIR_MIXIN+"**/*", DIR_MGVUE+"style/**/*",
+                    DIR_APP_PUBLIC+"**/*.scss", DIR_APP_MODULE+"**/*.scss",
+                    "!"+DIR_APP_PUBLIC+"style/mixin.scss"])
+            .on("change", task_build_mgapp_style);
+
+        gulp.watch([DIR_APP+"index.html", DIR_APP_ASSETS+"**/*",
+                    "!"+DIR_APP_ASSETS+"debug"])
+            .on("change", task_build_mgapp_assets);
+
+        gulp.watch([DIR_MINJS+"**/*.js", DIR_MAGIC+"**/*.js",
+                    DIR_MGVUE+"**/*.js", DIR_APP_PUBLIC+"**/*.js",
+                    DIR_APP_MODULE+"**/*.js"])
+            .on("change", function() {
+                task_build_mgapp().then(function() {
+                    wss.broadcast("_MG_RELOAD_");
+                });
+            });
+
+        wss = new webSocket.Server({ port: 3001 });
+        wss.broadcast = function broadcast(data) {
+            wss.clients.forEach(function(client) {
+                if (client.readyState === webSocket.OPEN) {
+                    client.send(data);
+                }
+            });
+        };
     } else {
         task_build().then(function() {
             browserSync.init({ server: { baseDir: DIR_APP_DIST } });
