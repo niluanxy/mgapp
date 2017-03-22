@@ -169,6 +169,10 @@ viewMixins = {
     mounted: function() {
         var self = this, $opt = self.$options;
 
+        if ($opt.style && $opt.style.page) {
+            self.$el.classList.add($opt.style.page);
+        }
+
         viewParentFix(self);
         self.$emit("mgViewReady", self.$$params);
 
@@ -268,6 +272,7 @@ export function loadView(viewName, bindView) {
     }
 }
 
+MagicVue.viewFactory = viewFactory;
 MagicVue.renderView = renderView;
 MagicVue.initView = initView;
 MagicVue.loadView = loadView;
