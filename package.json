@@ -28,7 +28,7 @@
     "gulp-sass": "^2.3.0",
     "gulp-shell": "^0.5.2",
     "html-loader": "^0.4.5",
-    "mgvue-loader": "^0.2.1",
+    "mgvue-loader": "^0.2.4",
     "moment": "^2.15.1",
     "opn": "^4.0.2",
     "q": "^1.4.1",

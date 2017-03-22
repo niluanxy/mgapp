@@ -3,7 +3,6 @@ import RootMagic from "MG_CORE/build.js";
 import {isFunction, isTrueString} from "LIB_MINJS/check.js";
 import {addProxy as addClass} from "MG_MODULE/style/class/main.js";
 
-import {viewModeBind} from "MV_MODULE/view.js";
 import ConfigUI from "MV_UIKIT/base/config.js";
 
 var CFG = ConfigUI.loader = {};
@@ -30,7 +29,7 @@ MagicVue.on("mgViewChange.viewLoader", function(viewGo, viewLast, routeType, rou
                 .addClass(CFG.class);
         }
 
-        viewModeBind(view.$$name, "ready", function() {
+        view.$$on("ready", function() {
             $wrap.addClass(CFG.hideClass);
         });
 

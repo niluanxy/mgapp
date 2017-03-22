@@ -3,11 +3,13 @@ import {extend} from "LIB_MINJS/utils.js";
 import {removeProxy} from "MG_MODULE/dom/editer/main.js";
 import {getValue} from "MV_UIKIT/base/tools.js";
 import {raf} from "MG_STATIC/function/main.js";
+import {uuid} from "MG_STATIC/utils/main.js";
 import {isFunction, isObject, isTrueString, isElement, isArray} from "LIB_MINJS/check.js";
 
 import * as Cache from "MV_MODULE/cache.js";
 
-var viewMixins, $CACHE_SHOW = null;
+var viewMixins, $CACHE_SHOW = null,
+    RootVue = MagicVue.RootVue, RootEmitter = MagicVue.RootEmitter;
 
 export function nameTrans(name, tag) {
     var ret = "ma-"+name;
@@ -32,6 +34,44 @@ function createWraper(dom) {
     return $wrap.childNodes[0];
 }
 
+function createEmitBind(hash, type) {
+    return function(eve /* args... */) {
+        var args = extend([], arguments);
+
+        args[0] = createEmitName(hash, eve);
+        RootEmitter[type].apply(RootEmitter, args);
+    }
+}
+
+function createEmitName(hash, eve) {
+    return hash+"_"+eve;
+}
+
+function viewEmitInit($wraper, $render) {
+    var hash = $wraper.$$name+" "+uuid();
+
+    $render.$$hash = hash;
+    $wraper.$$hash = hash;
+
+    $render.$$on   = createEmitBind(hash, "on");
+    $render.$$once = createEmitBind(hash, "once");
+    $render.$$off  = createEmitBind(hash, "off");
+
+    return $render;
+}
+
+function viewEmitCall($scope, eve /* args... */) {
+    var opt = $scope.$options, $wrap = opt.el, hash, args;
+
+    if ($wrap && (hash = $wrap.$$hash)) {
+        args = extend([], arguments);
+        eve  = createEmitName(hash, eve);
+        args.splice(1, 1); args.unshift(eve);
+
+        RootEmitter.emit.apply(RootEmitter, args);
+    }
+}
+
 export function renderView(name, params, $wrap) {
     if (!name.match(/^ma/)) name = nameTrans(name);
 
@@ -52,10 +92,10 @@ export function renderView(name, params, $wrap) {
 
     // 保存到渲染元素上，用于异步组件获取参数
     $wraper.$$name   = name;
-    $wraper.$$params = params || {};
     $wraper.$$render = $parent;
+    $wraper.$$params = params || {};
 
-    return $render;
+    return viewEmitInit($wraper, $render);
 }
 
 /**========================================================
@@ -98,32 +138,6 @@ function viewParentFix(vueView) {
     vueView.$parent = $parent;
 }
 
-function makeModeCall(name, eve) {
-    if (name.match("/^ma-/")) name = nameTrans(name);
-
-    return "``_mg_view_"+name+"_call"+"."+eve;
-}
-
-export function viewModeEmit(scope, eve) {
-    if (scope && scope.$options) {
-        var name = scope.$options.name, call;
-
-        if (scope.$$render && name) {
-            call = makeModeCall(name, eve);
-            MagicVue.emit(call, scope);
-        }
-    }
-}
-
-export function viewModeBind(name, eve, callback, onType) {
-    if (isTrueString(name) && isTrueString(eve)) {
-        var callEve = makeModeCall(name, eve),
-            bind = onType ? "on" : "once";
-
-        MagicVue[bind](callEve, callback);
-    }
-}
-
 viewMixins = {
     created: function() {
         var self = this, $opt = self.$options, $el = $opt.el;
@@ -149,7 +163,7 @@ viewMixins = {
         self.$emit("mgViewCreated");
 
         // 尝试调用 view 模式页面回调事件
-        viewModeEmit(self, "created");
+        viewEmitCall(self, "created");
     },
 
     mounted: function() {
@@ -159,7 +173,7 @@ viewMixins = {
         self.$emit("mgViewReady", self.$$params);
 
         // 尝试调用 view 模式页面回调事件
-        viewModeEmit(self, "ready");
+        viewEmitCall(self, "ready");
 
         // 默认不是隐藏的页面，则立即触发 显示回调事件
         if (!self.$$defaultHide) {
@@ -236,7 +250,7 @@ export function loadView(viewName, bindView) {
 
             // 如果为异步组件，则需要在组件创建后更新 scope 对象
             if (!($viewGo instanceof MagicVue.Vue)) {
-                viewModeBind(bindName, "created", function(scope) {
+                $viewGo.$$once("created", function(scope) {
                     $cache.scope = scope;
                 });
             }

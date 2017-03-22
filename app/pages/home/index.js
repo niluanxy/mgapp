@@ -3,8 +3,8 @@ module.exports = {
     template: require("./template.html"),
 
     data: {
-        title: "首页测试",
-        print: "default 123",
+        title: "首页测试 @@@",
+        print: "default 111",
         dis: false,
         sel: 2,
     },
