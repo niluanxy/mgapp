@@ -214,9 +214,8 @@ function task_mgapp_main_build() {
         if (error) {
             log(error, "error"); defer_all.resolve();
         } else {
-            log("--- mgapp main build finish");
-
             task_mgapp_main_fix().then(function() {
+                log("--- mgapp main build finish");
                 defer_build.resolve();
             });
         }

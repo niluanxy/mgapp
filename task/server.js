@@ -35,8 +35,8 @@ var DIR    = require("./base").DIR,
 
     task_magic_build = require("./magic").build,
 
+    task_mgvue_main_build  = require("./mgvue").buildMain,
     task_mgvue_style_build = require("./mgvue").buildStyle,
-    task_mgvue_main_build  = require("./mgvue").build,
 
     task_mgapp_main_build  = require("./mgapp").buildMain,
     task_mgapp_style_build = require("./mgapp").buildStyle,
@@ -115,8 +115,8 @@ function startServer(d, r) {
 
         Q.all([defer_assets.promise, defer_build.promise])
         .then(function() {
-
             task_mgapp_main_fix().then(function() {
+                log("--- mgapp main build finish");
 
                 server = new webpackDevServer(compile, {
                     hot: true, noInfo: true, quiet: true,

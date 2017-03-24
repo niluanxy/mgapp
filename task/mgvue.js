@@ -86,7 +86,7 @@ function task_mgvue_style_build() {
         .pipe(gulpif(RELEASE, minifycss()))
         .pipe(gulp.dest(DIR.APP_ASSETS+"debug/"))
         .on("finish", function() {
-            log("mgvue style build css finish");
+            log("--- mgvue style build finish");
             clean_mgvue_style_concat();
             defer_build.resolve();
         });
@@ -176,6 +176,21 @@ function task_mgvue_main_build() {
         task_mgvue_core_build(),
         task_mgvue_uikit_build()
     ]).then(function() {
+        log("--- mgvue main build finish");
+        defer_build.resolve();
+    });
+
+    return defer_build.promise;
+}
+
+function task_mgvue_build() {
+    var defer_build = Q.defer();
+
+    Q.all([
+        task_mgvue_style_build(),
+        task_mgvue_core_build(),
+        task_mgvue_uikit_build()
+    ]).then(function() {
         log("mgvue task all finish");
         defer_build.resolve();
     });
@@ -189,6 +204,7 @@ module.exports = {
 
     concat: task_mgvue_style_concat,
 
-    build: task_mgvue_main_build,
+    build     : task_mgvue_build,
+    buildMain : task_mgvue_main_build,
     buildStyle: task_mgvue_style_build,
 };
