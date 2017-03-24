@@ -91,4 +91,6 @@ function task_magic_build() {
     return defer_build.promise;
 }
 
-module.exports = { build: task_magic_build };
+module.exports = {
+    build: task_magic_build,
+};

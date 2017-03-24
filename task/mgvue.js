@@ -187,6 +187,8 @@ function task_mgvue_main_build() {
 module.exports = {
     clean: clean_mgvue_style_concat,
 
+    concat: task_mgvue_style_concat,
+
     build: task_mgvue_main_build,
     buildStyle: task_mgvue_style_build,
 };

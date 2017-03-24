@@ -2,26 +2,28 @@ var moment  = require("moment"),
     path    = require("path");
 
 
-var DIR_BASE   = path.resolve(__dirname, "../"),
+var DIR_BASE   = path.resolve(__dirname, "../")+"/",
     CONCAT_PRE = "_concat_";
 
 var DIR = {
     BASE: DIR_BASE,
-    APP : DIR_BASE + "/app/",
-    DEV : DIR_BASE + "/dev/",
+    TASK: DIR_BASE+"task/",
 
-    MIXIN: DIR_BASE + "/dev/mixin/",
-    MINJS: DIR_BASE + "/dev/minjs/",
-    MAGIC: DIR_BASE + "/dev/magic/",
-    MGVUE: DIR_BASE + "/dev/mgvue/",
+    APP : DIR_BASE + "app/",
+    DEV : DIR_BASE + "dev/",
 
-    CONCAT: DIR_BASE + "/dev/concat/",
+    MIXIN: DIR_BASE + "dev/mixin/",
+    MINJS: DIR_BASE + "dev/minjs/",
+    MAGIC: DIR_BASE + "dev/magic/",
+    MGVUE: DIR_BASE + "dev/mgvue/",
 
-    APP_PUBLIC: DIR_BASE + "/app/public/",
-    APP_ASSETS: DIR_BASE + "/app/assets/",
-    APP_MODULE: DIR_BASE + "/app/module/",
+    CONCAT: DIR_BASE + "dev/concat/",
 
-    APP_DIST: DIR_BASE + "/dist/",
+    APP_PUBLIC: DIR_BASE + "app/public/",
+    APP_ASSETS: DIR_BASE + "app/assets/",
+    APP_MODULE: DIR_BASE + "app/module/",
+
+    APP_DIST: DIR_BASE + "dist/",
 };
 
 var CONCAT = {

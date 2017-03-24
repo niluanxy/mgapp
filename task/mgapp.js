@@ -56,7 +56,7 @@ function task_mgapp_style_build() {
     RELEASE = process.env.NODE_ENV == 'production';
 
     task_mgapp_style_concat().then(function() {
-        log("--- task magic app style concat finish");
+        log("--- mgapp style concat finish");
 
         gulp.src([DIR.APP_PUBLIC+"style/mixin.scss",
                   DIR.APP_PUBLIC+"main.scss"])
@@ -69,7 +69,7 @@ function task_mgapp_style_build() {
         .pipe(gulpif(RELEASE, minifycss()))
         .pipe(gulp.dest(DIR.APP_DIST+"assets/"))
         .on("finish", function() {
-            log("magic app style build css finish");
+            log("--- mgapp style build finish");
             defer_build.resolve();
         });
     });
@@ -79,14 +79,16 @@ function task_mgapp_style_build() {
 
 function task_mgapp_assets_build() {
     var defer_all = Q.defer(), defer_assets = Q.defer(),
-        defer_html = Q.defer(), hotScript, remScript;
+        defer_html = Q.defer(), hotScript, remScript,
+        RELEASE = process.env.NODE_ENV == 'production';
 
-    hotScript = fs.readFileSync("./template/hotSocket.js").toString();
-    hotScript = hotScript.replace(/_SOCKET_HOST_/, "127.0.0.1");
-    hotScript = hotScript.replace(/_HOT_KEY_/, HOT_KEY);
+    remScript = fs.readFileSync(DIR.TASK+"template/remScript.js").toString();
+    remScript = '</title>\n'+remScript.replace(/\n$/, '');
 
-    remScript = fs.readFileSync("./template/remScript.js").toString();
-    remScript = "</title>\n\n\t"+remScript+"\n";
+    hotScript = fs.readFileSync(DIR.TASK+"template/hotSocket.js").toString();
+    hotScript = hotScript.replace(/_SOCKET_HOST_/g, "127.0.0.1");
+    hotScript = hotScript.replace(/_HOT_KEY_/g, HOT_KEY);
+    hotScript = '\n'+hotScript+'</body>';
 
     gulp.src(DIR.APP+"assets/**/*")
     .pipe(gulp.dest(DIR.APP_DIST+"assets/"))
@@ -94,13 +96,13 @@ function task_mgapp_assets_build() {
 
     gulp.src(DIR.APP+"index.html")
     .pipe(replace(/\<\/title\>/, remScript))
-    .pipe(replace(/\<\/body\>/,  hotScript))
+    .pipe(gulpif(!RELEASE, replace(/\<\/body\>/,  hotScript)))
     .pipe(gulp.dest(DIR.APP_DIST))
     .on("finish", function() { defer_html.resolve() })
 
     Q.all([defer_html.promise, defer_assets.promise])
     .then(function() {
-        log("magic app assets task finish");
+        log("--- mgapp assets build finish");
         defer_all.resolve();
     });
 
@@ -128,7 +130,7 @@ function createConfig() {
             "./app/public/main.js"
         ],
         output: {
-            publicPath: '/pages/', path: DIR_APP_DIST+"pages/",
+            publicPath: '/pages/', path: DIR.APP_DIST+"pages/",
             filename: '[name].js', library: 'MagicVue', libraryTarget: "umd",
         },
         module: {
@@ -212,14 +214,28 @@ function task_mgapp_main_build() {
         if (error) {
             log(error, "error"); defer_all.resolve();
         } else {
-            log("--- magic app webpack build finish");
+            log("--- mgapp main build finish");
 
             task_mgapp_main_fix().then(function() {
-                log("magic app all task build finish");
                 defer_build.resolve();
             });
         }
     }));
+
+    return defer_build.promise;
+}
+
+function task_mgapp_build() {
+    var defer_build = Q.defer();
+
+    Q.all([
+        task_mgapp_assets_build(),
+        task_mgapp_style_build(),
+        task_mgapp_main_build()
+    ]).then(function() {
+        log("mgapp task all finish");
+        defer_build.resolve();
+    });
 
     return defer_build.promise;
 }
@@ -241,6 +257,7 @@ module.exports = {
     config  : createConfig,
     callback: webpackCallback,
 
+    build      : task_mgapp_build,
     buildMain  : task_mgapp_main_build,
     buildStyle : task_mgapp_style_build,
     buildAssets: task_mgapp_assets_build,
