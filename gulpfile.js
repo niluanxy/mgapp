@@ -51,6 +51,7 @@ gulp.task("clean-dist", require("./task/mgapp").cleanDist);
 gulp.task("clean-assets", require("./task/mgapp").cleanAssets);
 gulp.task("dev-build-mgapp", require("./task/mgapp").build);
 gulp.task("dev-build-mgapp-style", require("./task/mgapp").buildStyle);
+gulp.task("dev-build-mgapp-assets", require("./task/mgapp").buildAssets);
 
 /*==========================================================================
  *  开发打包 核心脚本
