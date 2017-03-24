@@ -1,4 +1,4 @@
-import MagicVue from "MV_BASE/main.js";
+import MagicVue from "MV_CORE/base/main.js";
 import RootMagic from "MG_CORE/build.js";
 import Tip from "MG_UIKIT/tip/main.js";
 import Ready from "LIB_MINJS/ready.js";

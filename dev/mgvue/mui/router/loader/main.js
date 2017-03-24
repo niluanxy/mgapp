@@ -1,4 +1,4 @@
-import MagicVue from "MV_BASE/main.js";
+import MagicVue from "MV_CORE/base/main.js";
 import RootMagic from "MG_CORE/build.js";
 import {isFunction, isTrueString} from "LIB_MINJS/check.js";
 import {addProxy as addClass} from "MG_MODULE/style/class/main.js";

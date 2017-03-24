@@ -1,4 +1,4 @@
-import MagicVue from "MV_BASE/main.js";
+import MagicVue from "MV_CORE/base/main.js";
 
 var VIEW_CACHE = [], CFG = MagicVue.config; CFG.maxViewCache = 5;
 

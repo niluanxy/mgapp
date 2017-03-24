@@ -1,4 +1,4 @@
-import MagicVue from "MV_BASE/main.js";
+import MagicVue from "MV_CORE/base/main.js";
 import RootMagic from "MG_CORE/build.js";
 import Scroll from "MG_UIKIT/scroll/main.js";
 import {extend} from "LIB_MINJS/utils.js";

@@ -1,4 +1,4 @@
-import MagicVue from "MV_BASE/main.js"
+import MagicVue from "MV_CORE/base/main.js"
 
 // 核心模块
 import "MV_MODULE/view.js";

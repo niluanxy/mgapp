@@ -3,11 +3,12 @@ import Ready from "LIB_MINJS/ready.js";
 import Vue from "vue";
 import {isFunction, isTrueString} from "LIB_MINJS/check.js";
 import {extend, applyCall} from "LIB_MINJS/utils.js";
-import Config from "MV_BASE/config.js";
+import Config from "MV_CORE/base/config.js";
+import * as Tools from "MV_CORE/base/tools.js";
 
 var MagicVue = {}, RootEmitter = Emitter(), RootVue = new Vue();
 
-MagicVue.config = Config;
+MagicVue.config = Config; extend(MagicVue, Tools);
 
 // ========================================================
 // 核心事件相关方法

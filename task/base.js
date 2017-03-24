@@ -47,17 +47,14 @@ var DIR_ALIAS = {
     LIB_MINJS: DIR.MINJS,
 
     MG_CORE  : DIR.MAGIC+"core",
-    MG_UTILS : DIR.MAGIC+"utils",
-    MG_MAGIC : DIR.MAGIC+"core/magic",
-    MG_MODULE: DIR.MAGIC+"core/module",
-    MG_STATIC: DIR.MAGIC+"core/static",
     MG_UIKIT : DIR.MAGIC+"mui",
+        MG_MAGIC : DIR.MAGIC+"core/magic",
+        MG_MODULE: DIR.MAGIC+"core/module",
+        MG_STATIC: DIR.MAGIC+"core/static",
 
     MV_CORE  : DIR.MGVUE+"core",
-    MV_BASE  : DIR.MGVUE+"core/base",
-    MV_MODULE: DIR.MGVUE+"core/module",
-    MV_PLUGIN: DIR.MGVUE+"core/plugin",
     MV_UIKIT : DIR.MGVUE+"mui",
+        MV_MODULE: DIR.MGVUE+"core/module",
 
     // magic app 相关目录常量
     ASSETS: DIR.APP_ASSETS,

@@ -1,4 +1,4 @@
-import MagicVue from "MV_BASE/main.js";
+import MagicVue from "MV_CORE/base/main.js";
 import {isTrueString} from "LIB_MINJS/check.js";
 import RootMagic from "MG_CORE/build.js";
 import Slider from "MG_UIKIT/slider/main.js";

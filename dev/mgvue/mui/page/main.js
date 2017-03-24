@@ -1,4 +1,4 @@
-import MagicVue from "MV_BASE/main.js";
+import MagicVue from "MV_CORE/base/main.js";
 
 MagicVue.component("mgPage", {
     name: "mgPage",

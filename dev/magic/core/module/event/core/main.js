@@ -2,7 +2,7 @@ import RootMagic from "MG_MAGIC/main.js";
 import Emitter from "LIB_MINJS/emitter.js";
 import {isFunction, isTrueString, isObject} from "LIB_MINJS/check.js";
 import {allProxy} from "MG_MAGIC/proxy.js";
-import {uuid} from "MG_STATIC/utils/main.js";
+import {uuid} from "LIB_MINJS/utils.js";
 import {element, extend, slice, each} from "LIB_MINJS/utils.js";
 import {parent, below, eq} from "MG_MODULE/dom/search/main.js";
 import {dataEvent} from "MG_MAGIC/tools.js";

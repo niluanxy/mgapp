@@ -1,10 +1,9 @@
-import MagicVue from "MV_BASE/main.js";
+import MagicVue from "MV_CORE/base/main.js";
 import {extend} from "LIB_MINJS/utils.js";
-import {removeProxy} from "MG_MODULE/dom/editer/main.js";
-import {getValue} from "MV_UIKIT/base/tools.js";
-import {raf} from "MG_STATIC/function/main.js";
+import {getValue} from "MV_CORE/base/tools.js";
 import {uuid} from "MG_STATIC/utils/main.js";
-import {isFunction, isObject, isTrueString, isElement, isArray} from "LIB_MINJS/check.js";
+import {isFunction, isObject, isTrueString,
+    isElement, isArray} from "LIB_MINJS/check.js";
 
 import * as Cache from "MV_MODULE/cache.js";
 
@@ -188,11 +187,18 @@ viewMixins = {
     },
 
     beforeDestroy: function() {
-        var self = this, delEl = self.$$render || self.$el;
+        var self = this;
 
         self.$emit("mgViewHide", self.$$params);
         self.$emit("mgViewDestory");
-        raf(function() { removeProxy.call(delEl) });
+    },
+
+    destroyed: function() {
+        var $el = this.$$render, $parent;
+
+        if ($el && ($parent = $el.parentNode)) {
+            $parent.removeChild($el);
+        }
     }
 };
 

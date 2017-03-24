@@ -1,4 +1,4 @@
-import MagicVue from "MV_BASE/main.js";
+import MagicVue from "MV_CORE/base/main.js";
 import Router from "LIB_MINJS/router.js";
 import {extend, applyCall} from "LIB_MINJS/utils.js";
 import {isObject, isFunction} from "LIB_MINJS/check.js";

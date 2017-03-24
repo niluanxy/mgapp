@@ -1,7 +1,6 @@
 var gulp    = require("gulp-param")(require("gulp"), process.argv),
     Q       = require("q"),
-    extend  = require("extend"),
-    log     = require("./task/base.js").log;
+    extend  = require("extend");
 
 gulp.bindTask = gulp.task;
 gulp.task = function(/* name, depends, function */) {
@@ -21,7 +20,6 @@ gulp.task = function(/* name, depends, function */) {
 
     return gulp.bindTask.apply(gulp, args);
 }
-
 
 /*==========================================================================
  *  mixin 部分编译脚本
@@ -58,7 +56,7 @@ gulp.task("dev-build-mgapp-style", require("./task/mgapp").buildStyle);
  *  开发打包 核心脚本
  *==========================================================================*/
 gulp.task("build", require("./task/mgapp").build);
-gulp.bindTask("server", require("./task/server").server);
+gulp.bindTask("serve", require("./task/server").server);
 
 /*==========================================================================
  *  clean 清理脚本

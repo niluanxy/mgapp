@@ -78,7 +78,11 @@ function startDevWatch() {
 
     gulp.watch([DIR.APP+"index.html", DIR.APP_ASSETS+"**/*",
                 "!"+DIR.APP_ASSETS+"debug"])
-        .on("change", task_mgapp_assets_build);
+        .on("change", function() {
+            task_mgapp_assets_build().then(function() {
+                wss.broadcast("_MG_RELOAD_");
+            });
+        });
 
     gulp.watch([DIR.MINJS+"**/*.js", DIR.MAGIC+"**/*.js",
                 DIR.MGVUE+"**/*.js", DIR.APP_PUBLIC+"**/*.js",

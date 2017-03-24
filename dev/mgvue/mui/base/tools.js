@@ -1,49 +1,9 @@
 import RootMagic from "MG_CORE/build.js";
 import {isTrueString} from "LIB_MINJS/check.js";
 import {extend, value as valueBase} from "LIB_MINJS/utils.js";
+import {getScope} from "MV_CORE/base/tools.js";
 
 import ConfigUI from "MV_UIKIT/base/config.js";
-
-export function getScope(scope, find) {
-    if (scope && isTrueString(find)) {
-        do {
-            if (scope[find] !== undefined) {
-                return scope;
-            }
-
-            scope = scope.$parent;
-        } while(scope);
-    }
-
-    return;
-}
-
-export function getValue(scope, find) {
-    if (scope && isTrueString(find)) {
-        do {
-            if (scope[find] !== undefined) {
-                return scope[find];
-            }
-
-            scope = scope.$parent;
-        } while(scope);
-    }
-
-    return;
-}
-
-export function getVmScope(scope) {
-    while(scope.$parent) {
-        scope = scope.$parent;
-
-        var $opt = scope.$options,
-            name = scope.$$name || $opt.name || $opt._componentTag || "";
-
-        if (name.match(/^ma-/)) return scope;
-    }
-
-    return;
-}
 
 export function value() {
     var args = extend([], arguments);
@@ -57,6 +17,17 @@ export function value() {
     }
 
     return valueBase.apply(null, args);
+}
+
+export function tryBindCtrl(scope, ctrl, ctrlName) {
+    ctrlName = ctrlName || "ctrl";
+
+    if (isTrueString(scope[ctrlName])) {
+        var ctrlKey   = scope[ctrlName],
+            findScope = getScope(scope, ctrlKey);
+
+        if (findScope) findScope[ctrlKey] = ctrl;
+    }
 }
 
 function makeListener(events) {
@@ -78,16 +49,5 @@ export function domListener(events, returnCall) {
         return [{
             mounted: makeListener(events)
         }]
-    }
-}
-
-export function tryBindCtrl(scope, ctrl, ctrlName) {
-    ctrlName = ctrlName || "ctrl";
-
-    if (isTrueString(scope[ctrlName])) {
-        var ctrlKey   = scope[ctrlName],
-            findScope = getScope(scope, ctrlKey);
-
-        if (findScope) findScope[ctrlKey] = ctrl;
     }
 }
