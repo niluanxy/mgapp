@@ -61,12 +61,10 @@
 
 @mixin page($class: page, $prefix: $config-prefix) {
     .#{$prefix+$class} {
-        display: flex;
-        flex-direction: column;
+        display: block;
         z-index: 10;
         width: 100%;
         height: 100%;
-        flex: 1;
         overflow: hidden;
         position: relative;
         background-color: #fff;

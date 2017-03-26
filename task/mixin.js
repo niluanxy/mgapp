@@ -6,8 +6,8 @@ var gulp            = require("gulp"),
     px2rem          = require("gulp-px2rem"),
     gulpif          = require("gulp-if"),
     autoprefixer    = require("gulp-autoprefixer"),
-    minifycss       = require("gulp-clean-css"),
-    sass            = require("gulp-sass");
+    sass            = require("gulp-sass"),
+    cssImport       = require("gulp-cssimport");
 
 var DIR    = require("./base").DIR,
     ALIAS  = require("./base").ALIAS,
@@ -88,17 +88,20 @@ var px2remConfig = {
 };
 
 function task_mixin_build() {
-    var defer_build = Q.defer(),
-        RELEASE = process.env.NODE_ENV == 'production';
+    var defer_build = Q.defer(), RELEASE;
+
+    RELEASE = process.env.NODE_ENV == 'production';
 
     task_mixin_concat().then(function() {
         log("--- mixin concat finish");
 
         gulp.src([DIR.CONCAT+CONCAT.MIXIN_BUILD])
-        .pipe(sass.sync().on('error', sass.logError))
+        .pipe(sass.sync({
+            outputStyle: RELEASE ? "compressed" : "nested",
+        }).on('error', sass.logError))
+        .pipe(cssImport())
         .pipe(autoprefixer())
         .pipe(px2rem(px2remConfig))
-        .pipe(gulpif(RELEASE, minifycss()))
         .pipe(gulp.dest(DIR.APP_ASSETS+"debug/"))
         .on("finish", function() {
             log("mixin build css finish");

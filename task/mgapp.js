@@ -4,7 +4,7 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     extend              = require("extend"),
     source              = require("vinyl-source-stream"),
     rollup              = require("rollup-stream"),
-    replace             = require("gulp-replace"),
+    replace             = require("gulp-replace-plus"),
     rollupReplace       = require("rollup-plugin-replace"),
     rollupAlias         = require("rollup-plugin-alias"),
     rollupUglify        = require("rollup-plugin-uglify"),
@@ -14,16 +14,17 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     gulpif              = require("gulp-if"),
     autoprefixer        = require("gulp-autoprefixer"),
     sass                = require("gulp-sass"),
-    minifycss           = require("gulp-clean-css"),
+    cssImport           = require("gulp-cssimport"),
     fs                  = require("fs"),
     webpack             = require("webpack"),
     webpackUglifyJS     = require('uglifyjs-webpack-plugin');
 
 
-var DIR    = require("./base").DIR,
-    ALIAS  = require("./base").ALIAS,
-    CONCAT = require("./base").CONCAT,
-    log    = require("./base").log,
+var log        = require("./base").log,
+    DIR        = require("./base").DIR,
+    CONCAT     = require("./base").CONCAT,
+    ALIAS      = require("./base").ALIAS,
+    SASS_ALIAS = require("./base").SASS_ALIAS,
 
     px2remConfig = require("./mixin").config,
     task_mgvue_style_concat = require("./mgvue").concat;
@@ -61,12 +62,13 @@ function task_mgapp_style_build() {
         gulp.src([DIR.APP_PUBLIC+"style/mixin.scss",
                   DIR.APP_PUBLIC+"main.scss"])
         .pipe(concat("main.scss"))
-        .pipe(replace(/PUBLIC/g, DIR.APP_PUBLIC))
-        .pipe(replace(/ASSETS/g, DIR.APP_ASSETS))
-        .pipe(sass.sync().on('error', sass.logError))
+        .pipe(replace(SASS_ALIAS))
+        .pipe(sass.sync({
+            outputStyle: RELEASE ? "compressed" : "nested",
+        }).on('error', sass.logError))
+        .pipe(cssImport())
         .pipe(autoprefixer())
         .pipe(px2rem(px2remConfig))
-        .pipe(gulpif(RELEASE, minifycss()))
         .pipe(gulp.dest(DIR.APP_DIST+"assets/"))
         .on("finish", function() {
             log("--- mgapp style build finish");
@@ -137,7 +139,13 @@ function createConfig() {
             rules: [
                 { test: /pages\/.*index\.js$/, use: [ "mgvue-loader" ] },
                 { test: /\.html$/, use: [ "html-loader" ] },
-                { test: /\.css$/, use: [ "style-loader", "css-loader" ] }
+                { test: /\.css$/, use: [ "style-loader", "css-loader" ] },
+                { test: /\.(eot|svg|ttf|woff|woff2)(\?\S*)?$/, loader: 'file-loader' },
+                {
+                    test: /\.(png|jpe?g|gif|svg)(\?\S*)?$/,
+                    loader: 'file-loader',
+                    query: { name: '[name].[ext]?[hash]' }
+                },
             ],
         },
         resolve: { alias: alias }, plugins: plugins,
@@ -212,7 +220,7 @@ function task_mgapp_main_build() {
 
     webpack(createConfig(), webpackCallback(function(error) {
         if (error) {
-            log(error, "error"); defer_all.resolve();
+            log(error, "error"); defer_build.reject();
         } else {
             task_mgapp_main_fix().then(function() {
                 log("--- mgapp main build finish");

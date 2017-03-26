@@ -1,25 +1,8 @@
 var gulp                = require("gulp-param")(require("gulp"), process.argv),
-    extend              = require("extend"),
     Q                   = require("q"),
-    extend              = require("extend"),
-    source              = require("vinyl-source-stream"),
-    rollup              = require("rollup-stream"),
-    replace             = require("gulp-replace"),
-    rollupReplace       = require("rollup-plugin-replace"),
-    rollupAlias         = require("rollup-plugin-alias"),
-    rollupUglify        = require("rollup-plugin-uglify"),
-    del                 = require("del"),
-    concat              = require("gulp-concat"),
-    px2rem              = require("gulp-px2rem"),
-    gulpif              = require("gulp-if"),
-    autoprefixer        = require("gulp-autoprefixer"),
-    sass                = require("gulp-sass"),
-    minifycss           = require("gulp-clean-css"),
-    fs                  = require("fs"),
     open                = require("opn"),
     webpack             = require("webpack"),
     webpackDevServer    = require("webpack-dev-server"),
-    webpackUglifyJS     = require('uglifyjs-webpack-plugin'),
     webSocket           = require('ws');
 
 
@@ -28,7 +11,6 @@ var DIR    = require("./base").DIR,
     CONCAT = require("./base").CONCAT,
     log    = require("./base").log,
 
-    px2remConfig     = require("./mixin").config,
     task_mixin_build = require("./mixin").build,
 
     task_minjs_build = require("./minjs").build,

@@ -1,5 +1,6 @@
-# 过滤 node 依赖工具
+# 过滤 node 相关文件
 /node_modules
+npm-debug.log
 
 # 过滤 svn 文件
 .svn
@@ -13,7 +14,6 @@
 /dev/mixin.css
 /dev/mixin.scss
 /dev/concat
-
 /app/libs
 
 

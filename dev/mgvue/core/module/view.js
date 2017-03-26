@@ -192,14 +192,6 @@ viewMixins = {
         self.$emit("mgViewHide", self.$$params);
         self.$emit("mgViewDestory");
     },
-
-    destroyed: function() {
-        var $el = this.$$render, $parent;
-
-        if ($el && ($parent = $el.parentNode)) {
-            $parent.removeChild($el);
-        }
-    }
 };
 
 

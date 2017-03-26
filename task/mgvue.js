@@ -4,7 +4,7 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     extend              = require("extend"),
     source              = require("vinyl-source-stream"),
     rollup              = require("rollup-stream"),
-    replace             = require("gulp-replace"),
+    replace             = require("gulp-replace-plus"),
     rollupReplace       = require("rollup-plugin-replace"),
     rollupAlias         = require("rollup-plugin-alias"),
     rollupUglify        = require("rollup-plugin-uglify"),
@@ -16,7 +16,7 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     gulpif              = require("gulp-if"),
     autoprefixer        = require("gulp-autoprefixer"),
     sass                = require("gulp-sass"),
-    minifycss           = require("gulp-clean-css");
+    cssImport           = require("gulp-cssimport");
 
 var DIR    = require("./base").DIR,
     ALIAS  = require("./base").ALIAS,
@@ -80,10 +80,12 @@ function task_mgvue_style_build() {
         log("--- mgvue style concot finish");
 
         gulp.src(DIR.CONCAT+CONCAT.MGVUE_STYLE_BUILD)
-        .pipe(sass.sync().on('error', sass.logError))
+        .pipe(sass.sync({
+            outputStyle: RELEASE ? "compressed" : "nested",
+        }).on('error', sass.logError))
+        .pipe(cssImport())
         .pipe(autoprefixer())
         .pipe(px2rem(px2remConfig))
-        .pipe(gulpif(RELEASE, minifycss()))
         .pipe(gulp.dest(DIR.APP_ASSETS+"debug/"))
         .on("finish", function() {
             log("--- mgvue style build finish");

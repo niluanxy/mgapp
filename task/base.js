@@ -67,6 +67,13 @@ var DIR_ALIAS = {
     pages: DIR.APP+"pages",
 };
 
+var SASS_ALIAS = [
+    { match: /node_modules/, value: DIR.BASE+"node_modules" },
+    { match: /PUBLIC/g, value: DIR.APP_PUBLIC },
+    { match: /ASSETS/g, value: DIR.APP_ASSETS },
+    { match: /STYLE/g,  value: DIR.STYLE }
+];
+
 var colors = require("colors");
 colors.setTheme({ silly: 'rainbow', input: 'grey', verbose: 'cyan',
     prompt: 'red', info: 'green', data: 'blue', help: 'cyan',
@@ -81,4 +88,10 @@ function log(str, style) {
     console.log("["+_time+"] "+str.toString()[style]);
 }
 
-module.exports = { log: log, DIR: DIR, CONCAT: CONCAT, ALIAS: DIR_ALIAS };
+module.exports = {
+    log: log,
+    DIR: DIR,
+    CONCAT: CONCAT,
+    ALIAS: DIR_ALIAS,
+    SASS_ALIAS: SASS_ALIAS,
+};
