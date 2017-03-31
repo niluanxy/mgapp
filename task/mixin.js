@@ -18,7 +18,8 @@ function clean_mixin_build() {
     return Q.all([
         del(DIR.CONCAT+CONCAT.MIXIN_CORE),
         del(DIR.CONCAT+CONCAT.MIXIN_VARS),
-        del(DIR.CONCAT+CONCAT.MIXIN_UIKIT)
+        del(DIR.CONCAT+CONCAT.MIXIN_UIKIT),
+        del(DIR.CONCAT+CONCAT.MIXIN_BUILD)
     ]);
 }
 

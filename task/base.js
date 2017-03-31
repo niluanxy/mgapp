@@ -1,5 +1,6 @@
 var moment  = require("moment"),
-    path    = require("path");
+    path    = require("path"),
+    ip      = require("ip");
 
 
 var DIR_BASE   = path.resolve(__dirname, "../")+"/",
@@ -57,22 +58,34 @@ var DIR_ALIAS = {
         MV_MODULE: DIR.MGVUE+"core/module",
 
     // magic app 相关目录常量
-    ASSETS: DIR.APP_ASSETS,
-    PUBLIC: DIR.APP_PUBLIC,
-    MODULE: DIR.APP_MODULE,
-        STYLE: DIR.APP_MODULE+"style",
-        STORE: DIR.APP_MODULE+"store",
-        COMPONENT: DIR.APP_MODULE+"component",
-
-    pages: DIR.APP+"pages",
+    assets: DIR.APP_ASSETS,
+    public: DIR.APP_PUBLIC,
+    pages : DIR.APP+"pages",
+    module: DIR.APP_MODULE,
+        style: DIR.APP_MODULE+"style",
+        store: DIR.APP_MODULE+"store",
+        component: DIR.APP_MODULE+"component",
 };
 
 var SASS_ALIAS = [
-    { match: /node_modules/, value: DIR.BASE+"node_modules" },
-    { match: /PUBLIC/g, value: DIR.APP_PUBLIC },
-    { match: /ASSETS/g, value: DIR.APP_ASSETS },
-    { match: /STYLE/g,  value: DIR.STYLE }
+    { match: /public\//g, value: DIR_ALIAS.public+"/" },
+    { match: /assets\//g, value: DIR_ALIAS.assets+"/" },
+    { match: /styles\//g, value: DIR_ALIAS.style +"/" }
 ];
+
+// 修复 Win 下路劲格式导致 SASS 引入文件失败问题
+function SASS_ALIAS_FIX(arrs) {
+    var result = [];
+
+    arrs.forEach(function(item) {
+        result.push({
+            match: item.match,
+            value: item.value.replace(/\\/g, '/')
+        });
+    });
+
+    return result;
+}
 
 var colors = require("colors");
 colors.setTheme({ silly: 'rainbow', input: 'grey', verbose: 'cyan',
@@ -88,10 +101,20 @@ function log(str, style) {
     console.log("["+_time+"] "+str.toString()[style]);
 }
 
+function localAddress(port, type) {
+    port = port || "3000";
+    type = type || "http";
+
+    return type+"://"+(ip.address() || "localhost")+":"+port;
+}
+
 module.exports = {
     log: log,
+    address: localAddress,
+
     DIR: DIR,
     CONCAT: CONCAT,
     ALIAS: DIR_ALIAS,
     SASS_ALIAS: SASS_ALIAS,
+    SASS_ALIAS_FIX: SASS_ALIAS_FIX,
 };

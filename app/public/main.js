@@ -1,4 +1,6 @@
-import MagicVue from "PUBLIC/magic/build.js";
+import MagicVue from "public/magic/build.js";
+
+require("public/main.css");     // 全局公用样式文件加载
 
 MagicVue.$mount("#mgapp", function() {
     var load = MagicVue.loadView, init = MagicVue.initView;

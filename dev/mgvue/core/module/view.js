@@ -6,6 +6,7 @@ import {isFunction, isObject, isTrueString,
     isElement, isArray} from "LIB_MINJS/check.js";
 
 import * as Cache from "MV_MODULE/cache.js";
+import bindEvents from "MV_MODULE/event.js";
 
 var viewMixins, $CACHE_SHOW = null,
     RootVue = MagicVue.RootVue, RootEmitter = MagicVue.RootEmitter;
@@ -46,12 +47,7 @@ function createEmitName(hash, eve) {
     return hash+"_"+eve;
 }
 
-function viewEmitInit($wraper, $render) {
-    var hash = $wraper.$$name+" "+uuid();
-
-    $render.$$hash = hash;
-    $wraper.$$hash = hash;
-
+function viewEmitInit(hash, $render) {
     $render.$$on   = createEmitBind(hash, "on");
     $render.$$once = createEmitBind(hash, "once");
     $render.$$off  = createEmitBind(hash, "off");
@@ -60,9 +56,9 @@ function viewEmitInit($wraper, $render) {
 }
 
 function viewEmitCall($scope, eve /* args... */) {
-    var opt = $scope.$options, $wrap = opt.el, hash, args;
+    var $opt = $scope.$options, hash, args;
 
-    if ($wrap && (hash = $wrap.$$hash)) {
+    if ((hash = $scope.$$hash)) {
         args = extend([], arguments);
         eve  = createEmitName(hash, eve);
         args.splice(1, 1); args.unshift(eve);
@@ -75,26 +71,35 @@ export function renderView(name, params, $wrap) {
     if (!name.match(/^ma/)) name = nameTrans(name);
 
     var com = MagicVue.component(name), $parent,
-        $render, $wraper = createWraper($wrap);
+        $render, $wraper = createWraper($wrap),
+        hash = name+"_"+uuid();
 
     if ($wraper != $wrap && $wraper.parentNode) {
         $parent = $wraper.parentNode;
         $parent.setAttribute("view", name);
     }
 
-    $render = new com({ el: $wraper, name: name});
+    $render = new com({
+        el: $wraper, name: name,
 
-    // 保存到返回对象上，用于同步调用获取参数
-    $render.$$name   = name;
+        $$hash: hash,
+        $$render: $parent,
+        $$params: params || {}
+    });
+
+    // 保存到返回对象上，用于同步插件调用
     $render.$$render = $parent;
+    $render.$$hash   = hash;
+    $render.$$name   = name;
     $render.$$params = params || {};
 
     // 保存到渲染元素上，用于异步组件获取参数
+    $wraper.$$hash   = hash;
     $wraper.$$name   = name;
     $wraper.$$render = $parent;
     $wraper.$$params = params || {};
 
-    return viewEmitInit($wraper, $render);
+    return viewEmitInit(hash, $render);
 }
 
 /**========================================================
@@ -142,8 +147,9 @@ viewMixins = {
         var self = this, $opt = self.$options, $el = $opt.el;
 
         // 尝试恢复 view 模式组件的渲染参数
-        self.$$name   = $el ? $el.$$name : $opt.name || $opt._componentTag || "";
-        self.$$render = $el ? $el.$$render : null;
+        self.$$hash   = $opt.hash || $el.$$hash || "";
+        self.$$name   = $opt.name || $el.$$name || $opt._componentTag || "";
+        self.$$render = $opt.$$render || $el.$$render || null;
 
         if (self.params !== undefined) {
             var params = self.params, value;
@@ -156,9 +162,10 @@ viewMixins = {
 
             self.$$params = extend(true, {}, value);
         } else {
-            self.$$params = $el ? $el.$$params : {};
+            self.$$params = extend(true, {}, $opt.$$params || $el.$$params);
         }
 
+        bindEvents(self);
         self.$emit("mgViewCreated");
 
         // 尝试调用 view 模式页面回调事件
@@ -259,7 +266,7 @@ export function loadView(viewName, bindView) {
 
             // 如果有溢出页面返回，执行页面销毁动作
             if ($del && $del.id && $del.scope && $del.el) {
-                $del.scope.$emit("hook:beforeDestroy");
+                $del.scope.$destroy();
             }
         }
 

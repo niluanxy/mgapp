@@ -1,5 +1,6 @@
 import fastCall from "LIB_MINJS/fastcall.js";
 import {isFunction} from "LIB_MINJS/check.js";
+import {extend} from "LIB_MINJS/utils.js";
 
 function Promise() {
     this.next = null;
@@ -27,7 +28,9 @@ function Defer() {
 
 function fireCall(status, value) {
     var that = this, promise = that.promise,
-        nextDefer, call, ret;
+        next, call, ret, args = extend([], arguments);
+
+    args = args.slice(1);   // 获得实际的结果数组内容
 
     fastCall(function() {
         if (status == "resolve") {
@@ -38,18 +41,18 @@ function fireCall(status, value) {
             call = promise.rejected;
         }
 
-        nextDefer = promise.next;
-        ret = isFunction(call) ? call(value) : undefined;
+        next = promise.next;
+        ret  = isFunction(call) ? call.apply(null, args) : undefined;
 
-        if (nextDefer && nextDefer[status]) {
+        if (next && next[status]) {
             if (ret && ret.then) {
                 ret.then(function(value) {
-                    nextDefer.resolve(value);
+                    next.resolve.apply(next, args);
                 }, function(reason) {
-                    nextDefer.reject(reason);
+                    next.reject.apply(next, args);
                 });
             } else {
-                nextDefer[status](ret);
+                next[status](ret);
             }
         }
     });
@@ -58,11 +61,17 @@ function fireCall(status, value) {
 }
 
 Defer.prototype.resolve = function(value) {
-    return fireCall.call(this, "resolve", value);
+    var args = extend([], arguments);
+    args.unshift("resolve");
+
+    return fireCall.apply(this, args);
 }
 
 Defer.prototype.reject = function(reason) {
-    return fireCall.call(this, "reject", reason);
+    var args = extend([], arguments);
+    args.unshift("reject");
+
+    return fireCall.apply(this, args);
 }
 
 export default Defer;

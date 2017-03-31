@@ -1,5 +1,5 @@
 import Defer from "LIB_MINJS/promise.js";
-import {strFind, each, extend} from "LIB_MINJS/utils.js";
+import {each, extend} from "LIB_MINJS/utils.js";
 import {isTrueString, isNumber, isObject} from "LIB_MINJS/check.js";
 import $config from "MG_MAGIC/config.js";
 import RootMagic from "MG_MAGIC/main.js";
@@ -14,12 +14,11 @@ var errorTpl = {
 $config.fetchTimeout = 5000;
 
 function isOption(option) {
-    var check = "body method header";
+    var check = "body method header", reg;
 
     for(var key in option) {
-        if (strFind(check, key) >= 0) {
-            return true;
-        }
+        reg = new RegExp("\\b"+key+"\\b");
+        if (check.match(reg)) return true;
     }
 
     return false;
@@ -65,13 +64,9 @@ function _ajax(method, url, data, option, timeout) {
     }
 
     addEvent(xhr, "load", function() {
-        var res = {
-            statusCode: this.status,
-            statusText: this.statusText,
-            response: tryFormat(this.response),
-        };
+        var result = tryFormat(this.response);
 
-        defer.resolve(res);
+        defer.resolve(result, this.status, this.statusText);
     });
 
     addEvent(xhr, "timeout", function() {
@@ -124,11 +119,7 @@ function _fetch(method, url, data, option, timeout) {
 
     self.fetch(url, init).then(function(response) {
         response.json().then(function(data) {
-            defer.resolve({
-                response: data,
-                statusCode: response.status,
-                statusText: response.statusText,
-            });
+            defer.resolve(data, response.status, response.statusText);
         });
     });
 
@@ -142,7 +133,7 @@ var fetchProxy = self.fetch && self.Headers ? _fetch : _ajax;
  * - 常见错误代码处理，比如 404，504 等
  *
  * options: {
- *     mode : ['cors' || null], 
+ *     mode : ['cors' || null],
  *         - 是否 cors 模式
  *     cache: [true || false],
  *         - GET下是否缓存，默认不缓存，会自动添加时间戳
@@ -151,7 +142,7 @@ var fetchProxy = self.fetch && self.Headers ? _fetch : _ajax;
  *     dataTyep: ['json' || 'text' || 'xml']
  *         - 转换返回的数据，为空自动转换
  * }
- * 
+ *
  */
 export function fetch(url, data, option, timeout) {
     var option = option || {}, method,

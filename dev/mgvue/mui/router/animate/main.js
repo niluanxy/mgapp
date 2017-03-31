@@ -54,6 +54,6 @@ MagicVue.on("mgViewChange.viewAnimate", function(viewGo, viewLast, routeType, ro
             });
         });
     } else {
-        $goView.addClass(CFG.display);
+        $goView.removeClass(CFG.hidden).addClass(CFG.display);
     }
 });

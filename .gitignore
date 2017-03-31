@@ -20,3 +20,8 @@ npm-debug.log
 # app 目录忽略相关文件
 /app/assets/debug
 /app/public/style/mixin.scss
+/app/public/main.css
+/app/**/style.css
+
+# 过滤软件生成的无用文件
+/_gsdata_

@@ -6,10 +6,12 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     webSocket           = require('ws');
 
 
-var DIR    = require("./base").DIR,
-    ALIAS  = require("./base").ALIAS,
-    CONCAT = require("./base").CONCAT,
-    log    = require("./base").log,
+var DIR         = require("./base").DIR,
+    ALIAS       = require("./base").ALIAS,
+    CONCAT      = require("./base").CONCAT,
+
+    log         = require("./base").log,
+    getAddress  = require("./base").address,
 
     task_mixin_build = require("./mixin").build,
 
@@ -21,6 +23,7 @@ var DIR    = require("./base").DIR,
     task_mgvue_style_build = require("./mgvue").buildStyle,
 
     task_mgapp_main_build  = require("./mgapp").buildMain,
+    task_mgapp_page_build  = require("./mgapp").buildPage,
     task_mgapp_style_build = require("./mgapp").buildStyle,
     task_mgapp_assets_build= require("./mgapp").buildAssets,
     task_mgapp_main_fix    = require("./mgapp").fix,
@@ -53,22 +56,26 @@ function startDevWatch() {
         });
     };
 
-    gulp.watch([DIR.MIXIN+"**/*", DIR.MGVUE+"style/**/*",
-                DIR.APP_PUBLIC+"**/*.scss", DIR.APP_MODULE+"**/*.scss",
-                "!"+DIR.APP_PUBLIC+"style/mixin.scss"])
-        .on("change", task_mgapp_style_build);
-
     gulp.watch([DIR.APP+"index.html", DIR.APP_ASSETS+"**/*",
-                "!"+DIR.APP_ASSETS+"debug"])
+                "!"+DIR.APP_ASSETS+"debug/**/*"])
         .on("change", function() {
             task_mgapp_assets_build().then(function() {
                 wss.broadcast("_MG_RELOAD_");
             });
         });
 
+    gulp.watch([DIR.MIXIN+"**/*", DIR.MGVUE+"style/**/*",
+                DIR.APP_PUBLIC+"**/*.scss", DIR.APP_MODULE+"**/*.scss",
+                "!"+DIR.APP_PUBLIC+"style/mixin.scss"])
+        .on("change", task_mgapp_style_build);
+
+    gulp.watch([DIR.APP+"pages/**/style.scss", DIR.APP_PUBLIC+"style/mixin.scss",
+                DIR.APP_MODULE+"style/**/*.scss"])
+        .on("change", task_mgapp_page_build);
+
     gulp.watch([DIR.MINJS+"**/*.js", DIR.MAGIC+"**/*.js",
                 DIR.MGVUE+"**/*.js", DIR.APP_PUBLIC+"**/*.js",
-                DIR.APP_MODULE+"**/*.js"])
+                DIR.APP_MODULE+"**/*.js", DIR.APP_MODULE+"**/*.html"])
         .on("change", function() {
             task_mgapp_main_build().then(function() {
                 wss.broadcast("_MG_RELOAD_");
@@ -87,16 +94,22 @@ function startServer(d, r) {
     if (DEBUG === true) startDebugWatch();
 
     if (RELEASE === false) {
-        Q.all([task_mgapp_style_build(), task_mgapp_assets_build()])
-        .then(function() { defer_assets.resolve() });
+        Q.all([
+            task_mgapp_style_build(),
+            task_mgapp_assets_build()
+        ]).then(function() {
+            return task_mgapp_page_build();
+        }).then(function() { defer_assets.resolve() });
 
         compile = webpack(task_mgapp_config());
-        compile.run(task_mgapp_callback(function(error) {
-            if (!error) defer_build.resolve();
-        }));
 
-        Q.all([defer_assets.promise, defer_build.promise])
-        .then(function() {
+        defer_assets.promise.then(function() {
+            compile.run(task_mgapp_callback(function(error) {
+                if (!error) defer_build.resolve();
+            }));
+
+            return defer_build.promise;
+        }).then(function() {
             task_mgapp_main_fix().then(function() {
                 log("--- mgapp main build finish");
 
@@ -107,9 +120,9 @@ function startServer(d, r) {
 
                 server.listen(3000, "0.0.0.0", function() {
                     log("----------------------------------------------", "verbose");
-                    log("Server has run on http://localhost:3000", "verbose");
+                    log("Server has run on "+getAddress(), "verbose");
                     log("----------------------------------------------", "verbose");
-                    open("http://localhost:3000");
+                    open(getAddress());
                 });
             });
         });

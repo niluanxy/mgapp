@@ -1,5 +1,5 @@
     <script type="text/javascript">
-        var socket = new WebSocket("ws://_SOCKET_HOST_:3001/");
+        var socket = new WebSocket("_SOCKET_HOST_/");
 
         socket.onmessage = function(event) {
             if (event.data === "_MG_RELOAD_") {

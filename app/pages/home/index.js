@@ -3,7 +3,7 @@ module.exports = {
     template: require("./template.html"),
 
     data: {
-        title: "首页测试 @@@",
+        title: "首页测试 ###",
         print: "default 111",
         dis: false,
         sel: 2,
@@ -18,8 +18,7 @@ module.exports = {
         log: function() {
             this.sel++;
             if (this.sel > 2) this.sel = 0;
-            console.log(this.$$params);
-            console.log(this.params)
+            console.log(this)
         },
 
         back: function() {

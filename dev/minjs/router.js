@@ -13,13 +13,12 @@ var CFG = {
     notCall  : null,                // 页面未找到时候的回调方法
     notPage  : "",                  // 页面未找到的时候，显示的页面，为空则跳到首页
 
-    onBefore : null,                // 页面跳转前的回调方法
-    onEmit   : null,                // 激活时运行的方法，可简写为 on
-    onLeave  : null,                // 页面 成功跳转后 的回调方法
-
     onInit   : null,                // 路由初始化时调用的方法
+
+    onBefore : null,                // 每次页面跳转前的回调方法
+    onLeave  : null,                // 每次页面离开时的回调方法
     onSuccess: null,                // 每次跳转成功后的回调方法
-    onAlways : null,                // 每次点击，不论是否阻止默认跳转，都会执行的方法
+    onAlways : null,                // 每次跳转，不论是否成功，都会执行的方法
 
     recurse  : false,               // 路由递归触发方式，forward 正序，backward 反序，默认只最后项
     regexp   : ":[^/]{1,}",         // 默认参数匹配替换的正则语句
@@ -75,6 +74,7 @@ Prototype.init = function() {
 }
 
 Prototype.transMatch = function(url) {
+    url = this.transUrl(url);
     var reg = this.option.regexp || ":[^/-_]{1,}";
 
     reg = new RegExp(reg, "g");
@@ -225,27 +225,28 @@ Prototype.off = function(url) {
  *
  */
 Prototype.emit = function(url, routeType, routeGo, routeLast, stateType) {
-    var args = [url, routeType, routeGo, routeLast],
+    var args = [url, routeType, routeGo, routeLast], tmpUrl,
         OPT = this.option, CTRL = this.callPatch, STACK = this.stack,
         CALLS = "onBefore onEmit".split(" "), emitResult = false;
 
     // 尝试运行上个页面的 leave 方法
-    args.unshift(routeLast.url + " on.Leave");
-    routeLast.url && CTRL.emit.apply(CTRL, args);
-
-    CTRL.once(this.transMatch(routeGo.match)+" on.Emit", function() {
-        emitResult = true;
-    });
-
-    for(var i=0; i<CALLS.length; i++) {
-        var eve = url+" "+CALLS[i],
-            fix = eve.replace("on", "on.");
-
-        args.shift(); args.unshift(fix);
-
-        CTRL.once(fix, OPT[CALLS[i]], this);
+    if (routeLast && routeLast.url) {
+        tmpUrl = this.transMatch(routeLast.match) + " on.Leave";
+        CTRL.once(tmpUrl, OPT.onLeave);
+        args.unshift(routeLast.url);
         CTRL.emit.apply(CTRL, args);
+    } else {
+        args.unshift("noLastBefore");
     }
+
+    // 当前页面添加跳转判断方法和全局的 before 方法
+    tmpUrl = this.transMatch(routeGo.match) +" on.Emit";
+    CTRL.once(tmpUrl, function() { emitResult = true });
+    CTRL.once(tmpUrl, OPT.onBefore, null, true);
+
+    // 调用当前页面方法
+    args.shift(); args.unshift(url+" on.Emit");
+    CTRL.emit.apply(CTRL, args);
 
     // 检测路由是否跳转成功
     if (emitResult === true) {

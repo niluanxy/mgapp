@@ -1,7 +1,7 @@
 import Emitter from "LIB_MINJS/emitter.js";
 import Ready from "LIB_MINJS/ready.js";
 import Vue from "vue";
-import {isFunction, isTrueString} from "LIB_MINJS/check.js";
+import {isFunction, isTrueString, isObject} from "LIB_MINJS/check.js";
 import {extend, applyCall} from "LIB_MINJS/utils.js";
 import Config from "MV_CORE/base/config.js";
 import * as Tools from "MV_CORE/base/tools.js";
@@ -39,7 +39,23 @@ function vueApply(type, rootScope) {
 
 MagicVue.filter    = vueApply("filter", Vue);
 MagicVue.directive = vueApply("directive", Vue);
-MagicVue.component = vueApply("component", Vue);
+MagicVue.component = function(ids, bind, noFix) {
+    var result = null, rootBind = MagicVue.component;
+
+    if (rootBind && isTrueString(ids)) {
+        if (!noFix && bind && isObject(bind.data)) {
+            var oldData = bind.data;
+            bind.data = function() {
+                return extend({}, oldData);
+            }
+        }
+
+        result = Vue.component(ids, bind);
+        if (bind) rootBind[ids] = bind;
+    }
+
+    return result;
+}
 MagicVue.Vue = Vue;
 MagicVue.RootVue = RootVue;
 

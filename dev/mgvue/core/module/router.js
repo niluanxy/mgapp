@@ -5,14 +5,17 @@ import {isObject, isFunction} from "LIB_MINJS/check.js";
 
 var RootRouter = {}, Tables;
 
-function callApply(eveName, before, after) {
+function callApply(eveName) {
     return function() {
-        var args = extend([], arguments);
+        var args = extend([], arguments), result = false;
+
+        MagicVue.once(eveName, function() { result = true });
 
         args.unshift(eveName);
-        if (isFunction(before)) before();
         MagicVue.emit.apply(MagicVue.emit, args);
-        if (isFunction(after)) after();
+
+        // 尝试阻止路由后续的方法执行
+        if (!result) this.stopImmediation();
     }
 }
 
@@ -33,17 +36,18 @@ MagicVue.init = function(option, repath) {
     option.repath = !!repath;
 
     option.onBefore = callApply("mgRouteBefore");
-    option.onEmit   = callApply("mgRouteEmit");
     option.onAfter  = callApply("mgRouteAfter");
     option.onAlways = callApply("mgRouteAlways");
+    option.onInit   = callApply("mgRouteInit");
 
-    $Router = Router(Tables || {}, option).init();
+    $Router = Router(Tables || {}, option);
+    RootRouter.$route = $Router;
     for(var i=0; i<copy.length; i++) {
         var bindKey = copy[i];
-
         RootRouter[bindKey] = applyCall(bindKey, $Router);
     }
 
+    $Router.init();     // 初始化启动路由库组件
     MagicVue.location = $Router; Tables = null;
 
     return MagicVue;

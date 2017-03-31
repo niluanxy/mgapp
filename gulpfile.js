@@ -48,8 +48,10 @@ gulp.task("dev-build-mgvue-style", require("./task/mgvue").buildStyle);
  *  mgapp 部分编译脚本
  *==========================================================================*/
 gulp.task("clean-dist", require("./task/mgapp").cleanDist);
+gulp.task("clean-style", require("./task/mgapp").cleanStyle);
 gulp.task("clean-assets", require("./task/mgapp").cleanAssets);
 gulp.task("dev-build-mgapp", require("./task/mgapp").build);
+gulp.task("dev-build-mgapp-main", require("./task/mgapp").buildMain);
 gulp.task("dev-build-mgapp-style", require("./task/mgapp").buildStyle);
 gulp.task("dev-build-mgapp-assets", require("./task/mgapp").buildAssets);
 
@@ -67,7 +69,8 @@ gulp.task("clean", function() {
         require("./task/mixin").clean(),
         require("./task/mgvue").clean(),
 
-        require("./task/mgapp").cleanAssets(),
         require("./task/mgapp").cleanDist(),
+        require("./task/mgapp").cleanStyle(),
+        require("./task/mgapp").cleanAssets()
     ]);
 })
