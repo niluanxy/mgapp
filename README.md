@@ -12,21 +12,20 @@
 <p>依赖环境初始化只需在 <b>项目根目录</b> 执行以下命令：</p>
 
 ```CLI
-npm install -g gulp cordova webpack
-
+npm install -g gulp
 npm install
 ```
 
-<p><b>第一条命令会将 gulp 和 cordova 和 webpack 安装到全局环境。</b></p>
+<p><b>第一条命令会将 gulp 安装到全局环境，第二条命令用于项目依赖环境初始化。</b></p>
 
-<p><b>PS：</b>国内的环境问题，安装可能会很慢，所以建议先安装 <b>nrm</b> 工具，替换为 国内淘宝源，可以极大加快下载速度：</p>
+<p><b>PS：</b>国内的环境问题，安装可能会很慢，建议先安装 <b>nrm</b> 工具，替换为国内淘宝源，可以极大加快下载速度：</p>
 
 ```CLI
 npm install -g nrm
 nrm use taobao
 ```
 
-<p>安装完成执行 <b>nrm ls</b> ，如果显示类似下面内容则安装成功：</p>
+<p>安装完成执行 <b>nrm ls</b> ，类似下面内容则安装成功：</p>
 
 ```CLI
   npm ---- https://registry.npmjs.org/
@@ -40,7 +39,7 @@ nrm use taobao
   pt ----- http://registry.npmjs.pt/
 ```
 
-<p>现在去执行初始化操作，将极大的缩短依赖下载时间。</p>
+<p>现在执行项目依赖环境初始化操作，将极大缩短依赖下载时间。</p>
 
 ### 2.常用命令说明
 <p>框架内置了以下常用命令，说明如下：</p>
