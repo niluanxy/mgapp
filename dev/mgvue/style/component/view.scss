@@ -6,8 +6,10 @@
     position: absolute;
     display: block;
     height: 100%;
-    top: 0; right: 0;
-    bottom: 0; left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
     overflow: hidden;
     background-color: #FFF;
 }
@@ -16,8 +18,58 @@
     .#{$prefix+$class} {
         @extend %full_screen;
         z-index: 100;
-
         @content;
+    }
+}
+
+@mixin app-header($class: app-header, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        display: block;
+        overflow: hidden;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 400;
+        height: rem($block-header-height);
+
+        >[class^=#{$prefix+bar}] {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        @content;
+    }
+}
+
+@mixin app-navbar($class: app-navbar, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        overflow: hidden;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 400;
+        height: rem($block-footer-height);
+        @content;
+    }
+}
+
+@mixin viewAnimate() {
+    &.MGslideInLeft {
+        @include animate(slideInLeft, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
+    }
+
+    &.MGslideInRight {
+        @include animate(slideInRight, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
+    }
+
+    &.MGslideOutLeft {
+        @include animate(slideOutLeft, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
+    }
+
+    &.MGslideOutRight {
+        @include animate(slideOutRight, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
     }
 }
 
@@ -25,22 +77,6 @@
     .#{$prefix+$class} {
         @extend %full_screen;
         z-index: 100;
-
-        &.slideInLeft {
-            @include animate(slideInLeft, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
-        }
-
-        &.slideInRight {
-            @include animate(slideInRight, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
-        }
-
-        &.slideOutLeft {
-            @include animate(slideOutLeft, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
-        }
-
-        &.slideOutRight {
-            @include animate(slideOutRight, 0.2s, cubic-bezier(0.33, 0.66, 0.66, 1));
-        }
 
         &.hidden {
             z-index: 50;
@@ -54,8 +90,8 @@
         &.display {
             z-index: 200;
         }
-
-        @content;   // 样式自定义扩展代码位置
+        @content;
+        // 样式自定义扩展代码位置
     }
 }
 
@@ -72,8 +108,8 @@
         &.full {
             @extend %full_screen;
         }
-
-        @content;   // 样式自定义扩展代码位置
+        @content;
+        // 样式自定义扩展代码位置
     }
 }
 
@@ -85,7 +121,7 @@
         &.hidden {
             @include animate(fadeOut, 0.16s);
         }
-
-        @content;   // 样式自定义扩展代码位置
+        @content;
+        // 样式自定义扩展代码位置
     }
 }

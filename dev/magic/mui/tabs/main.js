@@ -37,7 +37,7 @@ Prototype.init = function() {
     return this;
 }
 
-Prototype.select = function(index) {
+Prototype.select = function(index, noCall) {
     var $el = this.$el, opt = this.option,
         $childs = $el.children(),
         actClass = opt.actived, $item;
@@ -47,7 +47,9 @@ Prototype.select = function(index) {
     $item = $childs.eq(index).addClass(actClass);
     this.index = index;
     this.value = $item.attr("value");
-    if (isFunction(opt.onSelect)) {
+
+    // 尝试运行绑定的回调方法
+    if (!noCall && isFunction(opt.onSelect)) {
         opt.onSelect(index);
     }
 

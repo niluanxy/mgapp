@@ -7,12 +7,12 @@ MagicVue.$mount("#mgapp", function() {
 
     MagicVue.route({
         "/home": {
-            title: "首页测试",
+            header: "首页测试",
             on: load("home", require("pages/home")),
         },
 
         "/user": {
-            title: "用户中心",
+            header: "用户中心",
             on: load("user", function(resolve, name) {
                 require(["pages/user"], init(resolve, name));
             }),

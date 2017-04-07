@@ -7,7 +7,7 @@ import {isTrueString} from "LIB_MINJS/check.js";
 import MgConfig from "MG_UIKIT/base/config.js";
 
 import ConfigUI from "MV_UIKIT/base/config.js";
-import {tryBindCtrl} from "MV_UIKIT/base/tools.js";
+import {tryBindCtrl, getName} from "MV_UIKIT/base/tools.js";
 
 var CFG = ConfigUI.content = {
     native: false,
@@ -23,25 +23,12 @@ MagicVue.component("mgContent", {
     template: '<div><div><slot></slot></div></div>',
 
     props: {
-        "$name": { type: String, default: "mg-content" },
-
         "ctrl": {}, "native": {},
     },
 
     mounted: function() {
-        var self = this, $parent = self.$parent, opt = {wrapClass: ""},
-            el = self.$el, $el = RootMagic(el), isNative, $ctrl;
-
-        // 判断是否有 header 和 footer 组件
-        if ($parent && $parent.$children) {
-            var list = $parent.$children;
-
-            for(var i=0; i<list.length; i++) {
-                if (list[i].$name == "mg-header") {
-                    opt.wrapClass = " has-header"; break;
-                }
-            }
-        }
+        var self = this, opt = {wrapClass: ""},
+            $el = RootMagic(self.$el), isNative, $ctrl;
 
         isNative = self.native == null ? CFG.native : !!self.native;
 

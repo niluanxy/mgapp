@@ -184,6 +184,7 @@ viewMixins = {
 
         // 尝试调用 view 模式页面回调事件
         viewEmitCall(self, "ready");
+        MagicVue.emit("mgViewMounted", self, self.$$params);
 
         // 默认不是隐藏的页面，则立即触发 显示回调事件
         if (!self.$$defaultHide) {

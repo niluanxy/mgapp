@@ -17,6 +17,7 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     sass                = require("gulp-sass"),
     cssImport           = require("gulp-cssimport"),
     fs                  = require("fs"),
+    ip                  = require("ip"),
     webpack             = require("webpack"),
     webpackUglifyJS     = require('uglifyjs-webpack-plugin');
 
@@ -84,38 +85,49 @@ function task_mgapp_style_build() {
     return defer_build.promise;
 }
 
-function task_mgapp_assets_build() {
+function task_mgapp_assets_build(port) {
     var defer_all = Q.defer(), defer_assets = Q.defer(),
-        defer_html = Q.defer(), hotScript, remScript, cssString,
-        RELEASE = process.env.NODE_ENV == 'production', address;
+        defer_html = Q.defer(), defer_hoturl = Q.defer(),
+        hotScript, remScript, cssString, hotUrl,
+        RELEASE = process.env.NODE_ENV == 'production';
 
-    address = getAddress("3001", "ws");
+    if (port !== undefined) {
+        defer_hoturl.resolve("ws://"+(ip.address() || "localhost")+":"+port);
+    } else {
+        getAddress("ws", 3001, 1).then(function(url) {
+            defer_hoturl.resolve(url);
+        });
+    }
 
-    remScript = fs.readFileSync(DIR.TASK+"template/remScript.js").toString();
-    remScript = '</title>\n'+remScript.replace(/\n$/, '');
+    defer_hoturl.promise.then(function(url) {
+        hotUrl = { addr: url, port: parseInt(url.match(/:(\d*)$/)[1]) };
 
-    hotScript = fs.readFileSync(DIR.TASK+"template/hotSocket.js").toString();
-    hotScript = hotScript.replace(/_SOCKET_HOST_/g, address);
-    hotScript = hotScript.replace(/_HOT_KEY_/g, HOT_KEY);
-    hotScript = '\n'+hotScript+'</body>';
+        remScript = fs.readFileSync(DIR.TASK+"template/remScript.js").toString();
+        remScript = '</title>\n'+remScript.replace(/\n$/, '');
 
-    cssString = /\s*<link href="assets\/main.css" rel="stylesheet">/;
+        hotScript = fs.readFileSync(DIR.TASK+"template/hotSocket.js").toString();
+        hotScript = hotScript.replace(/_SOCKET_HOST_/g, url);
+        hotScript = hotScript.replace(/_HOT_KEY_/g, HOT_KEY);
+        hotScript = '\n'+hotScript+'</body>';
+
+        cssString = /\s*<link href="assets\/main.css" rel="stylesheet">/;
+
+        gulp.src(DIR.APP+"index.html")
+        .pipe(replace(/\<\/title\>/, remScript))
+        .pipe(gulpif(!RELEASE, replace(cssString, '')))
+        .pipe(gulpif(!RELEASE, replace(/\<\/body\>/,  hotScript)))
+        .pipe(gulp.dest(DIR.APP_DIST))
+        .on("finish", function() { defer_html.resolve() })
+    });
 
     gulp.src(DIR.APP+"assets/**/*")
     .pipe(gulp.dest(DIR.APP_DIST+"assets/"))
     .on("finish", function() { defer_assets.resolve() })
 
-    gulp.src(DIR.APP+"index.html")
-    .pipe(replace(/\<\/title\>/, remScript))
-    .pipe(gulpif(!RELEASE, replace(cssString, '')))
-    .pipe(gulpif(!RELEASE, replace(/\<\/body\>/,  hotScript)))
-    .pipe(gulp.dest(DIR.APP_DIST))
-    .on("finish", function() { defer_html.resolve() })
-
     Q.all([defer_html.promise, defer_assets.promise])
     .then(function() {
         log("--- mgapp assets build finish");
-        defer_all.resolve();
+        defer_all.resolve(RELEASE ? hotUrl : {});
     });
 
     return defer_all.promise;
@@ -143,10 +155,11 @@ function task_mgapp_page_build() {
     return defer_build.promise;
 }
 
-function createConfig() {
+function createConfig(port) {
     var plugins = [], loader, alias = extend({}, ALIAS),
         sassAlias = extend([], SASS_ALIAS),
-        address = getAddress(), RELEASE = process.env.NODE_ENV == 'production';
+        address = Q.defer(), config = Q.defer(),
+        RELEASE = process.env.NODE_ENV == 'production';
 
     alias.vue = RELEASE ? "vue/dist/vue.min.js" : "vue/dist/vue.js";
 
@@ -178,20 +191,32 @@ function createConfig() {
         }
     ];
 
-    return {
-        context: DIR.BASE,
-        entry: RELEASE ? "./app/public/main.js" : [
-            'webpack-dev-server/client?'+address,
-            'webpack/hot/only-dev-server',
-            "./app/public/main.js"
-        ],
-        output: {
-            publicPath: '/pages/', path: DIR.APP_DIST+"pages/",
-            filename: '[name].js', library: 'MagicVue', libraryTarget: "umd",
-        },
-        module : { rules: loader },
-        resolve: { alias: alias }, plugins: plugins,
+    if (port !== undefined) {
+        address.resolve("http://"+(ip.address() || "localhost")+":"+port);
+    } else {
+        getAddress("http", 3000, 2).then(function(hotUrl) {
+            address.resolve(hotUrl);
+        });
     }
+
+    address.promise.then(function(hotUrl) {
+        config.resolve({
+            context: DIR.BASE,
+            entry: RELEASE ? "./app/public/main.js" : [
+                'webpack-dev-server/client?'+hotUrl,
+                'webpack/hot/only-dev-server',
+                "./app/public/main.js"
+            ],
+            output: {
+                publicPath: '/pages/', path: DIR.APP_DIST+"pages/",
+                filename: '[name].js', library: 'MagicVue', libraryTarget: "umd",
+            },
+            module : { rules: loader },
+            resolve: { alias: alias }, plugins: plugins,
+        });
+    });
+
+    return config.promise;
 }
 
 function createReplace() {
@@ -257,19 +282,21 @@ function webpackCallback(callback) {
     }
 }
 
-function task_mgapp_main_build() {
+function task_mgapp_main_build(port) {
     var defer_build = Q.defer();
 
-    webpack(createConfig(), webpackCallback(function(error) {
-        if (error) {
-            log(error, "error"); defer_build.reject();
-        } else {
-            task_mgapp_main_fix().then(function() {
-                log("--- mgapp main build finish");
-                defer_build.resolve();
-            });
-        }
-    }));
+    createConfig(port).then(function(config) {
+        webpack(config, webpackCallback(function(error) {
+            if (error) {
+                log(error, "error"); defer_build.reject();
+            } else {
+                task_mgapp_main_fix().then(function() {
+                    log("--- mgapp main build finish");
+                    defer_build.resolve();
+                });
+            }
+        }));
+    });
 
     return defer_build.promise;
 }

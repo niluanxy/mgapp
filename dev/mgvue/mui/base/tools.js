@@ -51,3 +51,11 @@ export function domListener(events, returnCall) {
         }]
     }
 }
+
+export function getName(component) {
+    if (component && component.$options) {
+        return component.$options._componentTag;
+    } else {
+        return null;
+    }
+}

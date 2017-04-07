@@ -21,8 +21,6 @@ MagicVue.component("mgScroll", {
     template: '<div><div><slot></slot></div></div>',
 
     props: {
-        "$name": { type: String, default: "mg-scroll" },
-
         "scrollBar": {}, "scrollBarX": {}, "scrollBarY": {},
         "ctrl": {}, "direction": { type: String,  default: "Y"},
     },

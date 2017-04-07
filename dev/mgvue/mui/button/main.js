@@ -24,8 +24,6 @@ MagicVue.component("mgButton", {
         '</a>',
 
     props: {
-        "$name": { type: String, default: "mg-button" },
-
         "link": {}, "type" : {}, "size"    : {},
         "icon": {}, "block": {}, "disabled": {},
     },

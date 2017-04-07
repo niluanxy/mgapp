@@ -20,8 +20,6 @@ MagicVue.component("mgSlider", {
     template: "<div><div><slot></slot></div></div>",
 
     props: {
-        "$name": { type: String, default: "mg-slider" },
-
         "ctrl": {}, "point": {}, "active": {},
         "auto": { type: String, default: "5000"},
         "loop": { type: String, default: "true"},

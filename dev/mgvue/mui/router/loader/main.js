@@ -4,11 +4,11 @@ import {isFunction, isTrueString} from "LIB_MINJS/check.js";
 import {addProxy as addClass} from "MG_MODULE/style/class/main.js";
 
 import ConfigUI from "MV_UIKIT/base/config.js";
+import {renderHeader} from "MV_UIKIT/header/main.js";
 
 var CFG = ConfigUI.loader = {};
 
-CFG.template  = '<div class="bar-primary"><h3 class="title">{{title}}</h3></div>';
-CFG.template += '<div class="loading"></div>'
+CFG.template  = '<div class="loading"></div>';
 CFG.class     = "loader";
 CFG.hideClass = "hidden";
 
@@ -24,9 +24,10 @@ MagicVue.on("mgViewChange.viewLoader", function(viewGo, viewLast, routeType, rou
             info.loader(info, wrap, routeType);
         } else {
             CFG.class += isTrueString(info.loadClass) ? " "+info.loadClass : "";
+
+            CFG.template = renderHeader(info) + CFG.template;
             $wrap.tpl(CFG.template, info)
-                .removeClass(CFG.hideClass)
-                .addClass(CFG.class);
+                .removeClass(CFG.hideClass).addClass(CFG.class);
         }
 
         view.$$on("ready", function() {

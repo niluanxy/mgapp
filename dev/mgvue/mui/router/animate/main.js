@@ -9,11 +9,11 @@ var CFG = ConfigUI.view = {
     animate: "animate",
     display: "display",
 
-    slideInLeft : "slideInLeft",
-    slideInRight: "slideInRight",
+    slideInLeft : "MGslideInLeft",
+    slideInRight: "MGslideInRight",
 
-    slideOutLeft : "slideOutLeft",
-    slideOutRight: "slideOutRight",
+    slideOutLeft : "MGslideOutLeft",
+    slideOutRight: "MGslideOutRight",
 };
 
 MagicVue.on("mgViewChange.viewAnimate", function(viewGo, viewLast, routeType, routeGo, routeLast) {
@@ -51,9 +51,11 @@ MagicVue.on("mgViewChange.viewAnimate", function(viewGo, viewLast, routeType, ro
                     +" "+CFG.animate).addClass(CFG.hidden);
 
                 if (viewLast && viewLast.$emit) viewLast.$emit("mgViewHide");
+                MagicVue.emit("mgViewAnimated");
             });
         });
     } else {
         $goView.removeClass(CFG.hidden).addClass(CFG.display);
+        MagicVue.emit("mgViewAnimated");
     }
 });

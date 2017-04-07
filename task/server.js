@@ -45,8 +45,10 @@ function startDebugWatch() {
             .on("change", task_mgvue_main_build);
 }
 
-function startDevWatch() {
-    var wss = new webSocket.Server({ port: 3001 });
+function startDevWatch(port) {
+    port = port || 3001;    // 设置 socket 监听端口
+
+    var wss = new webSocket.Server({ port: port });
 
     wss.broadcast = function broadcast(data) {
         wss.clients.forEach(function(client) {
@@ -59,7 +61,7 @@ function startDevWatch() {
     gulp.watch([DIR.APP+"index.html", DIR.APP_ASSETS+"**/*",
                 "!"+DIR.APP_ASSETS+"debug/**/*"])
         .on("change", function() {
-            task_mgapp_assets_build().then(function() {
+            task_mgapp_assets_build(port).then(function() {
                 wss.broadcast("_MG_RELOAD_");
             });
         });
@@ -77,14 +79,14 @@ function startDevWatch() {
                 DIR.MGVUE+"**/*.js", DIR.APP_PUBLIC+"**/*.js",
                 DIR.APP_MODULE+"**/*.js", DIR.APP_MODULE+"**/*.html"])
         .on("change", function() {
-            task_mgapp_main_build().then(function() {
+            task_mgapp_main_build(port-1).then(function() {
                 wss.broadcast("_MG_RELOAD_");
             });
         });
 }
 
 function startServer(d, r) {
-    var args = arguments, server, compile, DEBUG, RELEASE,
+    var args = arguments, address, compile, DEBUG, RELEASE,
         defer_build = Q.defer(), defer_assets = Q.defer();
 
     DEBUG = args[0] ? true : false;
@@ -94,16 +96,23 @@ function startServer(d, r) {
     if (DEBUG === true) startDebugWatch();
 
     if (RELEASE === false) {
-        Q.all([
-            task_mgapp_style_build(),
-            task_mgapp_assets_build()
-        ]).then(function() {
-            return task_mgapp_page_build();
-        }).then(function() { defer_assets.resolve() });
+        task_mgapp_config().then(function(config) {
+            compile = webpack(config);
+            address = config.entry[0].match(/client\?(.*)$/);
+            address = {
+                addr: address[1],
+                port: parseInt(address[1].match(/:(\d*)$/)[1])
+            };
 
-        compile = webpack(task_mgapp_config());
+            Q.all([
+                task_mgapp_style_build(),
+                task_mgapp_assets_build(address.port+1)
+            ]).then(function() {
+                return task_mgapp_page_build();
+            }).then(function() { defer_assets.resolve() });
 
-        defer_assets.promise.then(function() {
+            return defer_assets.promise;
+        }).then(function() {
             compile.run(task_mgapp_callback(function(error) {
                 if (!error) defer_build.resolve();
             }));
@@ -113,21 +122,21 @@ function startServer(d, r) {
             task_mgapp_main_fix().then(function() {
                 log("--- mgapp main build finish");
 
-                server = new webpackDevServer(compile, {
+                var server = new webpackDevServer(compile, {
                     hot: true, noInfo: true, quiet: true,
                     publicPath: '/pages/', contentBase: DIR.APP_DIST,
                 });
 
-                server.listen(3000, "0.0.0.0", function() {
+                server.listen(address.port, "0.0.0.0", function() {
                     log("----------------------------------------------", "verbose");
-                    log("Server has run on "+getAddress(), "verbose");
+                    log("Server has run on "+address.addr, "verbose");
                     log("----------------------------------------------", "verbose");
-                    open(getAddress());
+                    open(address.addr);
                 });
             });
-        });
 
-        startDevWatch();    // 开启自动刷新功能
+            startDevWatch(address.port+1);    // 开启自动刷新功能
+        });
     } else {
         task_build().then(function() {
             browserSync.init({

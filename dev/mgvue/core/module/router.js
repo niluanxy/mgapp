@@ -47,7 +47,8 @@ MagicVue.init = function(option, repath) {
         RootRouter[bindKey] = applyCall(bindKey, $Router);
     }
 
-    $Router.init();     // 初始化启动路由库组件
+    // 异步初始化启动路由库组件
+    setTimeout(function() { $Router.init() });
     MagicVue.location = $Router; Tables = null;
 
     return MagicVue;

@@ -22,7 +22,11 @@
 @include modal();
 
 @include app-wrap();
+@include app-header();
+@include app-navbar();
+
 @include view();
 @include page();
 @include loader();
 @include content();
+@include viewAnimate();
