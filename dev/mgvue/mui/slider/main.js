@@ -74,8 +74,6 @@ MagicVue.component("mgSliderItem", {
     template: '<div><img v-if="image" :src="image"></img><slot></slot></div>',
 
     props: {
-        "$name": { type: String, default: "mg-slider-item" },
-
         "link" : { type: String, default: "" },
         "image": { type: String, default: "" },
     },

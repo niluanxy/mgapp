@@ -13,7 +13,7 @@ var CFG = ConfigUI.navbar = {
 
     rootRender: "mg-navbar",
     rootTemplate: '<div class="app-navbar"><solt></solt></div>',
-}, LINK_LIST = [];
+}, LINK_LIST = [], BAR_HIDE = true;
 
 MagicVue.component("mgNavbar", {
     name: "mgNavbar",
@@ -37,25 +37,25 @@ MagicVue.component("mgNavbar", {
         MagicVue.on("mgViewMounted.Navbar", function(scope, params) {
             var list = scope.$children[0].$children;
 
-            each(list, function(i, item) {
-                if (getName(item) == "mg-content") {
-                    RootMagic(item.$el).addClass("has-footer");
-                    return false;
-                }
-            });
+            if (BAR_HIDE === false) {
+                each(list, function(i, item) {
+                    if (getName(item) == "mg-content") {
+                        RootMagic(item.$el).addClass("has-footer");
+                        return false;
+                    }
+                });
+            }
         });
 
         MagicVue.on("mgViewChange.Navbar",
         function(viewGo, viewLast, routeType, routeGo, routeLast) {
-            var goUrl = routeGo.url, hide = true;
-
             each(LINK_LIST, function(i, link) {
-                if (link && link === goUrl) {
-                    hide = false; return false;
+                if (link && link === routeGo.url) {
+                    BAR_HIDE = false; return false;
                 }
             });
 
-            $el.toggleClass(ConfigUI.hide, hide);
+            $el.toggleClass(ConfigUI.hide, BAR_HIDE);
         });
     },
 });
