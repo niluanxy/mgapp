@@ -23,7 +23,7 @@ var CFG = ConfigUI.header = {
     autoTemplate: '<div class="__TYPE__">'
                       +'<h3 class="title">{{header}}</h3>'+
                   '</div>',
-}, $AppHeader = null;
+}, $APPHEADER = null, ROUGEGO = null;
 
 export function renderHeader(info) {
     var cls = CFG.class + "-" + CFG.type,
@@ -65,31 +65,33 @@ MagicVue.component("mgHeader", {
 MagicVue.on("mgRouteInit.Header", function() {
     if (!CFG.rootRender) return;
 
-    $AppHeader = RootMagic(CFG.rootTemplate).addClass(ConfigUI.hide);
+    $APPHEADER = RootMagic(CFG.rootTemplate).addClass(ConfigUI.hide);
     var $insert = isString(CFG.rootRender) ? RootMagic(CFG.rootRender)
                         : RootMagic(MagicVue.$root);
 
-    $insert.prepend($AppHeader);
+    $insert.prepend($APPHEADER);
 });
 
 MagicVue.on("mgViewChange.Header", function(viewGo, viewLast, routeType, routeGo, routeLast) {
-    $AppHeader.addClass(ConfigUI.hide).html("");
+    $APPHEADER.addClass(ConfigUI.hide).html("");
 
-    var appendHtml = "", useAnimate = false;
+    ROUGEGO = routeGo;  // 保存当前页面路由信息
 
-    if (routeLast && viewLast) {
-        useAnimate = true;
+    if (routeGo && routeGo.header) {
+        if (routeLast && viewLast) {
+            renderHeader(routeLast)
+                .appendTo($APPHEADER);
+        }
 
-        renderHeader(routeLast)
-            .appendTo($AppHeader);
+        if (routeGo && viewGo) {
+            renderHeader(routeGo)
+                .appendTo($APPHEADER);
+        }
+
+        $APPHEADER.removeClass(ConfigUI.hide);
+    } else {
+        $APPHEADER.addClass(ConfigUI.hide);
     }
-
-    if (routeGo && viewGo) {
-        renderHeader(routeGo)
-            .appendTo($AppHeader);
-    }
-
-    $AppHeader.removeClass(ConfigUI.hide);
 });
 
 MagicVue.on("mgViewMounted.Header", function(scope, params) {
@@ -97,28 +99,34 @@ MagicVue.on("mgViewMounted.Header", function(scope, params) {
         noHeader = true, page = scope.$children, viewInfo,
         childList = page[0] ? page[0].$children : [];
 
-    try {
-        each(childList, function(i, item) {
-            if (getName(item) == "mg-header") {
-                noHeader = false; return false;
+    if (isFunction(CFG.autoRender) && ROUGEGO && ROUGEGO.header) {
+        try {
+            each(childList, function(i, item) {
+                if (getName(item) == "mg-header") {
+                    noHeader = false; return false;
+                }
+            });
+        } catch(err) {
+            noHeader = false;
+        }
+
+        // 如果允许，则尝试自动生成页面的 header 部分
+        if (noHeader) {
+            var $page = RootMagic(page[0].$el), html,
+                finds = name.replace("ma", '').replace(/\-/g, "/");
+
+            if (isFunction(ROUTEGO.header)) {
+                html = ROUTEGO.header();
+            } else {
+                html = CFG.autoRender(ROUTEGO);
             }
-        });
-    } catch(err) {
-        noHeader = false;
-    }
 
-    // 如果允许，则尝试自动生成页面的 header 部分
-    if (isFunction(CFG.autoRender) && noHeader) {
-        var $page = RootMagic(page[0].$el),
-            finds = name.replace("ma", '').replace(/\-/g, "/");
-
-        viewInfo = MagicVue.location.fire(finds);
-        $page.prepend(CFG.autoRender(viewInfo));
-
-        tryFixContent(childList);   // 修复 content 元素样式
+            $page.prepend(html);
+            tryFixContent(childList);   // 修复 content 元素样式
+        }
     }
 });
 
 MagicVue.on("mgViewAnimated.Header", function() {
-    if ($AppHeader) $AppHeader.addClass(ConfigUI.hide);
+    if ($APPHEADER) $APPHEADER.addClass(ConfigUI.hide);
 });

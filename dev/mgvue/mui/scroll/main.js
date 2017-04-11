@@ -8,9 +8,9 @@ import ConfigUI from "MV_UIKIT/base/config.js";
 import {value, tryBindCtrl} from "MV_UIKIT/base/tools.js";
 
 var CFG = ConfigUI.scroll = {
-    scrollBar : true,
-    scrollBarX: true,
-    scrollBarY: true,
+    scrollBar : false,
+    scrollBarX: false,
+    scrollBarY: false,
 };
 
 /**
@@ -33,11 +33,10 @@ MagicVue.component("mgScroll", {
 
         scrollOption = { lockX: dir === "Y", lockY: dir === "X" };
         scrollOption.pointX = !scrollOption.lockX &&
-            value(self.scrollBarX, bar, CFG.scrollBarX, CFG.scrollBar);
+            value(self.scrollBarX, CFG.scrollBarX, CFG.scrollBar);
         scrollOption.pointY = !scrollOption.lockY &&
-            value(self.scrollBarY, bar, CFG.scrollBarY, CFG.scrollBar);
+            value(self.scrollBarY, CFG.scrollBarY, CFG.scrollBar);
 
-        scrollOption = extend(scrollOption, options || {});
         $ctrl = new Scroll($el, scrollOption).init();
 
         tryBindCtrl(self, $ctrl); // 尝试绑定 父页面 ctrl 对象

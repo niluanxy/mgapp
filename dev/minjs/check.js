@@ -3,7 +3,7 @@ export var isArray = Array.isArray;
 /* 判断是否为一个纯净的对象 */
 export function isObject(obj) {
     if (obj == null) return false;
-    
+
     if (typeof obj !== "object" ||
          obj.nodeType || obj === window) {
         return false;
@@ -27,7 +27,9 @@ export function isEmptyObject(obj) {
 }
 
 export function isElement(object) {
-    return object instanceof Element || object === document;
+    return object instanceof Element ||
+           object instanceof DocumentFragment ||
+           object === document;
 }
 
 export function isFunction(call) {

@@ -94,13 +94,11 @@ export function offset(relative) {
             bottom: height, width: width, height: height
         }
     } else {
-        if (isElement(el)) {
-            rect = el.getBoundingClientRect();
-        } else if (isString(el)) {
-            clone = isString(el) ? el : el.cloneNode(true);
-        }
+        rect = el.getBoundingClientRect();
 
         if (rect && !rect.width && !rect.height) {
+            clone = el.cloneNode(true);
+
             // div 元素浮动后，行为类似 inline-block 元素
             if (clone.tagName == "DIV") {
                 css.call(clone, "display", "inline-block");

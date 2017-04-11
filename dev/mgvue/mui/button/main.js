@@ -5,7 +5,7 @@ import RootRouter from "MV_MODULE/router.js";
 import {uiClass, uiAddClass} from "MG_UIKIT/base/tools.js";
 
 import ConfigUI from "MV_UIKIT/base/config.js";
-import {domListener} from "MV_UIKIT/base/tools.js";
+import {domListener, value} from "MV_UIKIT/base/tools.js";
 
 var CFG = ConfigUI.button = {
     type :    ConfigUI.type,
@@ -24,8 +24,8 @@ MagicVue.component("mgButton", {
         '</a>',
 
     props: {
-        "link": {}, "type" : {}, "size"    : {},
-        "icon": {}, "block": {}, "disabled": {},
+        "link": {}, "type" : {}, "size": {},
+        "icon": {}, "block": {}, "disabled": {}, "clear": {},
     },
 
     mixins: domListener(),
@@ -36,6 +36,7 @@ MagicVue.component("mgButton", {
         uiAddClass($el, CFG.class, [
             self.type || CFG.type,
             self.size,
+            value(self.clear) ? "clear" : "",
             !!self.block ? CFG.block : '',
             !!self.disabled ? CFG.disabled : ''
         ]);
