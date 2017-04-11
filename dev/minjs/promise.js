@@ -1,76 +1,39 @@
 import fastCall from "LIB_MINJS/fastcall.js";
-import {isFunction, isArray} from "LIB_MINJS/check.js";
+import {isFunction} from "LIB_MINJS/check.js";
 import {extend, each} from "LIB_MINJS/utils.js";
 
-function Promise() {
-    this.next = null;
-    this.resolved = null;
-    this.rejected = null;
+function trigerCalls(list, args) {
+    var result, list = list || [];
 
-    return this;
+    each(list, function(i, callback) {
+        result = callback.apply(null, args);
+    });
+
+    return result;
 }
 
-function addCall(type, call) {
-    if (!isFunction(call)) return;
+function firePromise(action, values) {
+    var that = this, args, runs;
 
-    if (this[type]) {
-        if (isArray(this[type])) {
-            this[type].push(call);
-        } else {
-            this[type] = [this[type], call];
-        }
+    if (this.status == "pending") {
+        this.arguments = extend([], values);
+        this.status = action == "resolve" ? "resolved" : "rejected";
+    }
+
+    args = extend([], this.arguments);
+
+    if (this.status === "resolved") {
+        runs = this.resolved;
+        this.resolved = [];
     } else {
-        this[type] = call;
+        runs = this.rejected;
+        this.rejected = [];
     }
-}
-
-Promise.prototype.then = function(resolve, reject) {
-    addCall.call(this, "resolved", resolve);
-    addCall.call(this, "rejected", reject);
-
-    if (!this.next) this.next = new Defer();
-
-    return this.next.promise;
-}
-
-function Defer() {
-    this.status = 'pending';
-    this.promise = new Promise();
-
-    return this;
-}
-
-function runCalls(calls, args) {
-    if (isArray(calls)) {
-        each(calls, function(i, call) {
-            call.apply(null, args);
-        });
-    } else if (isFunction(calls)) {
-        return calls.apply(null, args);
-    }
-
-    return;
-}
-
-function fireCall(status) {
-    var that = this, promise = that.promise,
-        next, call, ret, args = extend([], arguments);
-
-    args = args.slice(1);   // 获得实际的结果数组内容
 
     fastCall(function() {
-        if (status == "resolve") {
-            that.status = "resolved";
-            call = promise.resolved;
-        } else {
-            that.status = "rejected";
-            call = promise.rejected;
-        }
+        var next = that.next, ret = trigerCalls(runs, args);
 
-        next = promise.next;
-        ret  = runCalls(call, args);
-
-        if (next && next[status]) {
+        if (next && next[action]) {
             if (ret && ret.then) {
                 ret.then(function() {
                     next.resolve.apply(next, args);
@@ -78,7 +41,7 @@ function fireCall(status) {
                     next.reject.apply(next, args);
                 });
             } else {
-                next[status].apply(next, args);
+                next[action].apply(next, args);
             }
         }
     });
@@ -86,24 +49,62 @@ function fireCall(status) {
     return this;
 }
 
-Defer.prototype.then = function(resolve, reject) {
-    this.promise.then(resolve, reject);
+function Promise() {
+    this.next = null;
+    this.status = "pending";
+    this.arguments = [];
+
+    this.resolved = [];
+    this.rejected = [];
 
     return this;
 }
 
-Defer.prototype.resolve = function(value) {
-    var args = extend([], arguments);
-    args.unshift("resolve");
+Promise.prototype.then = function(resolve, reject) {
+    if (isFunction(resolve)) this.resolved.push(resolve);
+    if (isFunction(reject))  this.rejected.push(reject);
 
-    return fireCall.apply(this, args);
+    if (!this.next) this.next = new Promise();
+
+    if (this.status !== "pending") {
+        var args = this.arguments;
+
+        if (this.status === "resolved") {
+            this.resolve.apply(this, args);
+        } else {
+            this.reject.apply(this, args);
+        }
+    }
+
+    return this.next;
 }
 
-Defer.prototype.reject = function(reason) {
-    var args = extend([], arguments);
-    args.unshift("reject");
+Promise.prototype.resolve = function() {
+    return firePromise.call(this, "resolve", arguments);
+}
 
-    return fireCall.apply(this, args);
+Promise.prototype.reject = function() {
+    return firePromise.call(this, "reject", arguments);
+}
+
+function Defer() {
+    this.promise = new Promise();
+    return this;
+} Defer.Promise = Promise;
+
+Defer.prototype.then = function(resolve, reject) {
+    this.promise.then(resolve, reject);
+    return this;
+}
+
+Defer.prototype.resolve = function() {
+    firePromise.call(this.promise, "resolve", arguments);
+    return this;
+}
+
+Defer.prototype.reject = function() {
+    firePromise.call(this.promise, "reject", arguments);
+    return this;
 }
 
 export default Defer;
