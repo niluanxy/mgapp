@@ -98,11 +98,7 @@ export function simProperty(scope, find, bind, key) {
             }
         };
     } else {
-        bindOptions = {
-            get: function() {
-                return vmScope[find];
-            },
-        };
+        bindOptions = {};
     }
 
     factoryProperty(bindObject, bindKey, bindOptions);

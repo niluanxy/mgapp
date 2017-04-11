@@ -5,6 +5,7 @@ import {extend} from "LIB_MINJS/utils.js";
 import {isTrueString} from "LIB_MINJS/check.js";
 
 import ConfigUI from "MV_UIKIT/base/config.js";
+import {simProperty} from "MV_CORE/base/tools.js";
 import {value, tryBindCtrl} from "MV_UIKIT/base/tools.js";
 
 var CFG = ConfigUI.scroll = {
@@ -22,7 +23,8 @@ MagicVue.component("mgScroll", {
 
     props: {
         "scrollBar": {}, "scrollBarX": {}, "scrollBarY": {},
-        "ctrl": {}, "direction": { type: String,  default: "Y"},
+        "ctrl": {}, "refresh": {},
+        "direction": { type: String,  default: "Y"},
     },
 
     mounted: function() {
@@ -37,8 +39,17 @@ MagicVue.component("mgScroll", {
         scrollOption.pointY = !scrollOption.lockY &&
             value(self.scrollBarY, CFG.scrollBarY, CFG.scrollBar);
 
-        $ctrl = new Scroll($el, scrollOption).init();
+        if (scrollOption.lockY && !scrollOption.lockX) {
+            scrollOption.bodyClass = "scroll_body_x";
+        } else if (scrollOption.lockX && !scrollOption.lockY) {
+            scrollOption.bodyClass = "scroll_body_y";
+        }
 
+        $ctrl = new Scroll($el, scrollOption).init();
         tryBindCtrl(self, $ctrl); // 尝试绑定 父页面 ctrl 对象
+
+        self.$watch("refresh", function() {
+            $ctrl.refresh();
+        })
     }
 });

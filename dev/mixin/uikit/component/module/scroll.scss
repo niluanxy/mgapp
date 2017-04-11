@@ -44,6 +44,8 @@
             &_body_x {
                 height: 100%;
                 width: auto;
+                display: table;
+                white-space: nowrap;
             }
 
             &_body_all {
