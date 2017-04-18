@@ -7,6 +7,7 @@ import {isTrueString} from "LIB_MINJS/check.js";
 import MgConfig from "MG_UIKIT/base/config.js";
 
 import ConfigUI from "MV_UIKIT/base/config.js";
+import {addRefresh} from "MV_UIKIT/scroll/main.js";
 import {tryBindCtrl, getName} from "MV_UIKIT/base/tools.js";
 
 var CFG = ConfigUI.content = {
@@ -19,11 +20,16 @@ var CFG = ConfigUI.content = {
 }
 
 MagicVue.component("mgContent", {
-    name: "mgContent",
+    name: "mg-content",
     template: '<div><div><slot></slot></div></div>',
 
     props: {
-        "ctrl": {}, "native": {},
+        "ctrl": {}, "native": {}, "refresh": {},
+    },
+
+    data: {
+        control: null,
+        refreshList: [],
     },
 
     mounted: function() {
@@ -62,7 +68,14 @@ MagicVue.component("mgContent", {
                 $ctrl.refresh();    // 第一次点击时刷新组件
             });
 
+            self.control = $ctrl;
             tryBindCtrl(self, $ctrl); // 尝试绑定 父页面 ctrl 对象
+
+            self.$watch("refresh", function() { $ctrl.refresh() });
+
+            if ($ctrl && self.refreshList) {
+                addRefresh($ctrl, self.refreshList);
+            }
         }
     }
 });

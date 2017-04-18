@@ -12,10 +12,13 @@ import "MV_UIKIT/page/main.js";
 import "MV_UIKIT/router/main.js";
 import "MV_UIKIT/scroll/main.js";
 import "MV_UIKIT/content/main.js";
+import "MV_UIKIT/refresh/main.js";
 
 import "MV_UIKIT/button/main.js";
 import "MV_UIKIT/tabs/main.js";
 import "MV_UIKIT/slider/main.js";
+import "MV_UIKIT/list/main.js";
+import "MV_UIKIT/counter/main.js";
 
 import "MV_UIKIT/tip/main.js";
 

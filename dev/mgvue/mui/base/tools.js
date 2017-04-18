@@ -52,10 +52,14 @@ export function domListener(events, returnCall) {
     }
 }
 
-export function getName(component) {
-    if (component && component.$options) {
-        return component.$options._componentTag;
-    } else {
-        return null;
+export function getName(com) {
+    var name = "", opt;
+
+    if (typeof com === "object") {
+        opt = com.$options || {};
+
+        name = value(com.$$name, opt.name, opt._componentTag);
     }
+
+    return name;
 }

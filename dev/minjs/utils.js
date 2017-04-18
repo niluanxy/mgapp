@@ -21,12 +21,12 @@ export function each(object, callback) {
  * 从给定字符串中，查找给定字符串或正则
  */
 export function strFind(strs, find) {
-    var arrs = strs.split(" ");
+    var arrs = strs.split(" "), reg;
 
     for(var i=0; i<arrs.length; i++) {
-        if (arrs[i].match(find)) {
-            return i;
-        }
+        reg = new RegExp("\\b"+find+"\\b");
+
+        if (arrs[i].match(reg)) return i;
     }
 
     return -1;

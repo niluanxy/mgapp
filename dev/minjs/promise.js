@@ -56,8 +56,6 @@ function Promise() {
 
     this.resolved = [];
     this.rejected = [];
-
-    return this;
 }
 
 Promise.prototype.then = function(resolve, reject) {
@@ -107,4 +105,6 @@ Defer.prototype.reject = function() {
     return this;
 }
 
-export default Defer;
+export default function() {
+    return new Defer();
+};

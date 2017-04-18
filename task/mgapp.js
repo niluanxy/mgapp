@@ -163,10 +163,6 @@ function createConfig(port) {
 
     alias.vue = RELEASE ? "vue/dist/vue.min.js" : "vue/dist/vue.js";
 
-    sassAlias.push({
-        match: /\.\/fonts/g, value: DIR.APP_ASSETS+"debug/fonts"
-    });
-
     if (RELEASE) {
         plugins.push(new webpackUglifyJS());
     } else {

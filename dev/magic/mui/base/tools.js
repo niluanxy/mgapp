@@ -1,8 +1,15 @@
 import {isTrueString as isTrue, isFunction, isArray} from "LIB_MINJS/check.js";
 import {extend, each, trim} from "LIB_MINJS/utils.js";
-import $cui from "MG_UIKIT/base/config.js";
+import ConfigUI from "MG_UIKIT/base/config.js";
 
-var keyWrap = "wrapClass", keyItem = "itemClass", keyClass = "class";
+var keyWrap = "wrapClass", keyItem = "itemClass", keyClass = "class",
+    baseList = "style prefix active actived styleList".split(" "), ConfigBase = {};
+
+for(var i=0; i<baseList.length; i++) {
+    var baseKey = baseList[i];
+
+    ConfigBase[baseKey] = ConfigUI[baseKey];
+}
 
 export function uiClass(aClass, type) {
     if (aClass && isTrue(type)) {
@@ -28,7 +35,7 @@ export function uiAddClass($el, aClass, type) {
 }
 
 function hasStyle($el, aClass, list) {
-    var check = list || $cui.styleList, reg = '';
+    var check = list || ConfigBase.styleList, reg = '';
 
     check = isArray(check) ? check : [check];
 
@@ -83,11 +90,11 @@ export function uiExtend() {
         transArrs = [keyWrap, keyItem];
     }
 
-    args = [{}, $cui].concat(args);
+    args = [{}, ConfigBase].concat(args);
     copy = extend.apply(null, args);
 
     oClass = copy.class || "";
-    aClass = $cui.prefix + oClass;
+    aClass = ConfigBase.prefix + oClass;
     regPre = new RegExp(oClass, "g");
 
     each(transArrs, function(i, fixName) {

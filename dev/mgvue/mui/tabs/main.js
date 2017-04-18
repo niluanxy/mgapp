@@ -14,12 +14,12 @@ var CFG = ConfigUI.tabs = {
 };
 
 MagicVue.component("mgTabs", {
-    name: "mgTabs",
+    name: "mg-tabs",
     template: "<div><slot></slot></div>",
 
     props: {
         "ctrl"   : {}, "icon"  : {}, "border": {},
-        "striped": {}, "active": {}, "select": {},
+        "striped": {}, "active": {},
     },
 
     data: {
@@ -27,11 +27,9 @@ MagicVue.component("mgTabs", {
     },
 
     mounted: function() {
-        var self = this, $el = RootMagic(self.$el),
-            striped, $ctrl, $ctrlScope, _active;
+        var self = this, $el = RootMagic(self.$el), striped, $ctrl;
 
         striped = self.striped ? (self.striped == "top" ? "striped-top" : "striped") : "";
-        _active = simProperty(self, self.active);
 
         uiAddClass($el, CFG.class, [
             striped,
@@ -41,24 +39,18 @@ MagicVue.component("mgTabs", {
         ]);
 
         $ctrl = new Tabs($el, {
-            onSelect: function(index) {
-                self.$emit("select", index);
-                _active.value = index;
+            onChange: function(index) {
+                self.$emit("change", index);
             }
         }).init();
 
-        _active.$watch("value", function(value) {
-            $ctrl.select(value, true);
-            self.$emit("select", value);
-        });
-
-        self.$ctrl = $ctrl.select(parseInt(_active.value) || 0);
+        self.$ctrl = $ctrl.select(parseInt(self.active) || 0);
         tryBindCtrl(self, $ctrl);   // 尝试绑定 父页面 ctrl 对象
     },
 });
 
 MagicVue.component("mgTabsItem", {
-    name: "mgTabsItem",
+    name: "mg-tabs-item",
     props: ["icon"],
     template: '<a>'+
         '<i v-if="icon" class="icon" :class="\'icon-\'+icon"></i>'+

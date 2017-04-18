@@ -42,7 +42,7 @@ function tryFixContent(list) {
 }
 
 MagicVue.component("mgHeader", {
-    name: "mgHeader",
+    name: "mg-header",
     template: "<div><slot></slot></div>",
 
     props: {

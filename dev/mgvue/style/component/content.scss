@@ -2,29 +2,12 @@
 // content 内容UI生成器
 // ========================================================
 
-%content_point {
-    display: block;
-    position: absolute;
-
-    &:before {
-        content: " ";
-        display: inline-block;
-        position: absolute;
-        background: $content-point-bg;
-        border-radius: rem($content-point-radius);
-    }
-}
-
 @mixin content($class: content, $prefix: $config-prefix) {
-    .#{$prefix+$class} {
-        position: absolute !important;
+    @include scroll($class, $prefix) {
+        position: absolute;
         top: 0; right: 0;
-        bottom: 0; left: 0;
-        overflow: hidden;
-
-        margin-top: -1px;
-        padding-top:1px;
-        background-color: $content-back-color;
+        left: 0; bottom: 0;
+        background-color: $content-back;
 
         &.padding > *:first-child {
             padding: rem($content-padding);
@@ -33,16 +16,9 @@
         &.has-header {
             top: rem($content-head-size);
         }
+
         &.has-footer {
             bottom: rem($content-foot-size);
-        }
-
-        .#{$prefix+$class}_body {
-            display: block;
-            width: 100%;
-            top: 0; left: 0;
-            touch-action: none;
-            transform-origin: 0px 0px 0px;
         }
 
         &.native {
@@ -55,34 +31,6 @@
             }
         }
 
-        &_point_x, &_point_y {
-            @extend %scroll_point;
-        }
-
-        &_point_x {
-            left: 0;
-            bottom: rem($scroll-point-offset);
-            height: rem($scroll-point-size);
-
-            &:before {
-                height: 100%;
-                left: rem($scroll-point-offset);
-                right: rem($scroll-point-offset);
-            }
-        }
-
-        &_point_y {
-            top: 0;
-            right: rem($scroll-point-offset);
-            width: rem($scroll-point-size);
-
-            &:before {
-                width: 100%;
-                top: rem($scroll-point-offset);
-                bottom: rem($scroll-point-offset);
-            }
-        }
-
-        @content;   // 样式自定义扩展代码位置
-    }
+        @content;
+    };
 }

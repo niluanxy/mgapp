@@ -17,7 +17,7 @@ var CFG = ConfigUI.tabs = {
  *     wrapClass: [string] 父容器额外添加的 class
  *     itemClass: [string] 子容器额外添加的 class
  *
- *     onSelect : [function] 选择某个项目时调用
+ *     onChange : [function] 选择某个项目时调用
  * }
  */
 export default function Tabs(el, option) {
@@ -49,8 +49,8 @@ Prototype.select = function(index, noCall) {
     this.value = $item.attr("value");
 
     // 尝试运行绑定的回调方法
-    if (!noCall && isFunction(opt.onSelect)) {
-        opt.onSelect(index);
+    if (!noCall && isFunction(opt.onChange)) {
+        opt.onChange(index);
     }
 
     return this;

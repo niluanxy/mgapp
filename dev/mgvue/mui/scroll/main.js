@@ -14,17 +14,33 @@ var CFG = ConfigUI.scroll = {
     scrollBarY: false,
 };
 
+export function addRefresh($ctrl, list) {
+    if (!$ctrl || !list || !list.length) return;
+
+    for(var i=0; i<list.length; i++) {
+        var refresh = list[i].item,
+            options = list[i].options;
+
+        $ctrl.attach(refresh, options);
+    }
+}
+
 /**
  * @todo 添加 loading 参数，自动展示加载动画
  */
 MagicVue.component("mgScroll", {
-    name: "mgScroll",
+    name: "mg-scroll",
     template: '<div><div><slot></slot></div></div>',
 
     props: {
-        "scrollBar": {}, "scrollBarX": {}, "scrollBarY": {},
         "ctrl": {}, "refresh": {},
+        "scrollBar": {}, "scrollBarX": {}, "scrollBarY": {},
         "direction": { type: String,  default: "Y"},
+    },
+
+    data: {
+        control: null,
+        refreshList: [],
     },
 
     mounted: function() {
@@ -46,10 +62,13 @@ MagicVue.component("mgScroll", {
         }
 
         $ctrl = new Scroll($el, scrollOption).init();
+        self.control = $ctrl;
         tryBindCtrl(self, $ctrl); // 尝试绑定 父页面 ctrl 对象
 
-        self.$watch("refresh", function() {
-            $ctrl.refresh();
-        })
+        self.$watch("refresh", function() { $ctrl.refresh() });
+
+        if ($ctrl && self.refreshList) {
+            addRefresh($ctrl, self.refreshList);
+        }
     }
 });

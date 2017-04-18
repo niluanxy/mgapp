@@ -1,0 +1,34 @@
+// ========================================================
+// counter 计数组件 默认样式
+// ========================================================
+
+
+@mixin counter($class: counter, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        display: inline-block;
+        overflow: hidden;
+
+        >.input {
+            text-align: center;
+            height: $counter-height;
+            line-height:$counter-height;
+
+            width: $counter-input-width;
+            border: $border-default;
+            border-left-width: 0;
+            border-right-width: 0;
+        }
+
+        >.button {
+            height: $counter-height;
+            line-height:$counter-height;
+
+            width: $counter-button-width;
+            @include button-appearance();
+
+            border: $border-default;
+        }
+
+        @content;
+    }
+}

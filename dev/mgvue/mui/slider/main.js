@@ -16,7 +16,7 @@ var CFG = ConfigUI.slider = {
 };
 
 MagicVue.component("mgSlider", {
-    name: "mgSlider",
+    name: "mg-slider",
     template: "<div><div><slot></slot></div></div>",
 
     props: {
@@ -24,8 +24,6 @@ MagicVue.component("mgSlider", {
         "auto": { type: String, default: "5000"},
         "loop": { type: String, default: "true"},
         "direction": { type: String, default: "x"},
-
-        "before" : {}, "scroll": {}, "animate": {},
     },
 
     data: function() {
@@ -59,6 +57,7 @@ MagicVue.component("mgSlider", {
             }
         }).init();
 
+        self.$ctrl.go(parseInt(self.active) || 0);
         tryBindCtrl(self, self.$ctrl);   // 尝试绑定 父页面 ctrl 对象
     },
 

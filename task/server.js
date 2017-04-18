@@ -3,7 +3,8 @@ var gulp                = require("gulp-param")(require("gulp"), process.argv),
     open                = require("opn"),
     webpack             = require("webpack"),
     webpackDevServer    = require("webpack-dev-server"),
-    webSocket           = require('ws');
+    webSocket           = require("ws"),
+    browserSync         = require("browser-sync");
 
 
 var DIR         = require("./base").DIR,
@@ -22,6 +23,7 @@ var DIR         = require("./base").DIR,
     task_mgvue_main_build  = require("./mgvue").buildMain,
     task_mgvue_style_build = require("./mgvue").buildStyle,
 
+    task_mgapp_build       = require("./mgapp").build,
     task_mgapp_main_build  = require("./mgapp").buildMain,
     task_mgapp_page_build  = require("./mgapp").buildPage,
     task_mgapp_style_build = require("./mgapp").buildStyle,
@@ -138,7 +140,7 @@ function startServer(d, r) {
             startDevWatch(address.port+1);    // 开启自动刷新功能
         });
     } else {
-        task_build().then(function() {
+        task_mgapp_build().then(function() {
             browserSync.init({
                 server: { baseDir: DIR.APP_DIST }
             });

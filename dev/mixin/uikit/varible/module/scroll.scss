@@ -1,4 +1,11 @@
-$scroll-point-bg:            rgba(0, 0, 0, 0.3) !default;
-$scroll-point-size:          3px !default;
-$scroll-point-offset:        3px !default;
-$scroll-point-radius:        3px !default;
+$scroll-radius:                      3px !default;
+$scroll-offset:                      3px !default;
+
+$scroll-point-bg:                    rgba(0, 0, 0, 0.3) !default;
+$scroll-point-size:                  3px !default;
+$scroll-point-offset:                $scroll-offset !default;
+$scroll-point-radius:                $scroll-radius !default;
+
+$scroll-refresh-simple-bg:           rgba(0, 0, 0, 0.65) !default;
+$scroll-refresh-simple-text:         #FFFFFF !default;
+$scroll-refresh-simple-radius:       $scroll-radius !default;

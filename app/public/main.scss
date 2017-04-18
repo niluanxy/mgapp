@@ -1,3 +1,6 @@
 @charset "UTF-8";
 
 @import "public/style/build.scss";
+
+@import "assets/icons/main.scss";
+@include icons();    // 编译 icon

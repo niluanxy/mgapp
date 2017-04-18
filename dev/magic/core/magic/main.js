@@ -106,6 +106,10 @@ Prototype = {
         _EXTEND.apply(null, args);
 
         return this;
+    },
+
+    isEmpty: function() {
+        return this.length == 0;
     }
 };
 

@@ -80,6 +80,21 @@
                     bottom: rem($scroll-point-offset);
                 }
             }
+
+            &_refresh_down, &_refresh_up {
+                display: block;
+                position: absolute;
+
+                &.simple {
+                    bottom: rem($scroll-point-offset);
+                    left: 50%;
+                    color: $scroll-refresh-simple-text;
+                    transform: translateX(-50%);
+                    padding: rem($scroll-offset) rem($scroll-offset*1.4);
+                    background-color: $scroll-refresh-simple-bg;
+                    border-radius: rem($scroll-refresh-simple-radius);
+                }
+            }
         }
 
         @content;   // 样式自定义扩展代码位置

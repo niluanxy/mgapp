@@ -1,6 +1,6 @@
 import {isTrueString, isObject} from "LIB_MINJS/check.js";
 import {allProxy} from "MG_MAGIC/proxy.js";
-import {append} from "MG_MODULE/dom/editer/main.js";
+import {html} from "MG_MODULE/dom/attrbute/main.js";
 import {element} from "LIB_MINJS/utils.js";
 import templayed from "LIB_MINJS/templayed.js";
 
@@ -9,7 +9,7 @@ function tplProxy(template, data) {
 
     if (el && isTrueString(template) && isObject(data)) {
         tpls = templayed(template)(data);
-        append.call(el, tpls);
+        html.call(el, tpls);
     }
 
     return this;

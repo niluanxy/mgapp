@@ -16,7 +16,7 @@ var CFG = ConfigUI.navbar = {
 }, LINK_LIST = [], BAR_HIDE = true;
 
 MagicVue.component("mgNavbar", {
-    name: "mgNavbar",
+    name: "mg-navbar",
     template: CFG.rootTemplate,
 
     props: {
@@ -61,7 +61,7 @@ MagicVue.component("mgNavbar", {
 });
 
 MagicVue.component("mgNavbarItem", {
-    name: "mgNavbarItem",
+    name: "mg-navbar-item",
     template:
         '<a :link="link">'+
             '<i v-if="icon" class="icon" :class="\'icon-\'+icon"></i>'+

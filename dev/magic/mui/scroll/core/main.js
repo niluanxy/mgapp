@@ -171,7 +171,7 @@ Prototype.initEvent = function() {
     return this;
 }
 
-Prototype.attach = function(plugin) {
+Prototype.attach = function(plugin, option) {
     var self = this, name, attachPlugin, $emit = self.emitter;
 
     if (isString(plugin) && Plugins[plugin]) {
@@ -181,7 +181,7 @@ Prototype.attach = function(plugin) {
     }
 
     if (attachPlugin) {
-        attachPlugin = new attachPlugin(self, self.option);
+        attachPlugin = new attachPlugin(self, option || self.option);
         name = attachPlugin.uuid;
 
         each(CoreEves, function(i, key) {
@@ -195,7 +195,9 @@ Prototype.attach = function(plugin) {
         });
 
         // 尝试运行插件的 init 初始化方法
-        isFunction(attachPlugin.init) && attachPlugin.init(self, self.option);
+        if (isFunction(attachPlugin.init)) {
+            attachPlugin.init(self, option || self.option);
+        }
 
         self.plugins[name] = attachPlugin;
     }

@@ -10,7 +10,7 @@
         .#{$prefix+$class}-item.embed {
             @content;
         }
-    } 
+    }
 }
 
 @mixin list-embed-item($class: list, $prefix: $config-prefix) {
@@ -32,7 +32,7 @@
         background-color: $list-item-default-bg;
         @include retina-border(top bottom, $list-item-default-border);
 
-        &.list-inset {
+        &.inset {
             @include retina-border-width(all);
             @include retina-border-radius($list-border-radius);
         }
@@ -139,14 +139,6 @@
                 .line {
                     @include text-ellipsis();
                     position: relative;
-
-                    &:first-of-type {
-                        top: rem(-$list-item-avatar-fix);
-                    }
-
-                    &:last-of-type {
-                        bottom: rem(-$list-item-avatar-fix);
-                    }
                 }
             }
 
@@ -248,7 +240,7 @@
 
 
             /*====================================================
-             * icon-right,item-button-right 公用 相关代码
+             * icon-right, button-right 公用 相关代码
              *====================================================*/
             &.icon-right .icon,
             &.icon-right .icon-right,
@@ -281,7 +273,7 @@
              *====================================================*/
             &.icon-right {
                 padding-right: rem($list-item-icon-right-padding);
-                
+
                 .icon:before,
                 .icon-right:before {
                     font-size: rem($list-item-icon-right-font-size);
@@ -306,7 +298,7 @@
 
 
             /*====================================================
-             * item-button-right 相关代码
+             * button-right 相关代码
              *====================================================*/
             &.button-right {
                 padding-right: rem($list-item-inset-left-padding);

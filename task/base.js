@@ -72,7 +72,8 @@ var DIR_ALIAS = {
 var SASS_ALIAS = [
     { match: /([\"\'])public\//g, value: "$1"+DIR_ALIAS.public },
     { match: /([\"\'])assets\//g, value: "$1"+DIR_ALIAS.assets },
-    { match: /([\"\'])styles\//g, value: "$1"+DIR_ALIAS.style  }
+    { match: /([\"\'])styles\//g, value: "$1"+DIR_ALIAS.style  },
+    { match: /\.\/fonts\/icomoon/g, value: DIR_ALIAS.assets+"icons/fonts/icomoon" }
 ];
 
 // 修复 Win 下路劲格式导致 SASS 引入文件失败问题

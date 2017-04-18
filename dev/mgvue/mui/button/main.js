@@ -16,7 +16,7 @@ var CFG = ConfigUI.button = {
 };
 
 MagicVue.component("mgButton", {
-    name: "mgButton",
+    name: "mg-button",
     template:
         '<a :link="link">'+
             '<i v-if="icon" class="icon" :class="\'icon-\'+icon"></i>'+
