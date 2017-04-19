@@ -21,6 +21,7 @@ var CFG = ConfigUI.scroll.refresh = {
     refreshScrollTmp: "",
 
     refreshEl    : "",
+    refreshInit  : "",
     refreshItem  : "",
 
     refreshCount : 10,
@@ -48,12 +49,13 @@ function Refresh(scope, option) {
 
     self.itemWidth = 0;
     self.itemHeight = 0;
+    self.itemSize  = 0;
     self.itemBoundary = 0;
 }; Scroll.register("refresh", Refresh, Prototype);
 
 
 Prototype.refresh = function(scope) {
-    var self = this, $el, $item, offset, opt = self.option;
+    var self = this, $el, $item, offset, rate, opt = self.option;
 
     $item = scope.$el.find(opt.refreshItem);
 
@@ -76,10 +78,12 @@ Prototype.refresh = function(scope) {
         self.itemHeight = offset.height;
 
         if (opt.refreshAirt == "Y") {
-            self.itemBoundary = offset.height*opt.refreshCount;
+            self.itemSize = offset.height*opt.refreshCount;
         } else {
-            self.itemBoundary = offset.width*opt.refreshCount;
+            self.itemSize = offset.width*opt.refreshCount;
         }
+
+        self.itemBoundary = self.itemSize * (parseFloat(1-opt.refreshRate) || 0.2);
     }
 
     self.computeRefresh(scope.x, scope.y);
@@ -97,8 +101,7 @@ Prototype.updatePage = function(page) {
 }
 
 Prototype.init = function(scope) {
-    var self = this, cls = "", $parent,
-        tmp, opt = self.option;
+    var self = this, opt = self.option, cls = "", $parent, tmp;
 
     cls += opt.refreshClass+"_"+opt.refreshType;
     cls += " "+opt.refreshModel;
@@ -120,22 +123,22 @@ Prototype.init = function(scope) {
         if (!$parent.isEmpty()) self.$el.appendTo($parent);
     }
 
+    self.pageMax = opt.refreshInit || 0;
     self.toggleRefresh(false);
     self.updatePage(1);
 }
 
-Prototype.computeRefresh = throttle(function(scrollX, scrollY) {
+Prototype.computeRefresh = function(scrollX, scrollY) {
     var self = this, opt = self.option,
-        size = self.itemBoundary, tmp, page, rate, isBound;
+        size = self.itemSize, bound = self.itemBoundary,
+        scope = self.scope,  page, isBound;
 
     if (opt.refreshAirt == "Y") {
         page = Math.abs(parseInt(scrollY/size))+1;
-        rate = Math.abs(scrollY%size/size);
-        isBound = rate >= opt.refreshRate;
+        isBound = (scrollY - scope.maxScrollY) <= bound;
     } else {
         page = Math.abs(parseInt(scrollX/size))+1;
-        rate = Math.abs(scrollX%size/size);
-        isBound = rate >= opt.refreshRate;
+        isBound = (scrollX - scope.maxScrollY) <= bound;
     }
 
     if (page != self.page) {
@@ -143,12 +146,12 @@ Prototype.computeRefresh = throttle(function(scrollX, scrollY) {
         self.updatePage(page);
     }
 
-    if ((page+1) > self.pageMax && isBound) {
+    if (isBound && (page+1) > self.pageMax) {
         self.pageMax = page+1;
 
         if (isFunction(opt.refreshBound)) {
             var defer = Defer().then(function() {
-                self.scope.refresh();
+                scope.refresh();
             });
 
             opt.refreshBound(self.pageMax, defer);
@@ -158,7 +161,7 @@ Prototype.computeRefresh = throttle(function(scrollX, scrollY) {
     if (isFunction(opt.refreshMove)) {
         opt.refreshMove(scrollX, scrollY);
     }
-}, 200);
+};
 
 Prototype.toggleRefresh = function(show) {
     var self = this, $el = self.$el, opt = self.option;
@@ -173,11 +176,8 @@ Prototype.toggleRefresh = function(show) {
 }
 
 Prototype.move = function(e, touches, root, translate) {
-    var scrollX = root.x + translate.scrollX,
-        scrollY = root.y + translate.scrollY;
-
     this.toggleRefresh(true);
-    this.computeRefresh(scrollX, scrollY);
+    this.computeRefresh(translate.scrollX, translate.scrollY);
 }
 
 Prototype.end = function(e, touches, root, translate) {
@@ -206,8 +206,6 @@ Prototype.end = function(e, touches, root, translate) {
 
 Prototype.scroll = function(root, scrollX, scrollY) {
     var self = this, opt = self.option;
-
-    scrollX += root.x; scrollY += root.y;
 
     if (opt.refreshModel == "simple") {
         self.computeRefresh(scrollX, scrollY);
