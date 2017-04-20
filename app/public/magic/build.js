@@ -13,6 +13,7 @@ import "MV_UIKIT/router/main.js";
 import "MV_UIKIT/scroll/main.js";
 import "MV_UIKIT/content/main.js";
 import "MV_UIKIT/refresh/main.js";
+import "MV_UIKIT/footer/main.js";
 
 import "MV_UIKIT/button/main.js";
 import "MV_UIKIT/tabs/main.js";

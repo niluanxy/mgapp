@@ -175,6 +175,10 @@ Prototype.toggleRefresh = function(show) {
     }
 }
 
+Prototype.start = function(e, touches, root, translate) {
+    clearTimeout(this.handle);
+}
+
 Prototype.move = function(e, touches, root, translate) {
     this.toggleRefresh(true);
     this.computeRefresh(translate.scrollX, translate.scrollY);

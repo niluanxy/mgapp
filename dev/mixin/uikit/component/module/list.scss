@@ -68,6 +68,25 @@
             padding: rem($list-item-padding);
             @include retina-border(bottom, $list-item-default-border);
 
+            &.active {
+                @if ($config-build-rem == true) {
+                    @include retina-border(bottom, $list-item-default-active-bg);
+
+                    &:after {
+                        content: " ";
+                        position: absolute;
+                        z-index: -1;
+                        top: 0;
+                        height: 100%;
+                        left: -50%;
+                        width: 200%;
+                        background-color: $list-item-default-active-bg;
+                    }
+                } @else {
+                    background-color: $list-item-default-active-bg;
+                }
+            }
+
             &:last-child {
                 @include retina-border-width(bottom, 0);
             }
@@ -247,7 +266,7 @@
             &.label-right .label,
             &.label-right .label-right,
             &.button-right .button,
-            &.button-right [class^="button-"],
+            &.button-right [class*="button-"],
             &.button-right .button-right {
                 position: absolute;
                 right: rem($list-item-padding);
@@ -304,7 +323,7 @@
                 padding-right: rem($list-item-inset-left-padding);
 
                 .button,
-                [class^="button-"],
+                [class*="button-"],
                 .button-right {
                     font-size: rem($list-item-button-font-size);
                     padding: 0 rem($list-item-button-padding);

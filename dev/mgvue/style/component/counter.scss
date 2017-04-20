@@ -7,6 +7,7 @@
     .#{$prefix+$class} {
         display: inline-block;
         overflow: hidden;
+        width: $counter-input-width + $counter-button-width*2;
 
         >.input {
             text-align: center;
@@ -27,6 +28,7 @@
             @include button-appearance();
 
             border: $border-default;
+            background-color: #FFF;
         }
 
         @content;

@@ -20,31 +20,34 @@ MagicVue.component("mgCounter", {
         '</div>',
 
     props: {
-        mobile: {},
-        min: {type: Number, default:   1},
+        mobile: {}, value: {}, scope: {},
+        min: {type: Number, default:   0},
         max: {type: Number, default: 999},
     },
 
     data: {
-        readonly: false,
-        currentValue: 1,
+        readonly: false, currentValue: 1,
     },
 
     methods: {
         incValue: function() {
             if (this.currentValue+1 <= this.max) {
+                var cache = this.currentValue;
+
                 this.currentValue += 1;
 
-                this.$emit("change", this.currentValue);
+                this.$emit("change", this.currentValue, cache, this.scope);
                 this.$emit("input", this.currentValue);
             }
         },
 
         decValue: function() {
             if (this.currentValue-1 >= this.min) {
+                var cache = this.currentValue;
+
                 this.currentValue -= 1;
 
-                this.$emit("change", this.currentValue);
+                this.$emit("change", this.currentValue, cache, this.scope);
                 this.$emit("input", this.currentValue);
             }
         }
@@ -54,8 +57,14 @@ MagicVue.component("mgCounter", {
         var self = this, $el = RootMagic(self.$el);
 
         self.readonly = value(self.mobile, CFG.mobile);
-        self.currentValue = self.value || 1;
+        self.currentValue = self.value || self.min;
 
-        $el.addClass(CFG.class);
+        self.$watch("value", function(newVal) {
+            if (newVal != this.currentValue) {
+                this.currentValue = newVal;
+            }
+        });
+
+        $el.addClass(CFG.class).tapPrevent();
     }
 });

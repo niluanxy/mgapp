@@ -17,8 +17,12 @@
             top: rem($content-head-size);
         }
 
-        &.has-footer {
+        &.has-footer, &.has-navbar {
             bottom: rem($content-foot-size);
+        }
+
+        &.has-footer.has-navbar {
+            bottom: rem($content-foot-size*2);
         }
 
         &.native {

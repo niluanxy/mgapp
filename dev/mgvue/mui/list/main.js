@@ -73,10 +73,6 @@ MagicVue.component("mgListItem", {
         icon  : {}, iconRight  : {},       // icon
     },
 
-    data: {
-        valueButton: "",
-    },
-
     mounted: function() {
         var self = this, $el = RootMagic(self.$el), cls = " ";
 
@@ -99,6 +95,8 @@ MagicVue.component("mgListItem", {
         if (self.label) cls += " label";
         if (self.labelRight) cls += " label-right";
 
-        $el.addClass(cls);
+        $el.addClass(cls).on("tap", function() {
+            if (self.link != "") Router.go(self.link);
+        });
     }
 });

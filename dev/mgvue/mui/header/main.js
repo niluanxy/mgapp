@@ -23,7 +23,7 @@ var CFG = ConfigUI.header = {
     autoTemplate: '<div class="__TYPE__">'
                       +'<h3 class="title">{{header}}</h3>'+
                   '</div>',
-}, $APPHEADER = null, ROUGEGO = null;
+}, $APPHEADER = null, ROUTEGO = null;
 
 export function renderHeader(info) {
     var cls = CFG.class + "-" + CFG.type,
@@ -75,7 +75,7 @@ MagicVue.on("mgRouteInit.Header", function() {
 MagicVue.on("mgViewChange.Header", function(viewGo, viewLast, routeType, routeGo, routeLast) {
     $APPHEADER.addClass(ConfigUI.hide).html("");
 
-    ROUGEGO = routeGo;  // 保存当前页面路由信息
+    ROUTEGO = routeGo;  // 保存当前页面路由信息
 
     if (routeGo && routeGo.header) {
         if (routeLast && viewLast) {
@@ -99,7 +99,7 @@ MagicVue.on("mgViewMounted.Header", function(scope, params) {
         noHeader = true, page = scope.$children, viewInfo,
         childList = page[0] ? page[0].$children : [];
 
-    if (isFunction(CFG.autoRender) && ROUGEGO && ROUGEGO.header) {
+    if (isFunction(CFG.autoRender) && ROUTEGO && ROUTEGO.header) {
         try {
             each(childList, function(i, item) {
                 if (getName(item) == "mg-header") {

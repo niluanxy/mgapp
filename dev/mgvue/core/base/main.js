@@ -38,6 +38,7 @@ function vueApply(type, rootScope) {
 }
 
 MagicVue.filter    = vueApply("filter", Vue);
+MagicVue.nextTick  = vueApply("nextTick", Vue);
 MagicVue.directive = vueApply("directive", Vue);
 MagicVue.component = function(ids, bind, noFix) {
     var result = null, rootBind = MagicVue.component;

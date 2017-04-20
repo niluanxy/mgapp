@@ -44,18 +44,29 @@ var CFG = ConfigUI.tap = {
         this.activeItems.addClass(CFG.active, true);
         this.activeTime = getTime();
     }
-}, delay = setTimeout, delayClear = clearTimeout;
+}, delay = setTimeout, delayClear = clearTimeout, TAP_PREVENT = "~MG_UI_TAP_PREVENT";
 
 function findActive(target) {
     var finds = RootMagic(), test = CFG.activeItem.split(" "),
-        $test = RootMagic(target).parents().push(target);
+        $test = RootMagic(), cache;
+
+    cache = RootMagic(target); cache.push(cache.parents());
+    for(var i=0; i<cache.length; i++) {
+        if (cache[i] !== document.body) {
+            $test.push(cache[i]);   // 添加当前元素到队列
+
+            if (cache.eq(i).data(TAP_PREVENT)) {
+                break;  // 如果有阻止，则略过后续对象
+            }
+        } else {
+            break;      // body后的元素直接忽略掉     
+        }
+    }
 
     each(test, function(i, match) {
         var eq = $test.eq(match);
 
-        if (eq && eq.length) {
-            finds.push(eq);
-        }
+        if (eq && eq.length) finds.push(eq);
     });
 
     return finds;
@@ -68,6 +79,13 @@ function notMove(touch, mode) {
     return (Math.abs(touch.pageX - TapCore.startX) < space) &&
            (Math.abs(touch.pageY - TapCore.startY) < space);
 }
+
+RootMagic.fn.tapPrevent = function(disable) {
+    var $that = RootMagic(this);
+
+    $that.data(TAP_PREVENT, !disable).off("tap.ui_prevent")
+    if (!disable) $that.on("tap.ui_prevent", function(e) { e.stopPropagation() });
+};
 
 (Gesture.tapInit = function() {
     Gesture.off("start.tap").on("start.tap", function(event, touch, touches) {

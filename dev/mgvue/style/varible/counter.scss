@@ -2,6 +2,8 @@
 // counter 计数组件 默认样式
 // ========================================================
 
-$counter-height:                     24px;
-$counter-input-width:                36px;
-$counter-button-width:               24px;
+$counter-input-width:                36px !default;
+$counter-button-width:               24px !default;
+
+$counter-height:                     24px !default;
+$counter-width:                      $counter-input-width + $counter-button-width*2 !default;

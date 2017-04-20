@@ -40,7 +40,7 @@ MagicVue.component("mgNavbar", {
             if (BAR_HIDE === false) {
                 each(list, function(i, item) {
                     if (getName(item) == "mg-content") {
-                        RootMagic(item.$el).addClass("has-footer");
+                        RootMagic(item.$el).addClass("has-navbar");
                         return false;
                     }
                 });
@@ -49,12 +49,15 @@ MagicVue.component("mgNavbar", {
 
         MagicVue.on("mgViewChange.Navbar",
         function(viewGo, viewLast, routeType, routeGo, routeLast) {
+            BAR_HIDE = true;    // 重置显示状态
+
             each(LINK_LIST, function(i, link) {
                 if (link && link === routeGo.url) {
                     BAR_HIDE = false; return false;
                 }
             });
 
+            MagicVue.rootNavbar = !BAR_HIDE;
             $el.toggleClass(ConfigUI.hide, BAR_HIDE);
         });
     },

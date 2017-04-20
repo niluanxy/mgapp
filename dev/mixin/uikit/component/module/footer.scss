@@ -1,0 +1,33 @@
+// ========================================================
+// footer 底栏UI生成器
+// ========================================================
+
+
+@mixin footer($class: footer, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        display: flex;
+        flex-direction: row;
+        position: absolute;
+        left: 0; right: 0;
+        bottom: 0;
+        z-index: $zindex-bar;
+        height: rem($block-footer-height);
+        padding: rem($padding-base);
+        background-color: #FFFFFF;
+        @include retina-border(top);
+
+        &.has-navbar {
+            bottom: rem($block-footer-height);
+        }
+
+        .main {
+            flex: 1;
+        }
+
+        .button {
+            line-height: rem($block-footer-height - $padding-base*2);
+        }
+
+        @content;   // 样式自定义扩展代码位置
+    }
+}
