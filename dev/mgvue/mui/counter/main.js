@@ -21,12 +21,11 @@ MagicVue.component("mgCounter", {
 
     props: {
         mobile: {}, value: {}, scope: {},
-        min: {type: Number, default:   0},
-        max: {type: Number, default: 999},
+        min: {default: 0}, max: {default: 999},
     },
 
     data: {
-        readonly: false, currentValue: 1,
+        readonly: false, currentValue: 0,
     },
 
     methods: {
@@ -37,7 +36,7 @@ MagicVue.component("mgCounter", {
                 this.currentValue += 1;
 
                 this.$emit("change", this.currentValue, cache, this.scope);
-                this.$emit("input", this.currentValue);
+                this.updateInput();
             }
         },
 
@@ -48,8 +47,12 @@ MagicVue.component("mgCounter", {
                 this.currentValue -= 1;
 
                 this.$emit("change", this.currentValue, cache, this.scope);
-                this.$emit("input", this.currentValue);
+                this.updateInput();
             }
+        },
+
+        updateInput: function(value) {
+            this.$emit("input", this.currentValue);
         }
     },
 
@@ -57,7 +60,8 @@ MagicVue.component("mgCounter", {
         var self = this, $el = RootMagic(self.$el);
 
         self.readonly = value(self.mobile, CFG.mobile);
-        self.currentValue = self.value || self.min;
+        self.currentValue = parseInt(self.value || self.min) || 0;
+        self.updateInput();
 
         self.$watch("value", function(newVal) {
             if (newVal != this.currentValue) {

@@ -1,0 +1,16 @@
+// ========================================================
+// card 卡片UI生成器
+// ========================================================
+
+
+@mixin card($class: card, $prefix: $config-prefix) {
+    .#{$prefix+$class} {
+        display: block;
+        overflow: hidden;
+        padding: $card-padding-portrait $card-padding-landscape;
+        margin-bottom: $card-margin-bottom;
+        background-color: $card-back-bg;
+
+        @content;   // 样式自定义扩展代码位置
+    }
+}

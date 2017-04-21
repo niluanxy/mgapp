@@ -11,13 +11,13 @@
         left: 0; right: 0;
         bottom: 0;
         z-index: $zindex-bar;
-        height: rem($block-footer-height);
-        padding: rem($padding-base);
+        height: rem($footer-height);
+        padding: rem($footer-padding);
         background-color: #FFFFFF;
         @include retina-border(top);
 
         &.has-navbar {
-            bottom: rem($block-footer-height);
+            bottom: rem($footer-height);
         }
 
         .main {
@@ -25,7 +25,7 @@
         }
 
         .button {
-            line-height: rem($block-footer-height - $padding-base*2);
+            line-height: rem($footer-height - $footer-padding*2);
         }
 
         @content;   // 样式自定义扩展代码位置

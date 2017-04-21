@@ -36,6 +36,7 @@ var CFG = ConfigUI.slider = {
  * options: {
  *      style: [string] 默认的样式
  *
+ *      pointEl  : [string || element] 指示器对象
  *      itemsWrap: [string] item包含容器 class
  *      pointWrap: [string] point包含容器 class
  *
@@ -45,6 +46,7 @@ var CFG = ConfigUI.slider = {
  *      onBefore : [function] 滑动前的回调
  *      onScroll : [function] 滑动结束的回调
  *      onAnimate: [function] 滑动动画结束的回调
+ *      onRefresh: [function] 刷新后的回到
  *
  *      direction: [string] x 滑动方向还是 y 滑动方向
  * }
@@ -96,7 +98,7 @@ Prototype.init = function() {
 Prototype.initPoint = function() {
     var self = this, opt = self.option, $point;
 
-    if (opt.pointWrap && opt.pointClass) {
+    if (!opt.pointEl && opt.pointWrap && opt.pointClass) {
         $point = self.$el.children("."+opt.pointWrap);
         if ($point.length < 1) {
             $point = RootMagic("<div class='"+opt.pointWrap+"'></div>");
@@ -161,6 +163,8 @@ Prototype.refresh = function() {
 
     self.maxPage = items-1;
     self.baseSize = opt.direction == "X" ? offset.width : offset.height;
+    self.initPoint();
+    if (isFunction(opt.onRefresh)) opt.onRefresh(items);
 
     return self;
 }

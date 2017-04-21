@@ -20,16 +20,14 @@ MagicVue.component("mgSlider", {
     template: "<div><div><slot></slot></div></div>",
 
     props: {
-        "ctrl": {}, "point": {}, "active": {},
+        "ctrl": {}, "point": {}, "active": {}, "refresh": {},
         "auto": { type: String, default: "5000"},
         "loop": { type: String, default: "true"},
         "direction": { type: String, default: "x"},
     },
 
-    data: function() {
-        return {
-            $ctrl: null,
-        }
+    data: {
+        control: null
     },
 
     mounted: function() {
@@ -40,7 +38,7 @@ MagicVue.component("mgSlider", {
 
         dir = self.direction == "y" ? "y" : "x";
 
-        self.$ctrl = new Slider(el, {
+        self.control = new Slider(el, {
             playLoop: loop, playAuto: auto,
             direction: dir,
 
@@ -57,8 +55,12 @@ MagicVue.component("mgSlider", {
             }
         }).init();
 
-        self.$ctrl.go(parseInt(self.active) || 0);
-        tryBindCtrl(self, self.$ctrl);   // 尝试绑定 父页面 ctrl 对象
+        self.$watch("refresh", function() {
+            self.control.refresh();
+        });
+
+        self.control.go(parseInt(self.active) || 0);
+        tryBindCtrl(self, self.control);   // 尝试绑定 父页面 ctrl 对象
     },
 
     watch: {

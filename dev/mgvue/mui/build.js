@@ -15,6 +15,7 @@ import "MV_UIKIT/content/main.js";
 import "MV_UIKIT/refresh/main.js";
 import "MV_UIKIT/footer/main.js";
 
+import "MV_UIKIT/card/main.js";
 import "MV_UIKIT/button/main.js";
 import "MV_UIKIT/tabs/main.js";
 import "MV_UIKIT/slider/main.js";

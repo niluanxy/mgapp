@@ -83,7 +83,7 @@ Prototype.transMatch = function(url) {
 }
 
 Prototype.transUrl = function(url, fix) {
-    return (url || '').replace(/^[\#|\/]*/g, fix || '/');
+    return (isString(url) ? url : '').replace(/^[\#|\/]*/g, fix || '/');
 }
 
 Prototype.transParams = function(url, match) {
@@ -122,7 +122,7 @@ Prototype.fire = function(url) {
         aFind = extend({}, aFind);
         aFind.url = aUrl;
         aFind.items = cacheArr.reverse();
-        aFind.params = this.transParams(url, aFind.match);
+        aFind.params = this.transParams(aUrl, aFind.match);
     } else {
         aFind = null;
     }
@@ -302,7 +302,7 @@ Prototype.go = function(url, inReplace, outClear, inRefresh) {
     var self = this, clear, refresh, single, routeGo, routeLast,
         STACK = self.stack, OPT = self.option, routeType, historyAction;
 
-    url = self.transUrl(url);
+    url = self.transUrl(url ? (url.url ? url.url : url) : "");
 
     if (url && (routeGo = self.fire(url))) {
         routeLast = self.lastRoute || {};
